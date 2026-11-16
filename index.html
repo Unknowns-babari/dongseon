@@ -261,6 +261,15 @@ main.full>*{animation:none}
 .lleg .lpin{position:relative;z-index:1;width:26px;height:26px;margin-left:-12px;border-radius:50%;border:2px solid var(--c);background:var(--card);color:var(--c);font-weight:800;font-size:15px;line-height:1;display:grid;place-items:center;flex-shrink:0}
 .lleg{padding-left:24px}
 .lleg .lline{left:24px}
+.sheet.pick{background:rgba(0,0,0,.35);justify-content:flex-end}
+.pickbody{position:relative!important;max-height:82%;height:auto;border-radius:20px 20px 0 0;overflow-y:auto}
+.sb{position:relative}
+.sact{position:absolute;top:6px;right:6px;display:flex;gap:4px}
+.sact .lic{width:36px;height:36px;background:var(--card)}
+.sact .lic.rep{background:var(--soft)}
+.st .stop{padding-right:88px}
+.mplus{margin-left:auto;border:1.5px dashed var(--line);background:var(--card);color:var(--pri);font-weight:700;font-size:.95em;border-radius:14px;min-height:32px;padding:0 10px}
+.dplus{margin:6px 0 8px}
 .gslot{position:absolute;inset:0}
 .hslot{position:absolute;inset:0}
 #hmap{position:absolute;inset:0;background:var(--sea)}
@@ -792,7 +801,8 @@ function stopRow(id, d, i, list, editMode, nDays){
      <span class="xs sub">${esc(x.pts[0])}</span><span class="xs" style="color:var(--pri);font-weight:700">후기 요약 ${x.pts.length}개 · 여행자 리뷰 ${cnt}개 보기 ›</span></button>
      ${editMode ? `<div class="ed"><button data-a="mv" data-v="${d}:${i}:-1" ${i === 0 ? 'disabled' : ''} aria-label="위로">↑ 위로</button><button data-a="mv" data-v="${d}:${i}:1" ${i === list.length - 1 ? 'disabled' : ''} aria-label="아래로">↓ 아래로</button>
        <select data-a="today" data-v="${d}:${i}" aria-label="다른 날로 옮기기">${opts}</select><button class="del" data-a="del" data-v="${d}:${i}">빼기</button></div>` : ''}
-     ${next ? (() => { const g = legInfo(id, next); return `<span class="move">${legIco(g.ic)} ${esc(g.t)} · 약 ${minT(g.m)} <a href="${legURL(id, next)}" target="_blank" rel="noopener">길찾기</a></span>`; })() : ''}</div></div>`;
+     ${S.scr === 'detail' ? `<div class="sact"><button class="lic del" data-a="del" data-v="${d}:${i}" aria-label="${esc(x.k)} 빼기"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><button class="lic rep" data-a="repstart" data-v="${id}" aria-label="${esc(x.k)} 다른 장소로 교체"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg></button></div>` : ''}
+     ${next ? (() => { const g = legInfo(id, next); return `<span class="move">${legIco(g.ic)} ${esc(g.t)} · 약 ${minT(g.m)} <a href="${legURL(id, next)}" target="_blank" rel="noopener">길찾기</a>${S.scr === 'detail' ? `<button class="mplus" data-a="insat" data-v="${d}:${i + 1}" aria-label="${i + 1}번과 ${i + 2}번 사이에 장소 추가">+ 사이에 추가</button>` : ''}</span>`; })() : ''}</div></div>`;
 }
 
 const MOVE_NOTE = '<p class="xs sub mvnote">이동 방법은 가까운 역을 기준으로 어림한 거예요. 정확한 노선과 시간은 ‘길찾기’에서 확인하세요.</p>';
@@ -805,7 +815,7 @@ function detail(){
   <div class="tabs" role="tablist"><button role="tab" class="${all ? 'on' : ''}" data-a="day" data-v="-1">전체</button>${r.map((x, i) => `<button role="tab" class="${!all && i === d ? 'on' : ''}" data-a="day" data-v="${i}">${i + 1}일차</button>`).join('')}</div>
   ${mapHTML(groups)}
   <div class="maplinks">${all ? '' : (r[d].length ? `<a href="${gdir(r[d])}" target="_blank" rel="noopener">구글 지도에서 ${d + 1}일차 경로 열기</a>` : '')}<button class="pill" data-a="edit">지도에서 동선 바꾸기</button>${edited(p) ? `<button class="pill" data-a="reset">원래 동선으로</button>` : ''}</div>
-  ${MOVE_NOTE}${(all ? r.map((ids, k) => ({ ids, k })) : [{ ids:r[d], k:d }]).map(g => `<h3>${g.k + 1}일차 ${g.ids.length ? (g.ids.length > 1 ? `<span class="xs sub">· 이동 약 ${minT(dayMove(g.ids))}</span>` : '') : '· 귀국·자유 일정'}</h3>${g.ids.length ? `<div class="tl">${g.ids.map((id, i) => stopRow(id, g.k, i, g.ids, S.edit, r.length)).join('')}</div>` : `<p class="sub">정해진 장소가 없어요.${S.edit ? ' 아래에서 추가할 수 있어요.' : ''}</p>`}`).join('')}
+  ${MOVE_NOTE}${(all ? r.map((ids, k) => ({ ids, k })) : [{ ids:r[d], k:d }]).map(g => `<h3>${g.k + 1}일차 ${g.ids.length ? (g.ids.length > 1 ? `<span class="xs sub">· 이동 약 ${minT(dayMove(g.ids))}</span>` : '') : '· 귀국·자유 일정'}</h3><button class="lplus dplus" data-a="insat" data-v="${g.k}:0"><span>+</span>${g.ids.length ? '맨 앞에 추가' : '이 날 장소 추가'}</button>${g.ids.length ? `<div class="tl">${g.ids.map((id, i) => stopRow(id, g.k, i, g.ids, S.edit, r.length)).join('')}</div><button class="lplus dplus" data-a="insat" data-v="${g.k}:${g.ids.length}"><span>+</span>맨 뒤에 추가</button>` : ''}`).join('')}
   `;
 }
 
@@ -937,6 +947,12 @@ function sheet(){
    </main></div>`;
 }
 
+function pickSheet(){
+  if (S.edit || S.scr !== 'detail' || !(S.ins || S.rep)) return '';
+  const p = pack(), r = route(p), where = {}; r.forEach((ids, k) => ids.forEach((id, i) => where[id] = [k, i]));
+  const d = S.ins ? S.ins.d : (where[S.rep] || [0])[0];
+  return `<div class="sheet pick" role="dialog" aria-modal="true" aria-label="넣을 장소 고르기"><div class="pickbody epanel list">${nearPanel(p, r, d, S.rep || null, 'list', where)}</div></div>`;
+}
 
 
 /* 한국어 지명 지도 (OpenFreeMap 벡터 지도, 한국어 이름이 있으면 한국어로) */
@@ -1096,7 +1112,7 @@ function render(){
   $('mn').className = full ? 'full' : '';
   $('mn').innerHTML = ({ home, detail, book, paid, trip, make, src })[S.scr]();
   $('ft').innerHTML = footer();
-  $('sh').innerHTML = sheet();
+  $('sh').innerHTML = sheet() || pickSheet();
   applyView();
   if (S.scr === 'detail' && S.edit) syncOM();
   if (S.scr === 'home') syncHome();
@@ -1143,10 +1159,10 @@ const A = {
     setRoute(r); S.sel = id; S.chg = true; S.rprev = false; render(); },
   addto:v => { A.insat(v + ':' + route(pack())[+v].length); },
   repstart:v => { S.ins = null; S.rep = v; S.sel = v; S.pl = 'list'; render(); },
-  insat:v => { const [d, pos] = v.split(':').map(Number); S.rep = null; S.ins = { d, pos }; S.day = d; S.sel = null; S.pl = 'list'; render(); },
+  insat:v => { const [d, pos] = v.split(':').map(Number); S.rep = null; S.ins = { d, pos }; if (S.edit) S.day = d; S.sel = null; S.pl = 'list'; render(); },
   insdo:v => { if (!S.ins) return; const r = route(pack()).map(x => x.slice()); let { d, pos } = S.ins;
     r.forEach((ids, k) => { const j = ids.indexOf(v); if (j >= 0){ ids.splice(j, 1); if (k === d && j < pos) pos--; } });
-    r[d].splice(Math.min(pos, r[d].length), 0, v); setRoute(r); S.ins = null; S.pl = ''; S.sel = null; S.day = d; S.chg = true; S.rprev = ''; render(); },
+    r[d].splice(Math.min(pos, r[d].length), 0, v); setRoute(r); S.ins = null; S.pl = ''; S.sel = null; if (S.edit) S.day = d; S.chg = true; S.rprev = ''; render(); },
   repcancel:() => { S.rep = null; S.ins = null; S.pl = ''; S.sel = null; render(); },
   repdo:v => { replaceStop(S.rep, v); },
   optog:() => { S.op = S.op === false ? true : false; render(); },
@@ -1177,8 +1193,8 @@ const A = {
 document.addEventListener('click', e => { if (suppress){ suppress = false; if (e.target.closest('.pan')){ e.preventDefault(); return; } } const b = e.target.closest('[data-a]'); if (!b || b.tagName === 'SELECT') return; e.preventDefault(); const f = A[b.dataset.a]; if (f) f(b.dataset.v, b); });
 function replaceStop(oldId, newId){
   const r = route(pack()).map(x => x.slice()); let done = false;
-  r.forEach((ids, k) => { const i = ids.indexOf(oldId); if (i >= 0 && !done){ const j = ids.indexOf(newId); if (j >= 0){ ids[j] = oldId; } ids[i] = newId; S.day = k; done = true; } });
-  if (!done) return; r.forEach((ids, k) => { if (k !== S.day){ const j = ids.indexOf(newId); if (j >= 0) ids[j] = oldId; } });
+  r.forEach((ids, k) => { const i = ids.indexOf(oldId); if (i >= 0 && !done){ const j = ids.indexOf(newId); if (j >= 0){ ids[j] = oldId; } ids[i] = newId; done = k + 1; } });
+  if (!done) return; const dk = done - 1; if (S.edit) S.day = dk; r.forEach((ids, k) => { if (k !== dk){ const j = ids.indexOf(newId); if (j >= 0) ids[j] = oldId; } });
   setRoute(r); S.rep = null; S.sel = newId; S.pl = ''; S.chg = true; S.rprev = ''; render();
 }
 document.addEventListener('change', e => { const t = e.target; if (t.dataset && t.dataset.a === 'repwith'){ if (t.value) replaceStop(t.value, t.dataset.v); return; } if (t.dataset && t.dataset.a === 'today'){ const [d, i] = t.dataset.v.split(':').map(Number), to = +t.value; if (to === d) return; const r = route(pack()).map(x => x.slice()); const [id] = r[d].splice(i, 1); r[to].push(id); setRoute(r); S.chg = true; render(); } });
