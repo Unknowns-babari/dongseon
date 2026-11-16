@@ -904,17 +904,17 @@ function baseLayer(map){
   map.on('baselayerchange', e => { try { localStorage.setItem('dongseon-basemap', e.name); } catch (err) {} });
 }
 function sheetH(){ const b = document.querySelector('.bsheet'); return b ? b.offsetHeight : 0; }
-function fitJapan(animate){ if (!HM.map) return; HM.map.invalidateSize(); HM.map.fitBounds(JP_BOUNDS, { paddingTopLeft:[16, 110], paddingBottomRight:[16, sheetH() + 16], animate:!!animate }); }
+function fitJapan(animate){ if (!HM.map) return; HM.map.invalidateSize(); HM.map.fitBounds(JP_BOUNDS, { paddingTopLeft:[16, 110], paddingBottomRight:[16, sheetH() + 16], maxZoom:7, animate:!!animate }); }
 function syncHome(){
   const slot = document.querySelector('.hslot'); if (!slot || !OM.ok) return;
   if (!HM.el){ HM.el = document.createElement('div'); HM.el.id = 'hmap'; }
   const moved = HM.el.parentNode !== slot; if (moved) slot.appendChild(HM.el);
   try {
     if (!HM.map){
-      HM.map = L.map(HM.el, { zoomControl:false, worldCopyJump:true, minZoom:2 });
+      HM.map = L.map(HM.el, { zoomControl:false, worldCopyJump:true, minZoom:2 }).setView([36.2, 137.8], 5);
       L.control.zoom({ position:'topright' }).addTo(HM.map); baseLayer(HM.map);
       HM.layer = L.layerGroup().addTo(HM.map);
-      setTimeout(() => fitJapan(false), 0);
+      requestAnimationFrame(() => requestAnimationFrame(() => fitJapan(false)));
     } else if (moved) setTimeout(() => HM.map.invalidateSize(), 0);
     HM.layer.clearLayers();
     Object.entries(CITY).forEach(([name, c]) => { const on = S.cityOpen && S.city === name, l = PACKS.filter(p => p.city === name), min = Math.min(...l.map(p => sum(items(p))));
