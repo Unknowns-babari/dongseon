@@ -829,9 +829,12 @@ function koLayer(){
   if (!(window.L && L.maplibreGL && window.maplibregl)) return null;
   const l = L.maplibreGL({ style:'https://tiles.openfreemap.org/styles/liberty', attribution:'&copy; OpenFreeMap &copy; OpenMapTiles &copy; OpenStreetMap contributors', localIdeographFontFamily:"'Noto Sans KR','Malgun Gothic','Apple SD Gothic Neo',sans-serif" });
   const fix = m => { try { (m.getStyle().layers || []).forEach(ly => { if (ly.type === 'symbol' && ly.layout && ly.layout['text-field']) m.setLayoutProperty(ly.id, 'text-field', ['coalesce', ['get', 'name:ko'], ['get', 'name']]); }); } catch (e) {} };
-  l.on('add', () => setTimeout(() => { const m = l.getMaplibreMap && l.getMaplibreMap(); if (!m) return; if (m.isStyleLoaded()) fix(m); m.on('style.load', () => fix(m)); m.once('idle', () => fix(m)); }, 0));
+  const kick = () => { try { const m = l.getMaplibreMap(); if (m){ m.resize(); } if (l._update) l._update(); } catch (e) {} };
+  l.on('add', () => setTimeout(() => { const m = l.getMaplibreMap && l.getMaplibreMap(); if (!m) return; if (m.isStyleLoaded()) fix(m); m.on('style.load', () => fix(m)); m.once('load', () => { fix(m); kick(); }); m.once('idle', () => { fix(m); kick(); }); kick(); }, 0));
+  l._kick = kick; KO.push(l);
   return l;
 }
+const KO = []; const kickKo = () => KO.forEach(l => l._kick && l._kick());
 function withKo(base){ const k = koLayer(); return k ? Object.assign({ '한국어 지도':k }, base) : base; }
 
 /* ---------- 무료 실제 지도 (Leaflet + OpenStreetMap) ---------- */
@@ -860,7 +863,7 @@ function syncOM(){
       base[pick].addTo(OM.map); L.control.layers(base, null, { position:'topright', collapsed:true }).addTo(OM.map);
       OM.map.on('baselayerchange', e => { try { localStorage.setItem('dongseon-basemap2', e.name); } catch (err) {} });
       OM.layer = L.layerGroup().addTo(OM.map);
-    } else if (moved) setTimeout(() => OM.map.invalidateSize(), 0);
+    } else if (moved) setTimeout(() => { OM.map.invalidateSize(); kickKo(); }, 0);
     const p = pack(), r = route(p), d = Math.max(0, Math.min(S.day, r.length - 1)), mf = S.mf || '전체';
     const where = {}; r.forEach((ids, k) => ids.forEach((id, i) => where[id] = [k, i]));
     OM.layer.clearLayers();
@@ -874,7 +877,7 @@ function syncOM(){
       m.on('click', () => A.sel(id)); m.addTo(OM.layer); });
     if (!OP.done[p.city]) fetchPop(p.city);
     if (OM.fitKey !== p.id){ OM.fitKey = p.id; const pts = cityPlaces(p.city).filter(id => !PL[id].o).map(id => [PL[id].la, PL[id].lo]);
-      const pan = document.querySelector('.epanel'); setTimeout(() => { OM.map.invalidateSize(); OM.map.fitBounds(pts, { paddingTopLeft:[30, 112], paddingBottomRight:[30, (pan ? pan.offsetHeight : 240) + 24] }); }, 0); }
+      const pan = document.querySelector('.epanel'); setTimeout(() => { OM.map.invalidateSize(); OM.map.fitBounds(pts, { paddingTopLeft:[30, 112], paddingBottomRight:[30, (pan ? pan.offsetHeight : 240) + 24] }); setTimeout(kickKo, 50); }, 0); }
   } catch (err) { OM.ok = false; OM.map = null; OM.el = null; setTimeout(render, 0); }
 }
 async function fetchPop(city, center, radius){
@@ -919,7 +922,7 @@ function baseLayer(map){
   map.on('baselayerchange', e => { try { localStorage.setItem('dongseon-basemap2', e.name); } catch (err) {} });
 }
 function sheetH(){ const b = document.querySelector('.bsheet'); return b ? b.offsetHeight : 0; }
-function fitJapan(animate){ if (!HM.map) return; HM.map.invalidateSize(); HM.map.fitBounds(JP_BOUNDS, { paddingTopLeft:[16, 110], paddingBottomRight:[16, sheetH() + 16], maxZoom:7, animate:!!animate }); }
+function fitJapan(animate){ if (!HM.map) return; HM.map.invalidateSize(); HM.map.fitBounds(JP_BOUNDS, { paddingTopLeft:[16, 110], paddingBottomRight:[16, sheetH() + 16], maxZoom:7, animate:!!animate }); setTimeout(kickKo, 50); }
 function syncHome(){
   const slot = document.querySelector('.hslot'); if (!slot || !OM.ok) return;
   if (!HM.el){ HM.el = document.createElement('div'); HM.el.id = 'hmap'; }
@@ -930,7 +933,7 @@ function syncHome(){
       L.control.zoom({ position:'topright' }).addTo(HM.map); baseLayer(HM.map);
       HM.layer = L.layerGroup().addTo(HM.map);
       requestAnimationFrame(() => requestAnimationFrame(() => fitJapan(false)));
-    } else if (moved) setTimeout(() => HM.map.invalidateSize(), 0);
+    } else if (moved) setTimeout(() => { HM.map.invalidateSize(); kickKo(); }, 0);
     HM.layer.clearLayers();
     Object.entries(CITY).forEach(([name, c]) => { const on = S.cityOpen && S.city === name, l = PACKS.filter(p => p.city === name), min = Math.min(...l.map(p => sum(items(p))));
       const html = `<span class="cdot hd"></span><div class="tagpin ${on ? 'on' : ''} ${c.dy > 0 ? 'down' : ''}" style="--dx:${c.dx < 0 ? -30 : c.dx > 0 ? 30 : 0}%" role="button" aria-label="${name} 동선팩 ${l.length}개"><b>${name}</b><span>${l.length}개 · ₩${priceMan(min)}~</span></div>`;
