@@ -212,6 +212,8 @@ main.full>*{animation:none}
 .lg.p{width:16px;height:0;border-top:3px dotted var(--ink);border-radius:0}
 .legend .lgb{display:flex;align-items:center;gap:4px;background:var(--card);padding:0 10px;border-radius:14px;border:1px solid var(--line);min-height:32px;font-size:11px;font-weight:700;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.12)}
 .legend .lgb.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.move{display:flex;align-items:center;gap:5px;flex-wrap:wrap;line-height:1.35}
+.move a{font-weight:700}
 .gslot{position:absolute;inset:0}
 .hslot{position:absolute;inset:0}
 #hmap{position:absolute;inset:0;background:var(--sea)}
@@ -546,11 +548,39 @@ function photoStrip(id, n){
 const rateT = id => { const t = rate(id); return t.n ? `<span class="rt">★ ${t.avg.toFixed(1)}</span> <span class="xs sub">리뷰 ${t.n}</span>` : '<span class="xs sub">아직 리뷰 없음</span>'; };
 
 
+
+/* ---------- 이동 방법 (가까운 역 기준 어림) ---------- */
+const LN = {"도쿄": ["JR 야마노테선", "긴자선"], "오사카": ["미도스지선", "JR 오사카 순환선", "JR 유메사키선"], "교토": ["가라스마선", "도자이선", "JR 사가노선", "JR 나라선", "한큐 교토선"], "나고야": ["히가시야마선", "메이조선", "메이테쓰 나고야본선"], "후쿠오카": ["공항선", "니시테쓰 전철"], "삿포로": ["JR 하코다테본선", "난보쿠선", "노면전차"], "히로시마": ["JR 산요본선", "노면전차"], "마쓰야마": ["이요테쓰 노면전차", "노면전차"], "구마모토": ["노면전차(시덴)"]};
+const stLines = (city, la, lo) => { const sd = STA[city]; if (!sd) return []; return sd.ln.map((l, i) => l.some(([a, b]) => km({ la:a, lo:b }, { la, lo }) < 0.2) ? (LN[city] || [])[i] : null).filter(Boolean); };
+function nearSt(city, x){ const sd = STA[city]; if (!sd) return null; let best = null; sd.st.forEach(([n, la, lo]) => { const d = km(x, { la, lo }); if (d < 1.6 && (!best || d < best.d)) best = { n, la, lo, d }; }); return best; }
+const walkM = k => Math.max(1, Math.round(k * 1.25 / 4.5 * 60));
+function legInfo(a, b){
+  const A = PL[a], B = PL[b], city = A.c, d = km(A, B);
+  if (d * 1.25 <= 1.3) return { ic:'walk', t:'걸어서', m:walkM(d) };
+  if (city === '히로시마' && (a === 'miyajima' || b === 'miyajima' || a === 'omotesando' || b === 'omotesando') && A.c === B.c){
+    const isl = id => ['miyajima', 'omotesando'].includes(id);
+    if (isl(a) && isl(b)) return { ic:'walk', t:'걸어서', m:walkM(d) };
+    return { ic:'ferry', t:'JR 산요본선으로 미야지마구치역 → 미야지마 페리(약 10분)', m:65 };
+  }
+  const sa = nearSt(city, A), sb = nearSt(city, B);
+  if (sa && sb && sa.n !== sb.n){
+    const la = stLines(city, sa.la, sa.lo), lb = stLines(city, sb.la, sb.lo), common = la.filter(x => lb.includes(x));
+    const ride = Math.round(km(sa, sb) * 1.2 / 30 * 60) + 5, m = walkM(sa.d) + ride + walkM(sb.d) + (common.length ? 0 : 8);
+    return { ic:'train', t:`${sa.n}역 → ${common.length ? common[0] : '전철(갈아타기)'} → ${sb.n}역`, m };
+  }
+  const gen = { '도쿄':'지하철·버스', '오사카':'지하철·버스', '나고야':'지하철·버스', '후쿠오카':'지하철·버스', '삿포로':'지하철·버스', '교토':'시내버스' }[city] || '노면전차·버스';
+  return { ic:d < 6 ? 'bus' : 'train', t:gen + (d > 3 ? '' : ' 또는 택시'), m:Math.round(d * 1.3 / 22 * 60) + 10 };
+}
+const LIC = { walk:'M13 4a2 2 0 1 1-4 0 2 2 0 0 1 4 0M10 8l-3 5h3l-1 8M12 8l3 4 3 1M10 13l4 3v5', train:'M7 3h10a2 2 0 0 1 2 2v9a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V5a2 2 0 0 1 2-2zM5 10h14M8 21l2-4M16 21l-2-4M9 14h.01M15 14h.01', bus:'M6 3h12a2 2 0 0 1 2 2v12H4V5a2 2 0 0 1 2-2zM4 11h16M7 21v-4M17 21v-4M8 14h.01M16 14h.01', ferry:'M3 17l2 3h14l2-3H3zM6 17V9h12v8M12 9V4M9 6h6' };
+const legIco = k => `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${LIC[k]}"/></svg>`;
+const legURL = (a, b) => 'https://www.google.com/maps/dir/?api=1&origin=' + PL[a].la + ',' + PL[a].lo + '&destination=' + PL[b].la + ',' + PL[b].lo + '&travelmode=' + (legInfo(a, b).ic === 'walk' ? 'walking' : 'transit');
+const dayMove = ids => ids.slice(0, -1).reduce((t, id, i) => t + legInfo(id, ids[i + 1]).m, 0);
+
 /* ---------- 추천 경로 ---------- */
 const legMin = (a, b) => { const k = km(PL[a], PL[b]) * 1.25; return k < 1.3 ? Math.round(k / 4.5 * 60) : Math.round(k / 25 * 60 + 12); };
 const minT = m => m < 60 ? m + '분' : Math.floor(m / 60) + '시간' + (m % 60 ? ' ' + (m % 60) + '분' : '');
 const tslot = id => { const w = PL[id].when || ''; return /밤|야경|저녁|해 질|노을/.test(w) ? 2 : /아침|오전|개장|오픈/.test(w) ? 0 : 1; };
-const dayMin = ids => ids.slice(0, -1).reduce((t, id, i) => t + legMin(id, ids[i + 1]), 0);
+const dayMin = ids => ids.slice(0, -1).reduce((t, id, i) => t + legInfo(id, ids[i + 1]).m, 0);
 const timePen = ids => ids.reduce((p, id, i) => { const pos = ids.length > 1 ? i / (ids.length - 1) : 0, sl = tslot(id); return p + (sl === 2 ? (1 - pos) * 40 : sl === 0 ? pos * 40 : 0); }, 0);
 const score = ids => dayMin(ids) + timePen(ids);
 function perms(a){ if (a.length < 2) return [a]; const out = []; a.forEach((x, i) => perms(a.slice(0, i).concat(a.slice(i + 1))).forEach(p => out.push([x].concat(p)))); return out; }
@@ -584,7 +614,7 @@ function recoBox(p, r, d){
   const dt = detours(r, d, p.city);
   if (dt.length) html += `<span class="xs sub" style="margin-top:4px">${ids.length ? '가는 길에 들르기 좋은 곳' : '이 날 넣기 좋은 곳'}</span>
     ${dt.map(o => { const x = PL[o.id]; return `<div class="drow"><button class="dname" data-a="sel" data-v="${o.id}"><span class="dic ${x.cat === '맛집' ? 'food' : ''}">${ico(x.cat, 14)}</span><span class="grow"><b>${esc(x.n)}</b><span class="xs sub">${ids.length ? (o.add ? `이동 +${minT(o.add)}` : '거의 같은 길') + ` · ${o.pos === 0 ? '맨 앞' : o.pos >= ids.length ? '맨 뒤' : esc(PL[ids[o.pos - 1]].k) + ' 다음'}` : esc(x.when)} · ${esc(x.feeT)}</span></span></button><button class="mini add" data-a="ins" data-v="${o.id}:${d}:${o.pos}">넣기</button></div>`; }).join('')}`;
-  return html + `<p class="xs sub">이동 시간은 직선거리로 어림한 값이에요(걷기 시속 4.5km, 1.3km 넘으면 대중교통).</p></div>`;
+  return html + `<p class="xs sub">이동 시간은 가까운 역 기준 어림값이에요.</p></div>`;
 }
 
 /* ---------- 동선 편집: 지도에서 보기 ---------- */
@@ -654,7 +684,7 @@ function dayList(p, r, d){
   return `<div class="row"><h3>${d + 1}일차 동선 · ${ids.length}곳</h3>${edited(p) ? '<button class="pill" data-a="reset">원래 동선으로</button>' : ''}</div>
    <p class="xs sub">지도의 깃발(관광)·수저(맛집) 아이콘을 누르면 주변 장소 카드가 떠요. 사진·리뷰를 보고 바로 동선에 넣을 수 있어요.</p>
    ${recoBox(p, r, d)}
-   ${ids.length ? ids.map((id, i) => `<button class="lrow" data-a="sel" data-v="${id}"><b class="num" style="background:${COLORS[d % 5]}">${i + 1}</b><span class="grow"><b style="font-size:.92em">${esc(PL[id].n)}</b><span class="xs sub">${PL[id].cat} · ${esc(PL[id].feeT)}${ids[i + 1] ? ' · 다음까지 직선 ' + kmT(km(PL[id], PL[ids[i + 1]])) : ''}</span></span><span class="xs" style="color:var(--pri)">›</span></button>`).join('')
+   ${ids.length ? ids.map((id, i) => `<button class="lrow" data-a="sel" data-v="${id}"><b class="num" style="background:${COLORS[d % 5]}">${i + 1}</b><span class="grow"><b style="font-size:.92em">${esc(PL[id].n)}</b><span class="xs sub">${PL[id].cat} · ${esc(PL[id].feeT)}${ids[i + 1] ? (g => ' · 다음까지 ' + (g.ic === 'walk' ? '걸어서' : g.ic === 'ferry' ? '전철+페리' : g.t.includes('역 →') ? '전철' : g.t.replace(' 또는 택시', '')) + ' 약 ' + minT(g.m))(legInfo(id, ids[i + 1])) : ''}</span></span><span class="xs" style="color:var(--pri)">›</span></button>`).join('')
      : '<p class="sub">이 날은 정해진 장소가 없어요. 지도에서 + 핀을 눌러 추가해 보세요.</p>'}
    <div class="row" style="flex-wrap:wrap">${ids.length ? `<a class="glink" href="${gdir(ids)}" target="_blank" rel="noopener">구글 지도에서 ${d + 1}일차 경로 열기</a>` : ''}<button class="pill" data-a="pl" data-v="list">${esc(p.city)} 장소 목록 보기</button></div>`;
 }
@@ -680,9 +710,10 @@ function stopRow(id, d, i, list, editMode, nDays){
      <span class="xs sub">${esc(x.pts[0])}</span><span class="xs" style="color:var(--pri);font-weight:700">후기 요약 ${x.pts.length}개 · 여행자 리뷰 ${cnt}개 보기 ›</span></button>
      ${editMode ? `<div class="ed"><button data-a="mv" data-v="${d}:${i}:-1" ${i === 0 ? 'disabled' : ''} aria-label="위로">↑ 위로</button><button data-a="mv" data-v="${d}:${i}:1" ${i === list.length - 1 ? 'disabled' : ''} aria-label="아래로">↓ 아래로</button>
        <select data-a="today" data-v="${d}:${i}" aria-label="다른 날로 옮기기">${opts}</select><button class="del" data-a="del" data-v="${d}:${i}">빼기</button></div>` : ''}
-     ${next ? `<span class="move">↓ 다음 장소까지 직선 약 ${kmT(km(x, PL[next]))}</span>` : ''}</div></div>`;
+     ${next ? (() => { const g = legInfo(id, next); return `<span class="move">${legIco(g.ic)} ${esc(g.t)} · 약 ${minT(g.m)} <a href="${legURL(id, next)}" target="_blank" rel="noopener">길찾기</a></span>`; })() : ''}</div></div>`;
 }
 
+const MOVE_NOTE = '<p class="xs sub mvnote">이동 방법은 가까운 역을 기준으로 어림한 거예요. 정확한 노선과 시간은 ‘길찾기’에서 확인하세요.</p>';
 function detail(){
   if (S.edit) return editStage();
   const p = pack(), r = route(p), all = S.day === -1, d = all ? 0 : Math.min(S.day, r.length - 1);
@@ -692,7 +723,7 @@ function detail(){
   <div class="tabs" role="tablist"><button role="tab" class="${all ? 'on' : ''}" data-a="day" data-v="-1">전체</button>${r.map((x, i) => `<button role="tab" class="${!all && i === d ? 'on' : ''}" data-a="day" data-v="${i}">${i + 1}일차</button>`).join('')}</div>
   ${mapHTML(groups)}
   <div class="maplinks">${all ? '' : (r[d].length ? `<a href="${gdir(r[d])}" target="_blank" rel="noopener">구글 지도에서 ${d + 1}일차 경로 열기</a>` : '')}<button class="pill" data-a="edit">지도에서 동선 바꾸기</button>${edited(p) ? `<button class="pill" data-a="reset">원래 동선으로</button>` : ''}</div>
-  ${(all ? r.map((ids, k) => ({ ids, k })) : [{ ids:r[d], k:d }]).map(g => `<h3>${g.k + 1}일차 ${g.ids.length ? '' : '· 귀국·자유 일정'}</h3>${g.ids.length ? `<div class="tl">${g.ids.map((id, i) => stopRow(id, g.k, i, g.ids, S.edit, r.length)).join('')}</div>` : `<p class="sub">정해진 장소가 없어요.${S.edit ? ' 아래에서 추가할 수 있어요.' : ''}</p>`}`).join('')}
+  ${MOVE_NOTE}${(all ? r.map((ids, k) => ({ ids, k })) : [{ ids:r[d], k:d }]).map(g => `<h3>${g.k + 1}일차 ${g.ids.length ? (g.ids.length > 1 ? `<span class="xs sub">· 이동 약 ${minT(dayMove(g.ids))}</span>` : '') : '· 귀국·자유 일정'}</h3>${g.ids.length ? `<div class="tl">${g.ids.map((id, i) => stopRow(id, g.k, i, g.ids, S.edit, r.length)).join('')}</div>` : `<p class="sub">정해진 장소가 없어요.${S.edit ? ' 아래에서 추가할 수 있어요.' : ''}</p>`}`).join('')}
   `;
 }
 
