@@ -208,6 +208,11 @@ main.full>*{animation:none}
 .chgbar{border:0;background:var(--soft);color:var(--pri);font-weight:700;font-size:.85em;border-radius:10px;min-height:40px;text-align:left;padding:0 12px}
 .lg.p{width:16px;height:0;border-top:3px dotted var(--ink);border-radius:0}
 .gslot{position:absolute;inset:0}
+.hslot{position:absolute;inset:0}
+#hmap{position:absolute;inset:0;background:var(--sea)}
+.cdot.hd{position:absolute;left:0;top:0;transform:translate(-50%,-50%)}
+.omk .tagpin{left:0;top:0;cursor:pointer;width:max-content}
+.stage .bsheet,.stage .zoom{z-index:600}
 #gmap{position:absolute;inset:0;background:var(--map)}
 .omk{background:none;border:0}
 .epin.gp{position:relative;transform:translate(-50%,-50%);width:max-content;cursor:pointer}
@@ -485,10 +490,10 @@ function home(){
     return `<span class="cdot" data-bx="${x.toFixed(1)}" data-by="${y.toFixed(1)}"></span><button class="tagpin ${on ? 'on' : ''} ${c.dy > 0 ? 'down' : ''}" data-a="city" data-v="${name}" data-bx="${x.toFixed(1)}" data-by="${y.toFixed(1)}" style="--dx:${c.dx < 0 ? -30 : c.dx > 0 ? 30 : 0}%" aria-pressed="${on}" aria-label="${name} 동선팩 ${l.length}개, ${priceMan(min)}원부터"><b>${name}</b><span>${l.length}개 · ₩${priceMan(min)}~</span></button>`; }).join('');
   const list = PACKS.filter(p => p.city === S.city);
   return `<div class="stage">
-    <div class="pan" data-key="home"><svg aria-hidden="true"><g class="world">${land}</g></svg>${pins}</div>
+    ${OM.ok ? '<div class="hslot"></div>' : `<div class="pan" data-key="home"><svg aria-hidden="true"><g class="world">${land}</g></svg>${pins}</div>`}
     <div class="ovl col"><div class="daychips">${Object.keys(CITY).map(x => `<button class="chip ${open && S.city === x ? 'on' : ''}" data-a="city" data-v="${x}">${x}</button>`).join('')}</div>
       <span class="hint">지도를 끌어서 움직이고, 두 손가락·휠로 확대해 보세요</span></div>
-    <div class="zoom" style="bottom:${open ? (full ? H * 0.78 + 12 : 274) : 16}px"><button data-a="zin" aria-label="확대">+</button><button data-a="zout" aria-label="축소">−</button><button data-a="zreset" aria-label="처음 위치로">⟲</button></div>
+    <div class="zoom" style="bottom:${open ? (full ? H * 0.78 + 12 : 274) : 16}px">${OM.ok ? '' : '<button data-a="zin" aria-label="확대">+</button><button data-a="zout" aria-label="축소">−</button>'}<button data-a="${OM.ok ? 'hjp' : 'zreset'}" aria-label="일본 전체 보기">⟲</button></div>
     ${open ? `<div class="bsheet ${full ? 'full' : ''}" role="region" aria-label="${S.city} 동선팩 목록">
       <button class="grab" data-a="cs" aria-label="${full ? '목록 접기' : '목록 펼치기'}"><i></i></button>
       <div class="bhead"><div class="grow"><h3>${S.city} 동선팩 ${list.length}개</h3><span class="xs sub">2인 · 항공 제외 · 관광지·맛집 ${cityPlaces(S.city).length}곳 수록</span></div>
@@ -887,6 +892,37 @@ async function fetchPop(city, center, radius){
   OP.busy = false; render();
 }
 
+
+/* ---------- 홈: 실제 세계지도 (처음엔 일본) ---------- */
+const JP_BOUNDS = [[30.6, 129.2], [45.6, 145.9]];
+const HM = { map:null, el:null, layer:null };
+function baseLayer(map){
+  const esri = n => L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/' + n + '/MapServer/tile/{z}/{y}/{x}', { maxZoom:19, attribution:'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors' });
+  const base = { '기본 지도':esri('World_Street_Map'), 'OpenStreetMap':L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'&copy; OpenStreetMap contributors' }), '위성':esri('World_Imagery') };
+  let pick = '기본 지도'; try { const v = localStorage.getItem('dongseon-basemap'); if (base[v]) pick = v; } catch (e) {}
+  base[pick].addTo(map); L.control.layers(base, null, { position:'topright' }).addTo(map);
+  map.on('baselayerchange', e => { try { localStorage.setItem('dongseon-basemap', e.name); } catch (err) {} });
+}
+function sheetH(){ const b = document.querySelector('.bsheet'); return b ? b.offsetHeight : 0; }
+function fitJapan(animate){ if (!HM.map) return; HM.map.invalidateSize(); HM.map.fitBounds(JP_BOUNDS, { paddingTopLeft:[16, 110], paddingBottomRight:[16, sheetH() + 16], animate:!!animate }); }
+function syncHome(){
+  const slot = document.querySelector('.hslot'); if (!slot || !OM.ok) return;
+  if (!HM.el){ HM.el = document.createElement('div'); HM.el.id = 'hmap'; }
+  const moved = HM.el.parentNode !== slot; if (moved) slot.appendChild(HM.el);
+  try {
+    if (!HM.map){
+      HM.map = L.map(HM.el, { zoomControl:false, worldCopyJump:true, minZoom:2 });
+      L.control.zoom({ position:'topright' }).addTo(HM.map); baseLayer(HM.map);
+      HM.layer = L.layerGroup().addTo(HM.map);
+      setTimeout(() => fitJapan(false), 0);
+    } else if (moved) setTimeout(() => HM.map.invalidateSize(), 0);
+    HM.layer.clearLayers();
+    Object.entries(CITY).forEach(([name, c]) => { const on = S.cityOpen && S.city === name, l = PACKS.filter(p => p.city === name), min = Math.min(...l.map(p => sum(items(p))));
+      const html = `<span class="cdot hd"></span><div class="tagpin ${on ? 'on' : ''} ${c.dy > 0 ? 'down' : ''}" style="--dx:${c.dx < 0 ? -30 : c.dx > 0 ? 30 : 0}%" role="button" aria-label="${name} 동선팩 ${l.length}개"><b>${name}</b><span>${l.length}개 · ₩${priceMan(min)}~</span></div>`;
+      L.marker([c.la, c.lo], { icon:L.divIcon({ className:'omk', html, iconSize:null }), zIndexOffset:on ? 1000 : 0, title:name }).on('click', () => A.city(name)).addTo(HM.layer); });
+  } catch (err) { OM.ok = false; HM.map = null; HM.el = null; setTimeout(render, 0); }
+}
+
 /* ---------- 지도 이동·확대 ---------- */
 const VIEW = {};
 const curPan = () => document.querySelector('.pan');
@@ -924,6 +960,7 @@ function render(){
   $('sh').innerHTML = sheet();
   applyView();
   if (S.scr === 'detail' && S.edit) syncOM();
+  if (S.scr === 'home') syncHome();
   if (S.scr === 'detail' && S.edit && S.sel){ centerOn(S.sel); const car = document.querySelector('.pcar'), on = car && car.querySelector('.pc.on'); if (on){ progUntil = Date.now() + 400; car.scrollLeft = on.offsetLeft - (car.clientWidth - on.offsetWidth) / 2; } }
 }
 let progUntil = 0, scT = 0;
@@ -942,13 +979,15 @@ function go(patch){ Object.assign(S, patch); render(); $('mn').scrollTop = 0; }
 const A = {
   go:v => go({ scr:v, ...(v === 'trip' ? {} : {}) }),
   big:() => go({ big:!S.big }),
+  hjp:() => fitJapan(true),
   city:v => { S.city = v; S.cityOpen = true; S.cs = 'peek'; render();
+    if (OM.ok && HM.map){ const c = CITY[v]; setTimeout(() => { HM.map.invalidateSize(); const z = 11, pt = HM.map.project([c.la, c.lo], z).add([0, sheetH() / 2 - 40]); HM.map.flyTo(HM.map.unproject(pt, z), z, { duration:.8 }); }, 0); return; }
     const el = curPan(); if (el && HP){ const c = CITY[v], [bx, by] = HP(c.lo, c.la), vv = viewOf(el), k = Math.max(vv.k, v === '삿포로' ? 1.6 : 1.8), H = el.clientHeight;
       vv.k = k; vv.x = el.clientWidth / 2 - bx * k; vv.y = Math.max(120, (H - 274) / 2 + 40) - by * k; applyView(); } },
   zin:() => zoomBtn(1.5), zout:() => zoomBtn(1 / 1.5),
   zreset:() => { const el = curPan(); if (el){ VIEW[el.dataset.key] = { k:1, x:0, y:0 }; applyView(); } },
   cs:() => { S.cs = S.cs === 'full' ? 'peek' : 'full'; render(); },
-  cclose:() => { S.cityOpen = false; render(); },
+  cclose:() => { S.cityOpen = false; render(); if (OM.ok && HM.map) setTimeout(() => fitJapan(true), 0); },
   sel:v => { S.sel = v || null; render(); },
   reorder:v => { const d = +v, r = route(pack()).map(x => x.slice()); r[d] = bestOrder(r[d]); setRoute(r); S.rprev = false; S.chg = false; render(); },
   rprev:() => { S.rprev = !S.rprev; render(); },
