@@ -743,14 +743,15 @@ function placeActs(id, r, d, where){
 function nearPanel(p, r, d, sel, mode, where){
   const insNb = S.ins ? ((r[S.ins.d] || [])[S.ins.pos - 1] || (r[S.ins.d] || [])[S.ins.pos]) : null;
   const mf = S.mf || '전체', o = sel ? PL[sel] : insNb ? PL[insNb] : null;
-  let ids = cityPlaces(p.city).filter(id => (mf === '전체' || PL[id].cat === mf || id === sel) && !(PL[id].o && S.op === false && id !== sel));
+  const pickDay = S.ins ? S.ins.d : S.rep && where[S.rep] ? where[S.rep][0] : -1, inDay = new Set(pickDay >= 0 ? r[pickDay] : []);
+  let ids = cityPlaces(p.city).filter(id => !inDay.has(id) && (mf === '전체' || PL[id].cat === mf || id === sel) && !(PL[id].o && S.op === false && id !== sel));
   if (o) ids.sort((a, b) => (a === sel ? -1 : b === sel ? 1 : km(o, PL[a]) - km(o, PL[b])));
   else ids.sort((a, b) => rate(b).n - rate(a).n || (where[b] ? 1 : 0) - (where[a] ? 1 : 0));
   const x_ = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
   const insWhere = () => { const ids = r[S.ins.d] || [], pos = S.ins.pos; return `${S.ins.d + 1}일차 ${!ids.length ? '' : pos === 0 ? '맨 앞' : pos >= ids.length ? '맨 뒤' : esc(PL[ids[pos - 1]].k) + '와 ' + esc(PL[ids[pos]].k) + ' 사이'}`; };
   const repBar = S.ins ? `<div class="repbar"><span class="grow"><b>${insWhere()}</b>에 넣을 곳을 골라 주세요</span><button class="mini" data-a="repcancel">취소</button></div>`
     : S.rep && PL[S.rep] ? `<div class="repbar"><span class="grow"><b>${esc(PL[S.rep].n)}</b> 대신 넣을 곳을 골라 주세요</span><button class="mini" data-a="repcancel">취소</button></div>` : '';
-  if (mode === 'list') return `${repBar}<div class="row"><h3 class="grow">${esc(p.city)} 장소 ${ids.length}곳 <span class="xs sub">${o ? esc(o.k) + '에서 가까운 순' : '리뷰 많은 순'}</span></h3><button class="ib" data-a="pl" data-v="" aria-label="목록 닫기">${x_}</button></div>
+  if (mode === 'list') return `${repBar}<div class="row"><h3 class="grow">${esc(p.city)} 장소 ${ids.length}곳 <span class="xs sub">${o ? esc(o.k) + '에서 가까운 순' : '리뷰 많은 순'}${pickDay >= 0 ? ` · ${pickDay + 1}일차에 이미 있는 곳은 뺐어요` : ''}</span></h3><button class="ib" data-a="pl" data-v="" aria-label="목록 닫기">${x_}</button></div>
     <div class="plist">${ids.map(id => { const x = PL[id];
       return `<article class="pl ${id === sel ? 'on' : ''}">${photoStrip(id, 3)}<div class="pcb">
         <button class="pname" data-a="pick" data-v="${id}"><span class="tag ${x.cat === '맛집' ? 'food' : ''}">${x.cat}</span> <b>${esc(x.n)}</b></button>
