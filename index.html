@@ -248,6 +248,19 @@ main.full>*{animation:none}
 .lleg svg{position:relative;background:var(--card);margin-left:-8px;color:var(--c)}
 .lleg a{font-weight:700;white-space:nowrap}
 .repbar{display:flex;align-items:center;gap:8px;background:var(--warn);color:var(--warnInk);border-radius:10px;padding:6px 6px 6px 12px;font-size:.85em}
+.llist{display:flex;flex-direction:column;gap:2px}
+.lplus{display:flex;align-items:center;justify-content:center;gap:6px;min-height:40px;border:1.5px dashed var(--line);border-radius:12px;background:none;color:var(--pri);font-weight:700;font-size:.85em}
+.lplus span{width:22px;height:22px;border-radius:50%;background:var(--pri);color:var(--priInk);display:grid;place-items:center;font-size:15px;line-height:1}
+.llist .lplus:first-child{margin-bottom:6px}.llist .lplus:last-child{margin-top:6px}
+.lrow2{display:flex;align-items:center;gap:2px;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:4px 4px 4px 0}
+.lrow2.on{border-color:var(--warnLine);background:var(--warn)}
+.lmain{flex:1;min-width:0;display:flex;gap:10px;align-items:center;text-align:left;border:0;background:none;padding:4px 8px 4px 12px;min-height:46px}
+.lic{width:40px;height:40px;border-radius:10px;border:0;background:none;display:grid;place-items:center;color:var(--sub);flex-shrink:0}
+.lic.del{color:var(--red)}
+.lic.rep{background:var(--soft);color:var(--pri)}
+.lleg .lpin{position:relative;z-index:1;width:26px;height:26px;margin-left:-12px;border-radius:50%;border:2px solid var(--c);background:var(--card);color:var(--c);font-weight:800;font-size:15px;line-height:1;display:grid;place-items:center;flex-shrink:0}
+.lleg{padding-left:24px}
+.lleg .lline{left:24px}
 .gslot{position:absolute;inset:0}
 .hslot{position:absolute;inset:0}
 #hmap{position:absolute;inset:0;background:var(--sea)}
@@ -442,7 +455,7 @@ const cityPlaces = c => Object.keys(PL).filter(id => PL[id].c === c);
 
 const SAVE_KEY = 'dongseon-routes-v3';
 let saved = {}; try { saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}') || {}; } catch (e) { saved = {}; }
-const S = { scr:'home', cityOpen:false, cs:'peek', sel:null, city:'도쿄', rf:'전체', pid:'tk1', day:0, edit:false, routes:saved, up:false, off:{}, place:null, mf:'전체', pl:'', chg:false, rprev:false, rep:null, filter:'전체', big:false, alt:null, loaded:false, made:false, shared:false };
+const S = { scr:'home', cityOpen:false, cs:'peek', sel:null, city:'도쿄', rf:'전체', pid:'tk1', day:0, edit:false, routes:saved, up:false, off:{}, place:null, mf:'전체', pl:'', chg:false, rprev:false, rep:null, ins:null, filter:'전체', big:false, alt:null, loaded:false, made:false, shared:false };
 const R = { name:'', text:'', stars:0, msg:'', busy:false, files:[] };
 const $ = id => document.getElementById(id);
 const pack = () => PACKS.find(p => p.id === S.pid);
@@ -714,16 +727,20 @@ function editStage(){
 function placeActs(id, r, d, where){
   const w = where[id];
   return w ? `<span class="tag">${w[0] + 1}일차 ${w[1] + 1}번째</span><button class="mini" data-a="mv" data-v="${w[0]}:${w[1]}:-1" ${w[1] === 0 ? 'disabled' : ''} aria-label="앞으로">↑</button><button class="mini" data-a="mv" data-v="${w[0]}:${w[1]}:1" ${w[1] === r[w[0]].length - 1 ? 'disabled' : ''} aria-label="뒤로">↓</button>${r.length > 1 ? `<select class="mini" data-a="today" data-v="${w[0]}:${w[1]}" aria-label="다른 날로 옮기기">${r.map((_, k) => `<option value="${k}" ${k === w[0] ? 'selected' : ''}>${k + 1}일차</option>`).join('')}</select>` : ''}<button class="mini del" data-a="del" data-v="${w[0]}:${w[1]}">빼기</button><button class="mini" data-a="repstart" data-v="${id}">⇄ 교체</button>`
+    : S.ins ? `<button class="mini add" data-a="insdo" data-v="${id}">여기에 넣기</button>`
     : S.rep && where[S.rep] ? `<button class="mini add" data-a="repdo" data-v="${id}">${esc(PL[S.rep].k)} 대신 넣기</button>`
     : `<button class="mini add" data-a="add" data-v="${id}">+ ${d + 1}일차에 넣기</button>${(r[d] || []).length ? `<select class="mini" data-a="repwith" data-v="${id}" aria-label="동선의 장소와 교체"><option value="">⇄ 교체…</option>${r[d].map(x => `<option value="${x}">${esc(PL[x].k)} 대신</option>`).join('')}</select>` : ''}`;
 }
 function nearPanel(p, r, d, sel, mode, where){
-  const mf = S.mf || '전체', o = sel ? PL[sel] : null;
+  const insNb = S.ins ? ((r[S.ins.d] || [])[S.ins.pos - 1] || (r[S.ins.d] || [])[S.ins.pos]) : null;
+  const mf = S.mf || '전체', o = sel ? PL[sel] : insNb ? PL[insNb] : null;
   let ids = cityPlaces(p.city).filter(id => (mf === '전체' || PL[id].cat === mf || id === sel) && !(PL[id].o && S.op === false && id !== sel));
   if (o) ids.sort((a, b) => (a === sel ? -1 : b === sel ? 1 : km(o, PL[a]) - km(o, PL[b])));
   else ids.sort((a, b) => rate(b).n - rate(a).n || (where[b] ? 1 : 0) - (where[a] ? 1 : 0));
   const x_ = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
-  const repBar = S.rep && PL[S.rep] ? `<div class="repbar"><span class="grow"><b>${esc(PL[S.rep].n)}</b> 대신 넣을 곳을 골라 주세요</span><button class="mini" data-a="repcancel">취소</button></div>` : '';
+  const insWhere = () => { const ids = r[S.ins.d] || [], pos = S.ins.pos; return `${S.ins.d + 1}일차 ${!ids.length ? '' : pos === 0 ? '맨 앞' : pos >= ids.length ? '맨 뒤' : esc(PL[ids[pos - 1]].k) + '와 ' + esc(PL[ids[pos]].k) + ' 사이'}`; };
+  const repBar = S.ins ? `<div class="repbar"><span class="grow"><b>${insWhere()}</b>에 넣을 곳을 골라 주세요</span><button class="mini" data-a="repcancel">취소</button></div>`
+    : S.rep && PL[S.rep] ? `<div class="repbar"><span class="grow"><b>${esc(PL[S.rep].n)}</b> 대신 넣을 곳을 골라 주세요</span><button class="mini" data-a="repcancel">취소</button></div>` : '';
   if (mode === 'list') return `${repBar}<div class="row"><h3 class="grow">${esc(p.city)} 장소 ${ids.length}곳 <span class="xs sub">${o ? esc(o.k) + '에서 가까운 순' : '리뷰 많은 순'}</span></h3><button class="ib" data-a="pl" data-v="" aria-label="목록 닫기">${x_}</button></div>
     <div class="plist">${ids.map(id => { const x = PL[id];
       return `<article class="pl ${id === sel ? 'on' : ''}">${photoStrip(id, 3)}<div class="pcb">
@@ -741,13 +758,17 @@ function nearPanel(p, r, d, sel, mode, where){
        <div class="pact">${placeActs(id, r, d, where)}<button class="mini" data-a="place" data-v="${id}">리뷰·사진 ›</button></div></div></article>`; }).join('')}</div>`;
 }
 function dayList(p, r, d){
-  const ids = r[d] || [];
-  return `<div class="row"><h3>${d + 1}일차 동선 · ${ids.length}곳</h3>${edited(p) ? '<button class="pill" data-a="reset">원래 동선으로</button>' : ''}</div>
-   <p class="xs sub">지도의 깃발(관광)·수저(맛집) 아이콘을 누르면 주변 장소 카드가 떠요. 사진·리뷰를 보고 바로 동선에 넣을 수 있어요.</p>
-   ${recoBox(p, r, d)}
-   ${ids.length ? ids.map((id, i) => `${i ? (g => `<div class="lleg" style="--c:${COLORS[d % 5]}"><span class="lline"></span>${legIco(g.ic)}<span class="grow">${esc(g.t)} · <b>약 ${minT(g.m)}</b></span><a href="${legURL(ids[i - 1], id)}" target="_blank" rel="noopener">길찾기</a></div>`)(legInfo(ids[i - 1], id)) : ''}<button class="lrow" data-a="sel" data-v="${id}"><b class="num" style="background:${COLORS[d % 5]}">${i + 1}</b><span class="grow"><b style="font-size:.92em">${esc(PL[id].n)}</b><span class="xs sub">${PL[id].cat} · ${esc(PL[id].feeT)}</span></span><span class="xs" style="color:var(--pri)">›</span></button>`).join('')
-     : '<p class="sub">이 날은 정해진 장소가 없어요. 지도에서 + 핀을 눌러 추가해 보세요.</p>'}
-   <div class="row" style="flex-wrap:wrap">${ids.length ? `<a class="glink" href="${gdir(ids)}" target="_blank" rel="noopener">구글 지도에서 ${d + 1}일차 경로 열기</a>` : ''}<button class="pill" data-a="pl" data-v="list">${esc(p.city)} 장소 목록 보기</button></div>`;
+  const ids = r[d] || [], c = COLORS[d % 5];
+  const plusEnd = pos => `<button class="lplus" data-a="insat" data-v="${d}:${pos}"><span>+</span>${pos === 0 ? (ids.length ? '맨 앞에 추가' : '장소 추가') : '맨 뒤에 추가'}</button>`;
+  const rows = ids.map((id, i) => `${i ? (g => `<div class="lleg" style="--c:${c}"><span class="lline"></span><button class="lpin" data-a="insat" data-v="${d}:${i}" aria-label="${i}번과 ${i + 1}번 사이에 장소 추가">+</button>${legIco(g.ic)}<span class="grow">${esc(g.t)} · <b>약 ${minT(g.m)}</b></span><a href="${legURL(ids[i - 1], id)}" target="_blank" rel="noopener">길찾기</a></div>`)(legInfo(ids[i - 1], id)) : ''}
+    <div class="lrow2 ${S.rep === id ? 'on' : ''}"><button class="lmain" data-a="sel" data-v="${id}"><b class="num" style="background:${c}">${i + 1}</b><span class="grow"><b style="font-size:.92em">${esc(PL[id].n)}</b><span class="xs sub">${PL[id].cat} · ${esc(PL[id].feeT)}</span></span></button>
+      <button class="lic del" data-a="del" data-v="${d}:${i}" aria-label="${esc(PL[id].k)} 빼기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <button class="lic rep" data-a="repstart" data-v="${id}" aria-label="${esc(PL[id].k)} 다른 장소로 교체"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg></button></div>`).join('');
+  return `<div class="row"><h3 class="grow">${d + 1}일차 동선 · ${ids.length}곳</h3>${edited(p) ? '<button class="pill" data-a="reset">원래 동선으로</button>' : ''}</div>
+   <p class="xs sub">+ 버튼으로 맨 앞·맨 뒤·장소 사이에 넣고, ✕로 빼고, 오른쪽 끝 ⇄로 다른 장소와 교체해요.</p>
+   <div class="llist" style="--c:${c}">${plusEnd(0)}${rows}${ids.length ? plusEnd(ids.length) : ''}</div>
+   <div class="row" style="flex-wrap:wrap">${ids.length ? `<a class="glink" href="${gdir(ids)}" target="_blank" rel="noopener">구글 지도에서 ${d + 1}일차 경로 열기</a>` : ''}</div>
+   ${recoBox(p, r, d)}`;
 }
 function selCard(id, r, d){
   const x = PL[id]; let w = null; r.forEach((ids, k) => { const i = ids.indexOf(id); if (i >= 0) w = [k, i]; });
@@ -1120,20 +1141,24 @@ const A = {
     else if (sd > 0 && k < r.length - 1){ r[k].splice(i, 1); r[k + 1].unshift(id); S.day = k + 1; }
     else return;
     setRoute(r); S.sel = id; S.chg = true; S.rprev = false; render(); },
-  addto:v => { S.day = +v; S.sel = null; S.pl = 'list'; render(); },
-  repstart:v => { S.rep = v; S.sel = v; S.pl = 'list'; render(); },
-  repcancel:() => { S.rep = null; render(); },
+  addto:v => { A.insat(v + ':' + route(pack())[+v].length); },
+  repstart:v => { S.ins = null; S.rep = v; S.sel = v; S.pl = 'list'; render(); },
+  insat:v => { const [d, pos] = v.split(':').map(Number); S.rep = null; S.ins = { d, pos }; S.day = d; S.sel = null; S.pl = 'list'; render(); },
+  insdo:v => { if (!S.ins) return; const r = route(pack()).map(x => x.slice()); let { d, pos } = S.ins;
+    r.forEach((ids, k) => { const j = ids.indexOf(v); if (j >= 0){ ids.splice(j, 1); if (k === d && j < pos) pos--; } });
+    r[d].splice(Math.min(pos, r[d].length), 0, v); setRoute(r); S.ins = null; S.pl = ''; S.sel = null; S.day = d; S.chg = true; S.rprev = ''; render(); },
+  repcancel:() => { S.rep = null; S.ins = null; S.pl = ''; S.sel = null; render(); },
   repdo:v => { replaceStop(S.rep, v); },
   optog:() => { S.op = S.op === false ? true : false; render(); },
   opop:() => { if (!OM.map) return; const c = OM.map.getCenter(), ne = OM.map.getBounds().getNorthEast(); fetchPop(pack().city, { lat:c.lat, lng:c.lng }, km({ la:c.lat, lo:c.lng }, { la:ne.lat, lo:ne.lng }) * 800); render(); },
   pick:v => { S.sel = v; S.pl = ''; render(); },
-  pl:v => { S.pl = v; if (!v) S.rep = null; render(); },
+  pl:v => { S.pl = v; if (!v){ S.rep = null; S.ins = null; } render(); },
   mf:v => { S.mf = v; render(); },
   rmph:v => { const f = R.files.splice(+v, 1)[0]; if (f) try { URL.revokeObjectURL(f.url); } catch (e) {} $('sh').innerHTML = sheet(); },
   rf:v => { S.rf = v; render(); },
   open:v => { S.up = false; S.off = {}; const p = PACKS.find(x => x.id === v); go({ scr:'detail', pid:v, city:p.city, day:-1, edit:false }); },
   day:v => { S.day = +v; S.rprev = false; render(); },
-  edit:() => { S.edit = !S.edit; S.sel = null; S.pl = ''; S.rep = null; S.chg = false; S.rprev = false; if (S.edit && S.day < 0) S.day = 0; render(); $('mn').scrollTop = 0; },
+  edit:() => { S.edit = !S.edit; S.sel = null; S.pl = ''; S.rep = null; S.ins = null; S.chg = false; S.rprev = false; if (S.edit && S.day < 0) S.day = 0; render(); $('mn').scrollTop = 0; },
   reset:() => { delete S.routes[S.pid]; try { localStorage.setItem(SAVE_KEY, JSON.stringify(S.routes)); } catch (e) {} render(); },
   mv:v => { const [d, i, k] = v.split(':').map(Number), r = route(pack()).map(x => x.slice()), j = i + k; if (j < 0 || j >= r[d].length) return; [r[d][i], r[d][j]] = [r[d][j], r[d][i]]; setRoute(r); S.chg = true; S.rprev = false; render(); },
   del:v => { const [d, i] = v.split(':').map(Number), r = route(pack()).map(x => x.slice()); r[d].splice(i, 1); setRoute(r); S.chg = true; S.rprev = false; if (!S.edit) S.sel = null; render(); },
