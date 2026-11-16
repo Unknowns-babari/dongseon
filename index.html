@@ -228,6 +228,15 @@ main.full>*{animation:none}
 .sx:disabled{opacity:.3}.sx.del{color:var(--red);font-weight:700}
 .sleg{font-size:10px;color:var(--sub);white-space:nowrap}
 .sadd{width:34px;height:34px;border-radius:50%;border:1.5px dashed var(--line);background:var(--card);font-weight:700;color:var(--pri);flex-shrink:0}
+.epanel.card{padding:10px 14px 12px;gap:6px}
+.epanel.card .row .pill{min-height:38px}
+.epanel.card .row .ib{width:38px;height:38px}
+.pcar .ph{height:76px}
+.pcar .ph.none span{display:none}
+.pcar .pcb{gap:2px;padding:8px 12px 10px}
+.pcar .pact{margin-top:6px}
+.pcar{flex:1;min-height:0;align-items:stretch}
+.pc{overflow:hidden}
 .gslot{position:absolute;inset:0}
 .hslot{position:absolute;inset:0}
 #hmap{position:absolute;inset:0;background:var(--sea)}
@@ -664,7 +673,7 @@ function editStage(){
     return `<button class="epin rec ${x0.cat === '맛집' ? 'food' : ''} ${sel ? 'sel' : ''}" data-a="sel" data-v="${id}" data-bx="${x.toFixed(1)}" data-by="${y.toFixed(1)}" aria-label="${x0.cat} ${esc(x0.n)}${t.n ? ', 별점 ' + t.avg.toFixed(1) : ''}"><b>${ico(x0.cat, 15)}</b><span>${esc(x0.k)}${t.n ? ` <em>★${t.avg.toFixed(1)}</em>` : ''}</span></button>`; }).join('');
   const kmPer = 80 / P.s * 111.32, nice = [0.1,0.2,0.5,1,2,5,10,20].find(v => v >= kmPer * 0.6) || 20;
   const sel = S.sel && PL[S.sel] ? S.sel : null, mode = S.pl === 'list' ? 'list' : sel ? 'card' : 'day';
-  const ph = mode === 'list' ? H - 116 : mode === 'card' ? Math.min(Math.round(H * 0.58), 350) : bottom;
+  const ph = mode === 'list' ? H - 116 : mode === 'card' ? Math.min(Math.max(Math.round(H * 0.5), 330), 370) : bottom;
   return `<div class="stage edit">
     ${OM.ok ? '<div class="gslot"></div>' : `<div class="pan" data-key="edit:${p.id}"><svg aria-hidden="true"><g class="world">${grid}${rails}${lines}${arrows}${prevLine}</g></svg>${stas}${pins}</div>
     <div class="zoom" style="bottom:${ph + 40}px"><button data-a="zin" aria-label="확대">+</button><button data-a="zout" aria-label="축소">−</button><button data-a="zreset" aria-label="처음 위치로">⟲</button></div>`}
@@ -694,12 +703,12 @@ function nearPanel(p, r, d, sel, mode, where){
         <span>${rateT(id)} <span class="xs sub">· ${esc(x.feeT)}${o && id !== sel ? ' · 직선 ' + kmT(km(o, x)) : ''}</span></span>
         <div class="rcards">${x.pts.slice(0, 2).map(t => `<div class="rcard"><span class="xs sub">블로그 후기 요약</span><p>${esc(t)}</p></div>`).join('')}</div>
         <div class="pact">${placeActs(id, r, d, where)}<button class="mini" data-a="place" data-v="${id}">리뷰·사진 ›</button></div></div></article>`; }).join('')}</div>`;
-  return `${S.chg ? `<button class="chgbar" data-a="showreco">동선이 바뀌었어요 · ${d + 1}일차 추천 경로 보기 ›</button>` : ''}<div class="row"><h3 class="grow">주변 장소 ${ids.length}곳 <span class="xs sub">옆으로 넘겨 보세요</span></h3><button class="pill" data-a="pl" data-v="list">목록 보기</button><button class="ib" data-a="sel" data-v="" aria-label="닫기">${x_}</button></div>
+  return `${S.chg ? `<button class="chgbar" data-a="showreco">동선이 바뀌었어요 · ${d + 1}일차 추천 경로 보기 ›</button>` : ''}<div class="row"><h3 class="grow" style="font-size:1em">주변 장소 ${ids.length}곳 <span class="xs sub" style="font-weight:500">· 옆으로 넘기기</span></h3><button class="pill" data-a="pl" data-v="list">목록 보기</button><button class="ib" data-a="sel" data-v="" aria-label="닫기">${x_}</button></div>
    <div class="pcar">${ids.map(id => { const x = PL[id];
      return `<article class="pc ${id === sel ? 'on' : ''}" data-a="sel" data-v="${id}">${photoStrip(id, 3)}<div class="pcb">
        <span><span class="tag ${x.cat === '맛집' ? 'food' : ''}">${x.cat}</span> ${rateT(id)}</span>
        <b class="pn">${esc(x.n)}</b>
-       <span class="xs sub">${esc(x.feeT)} · ${esc(x.when)}${o && id !== sel ? ' · 직선 ' + kmT(km(o, x)) : ''}</span>
+       <span class="xs sub">${[esc(x.feeT), esc(x.when), o && id !== sel ? '직선 ' + kmT(km(o, x)) : ''].filter(Boolean).join(' · ')}</span>
        <p class="xs clamp">${esc(x.pts[0])}</p>
        <div class="pact">${placeActs(id, r, d, where)}<button class="mini" data-a="place" data-v="${id}">리뷰·사진 ›</button></div></div></article>`; }).join('')}</div>`;
 }
