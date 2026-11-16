@@ -210,6 +210,8 @@ main.full>*{animation:none}
 .mini.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .chgbar{border:0;background:var(--soft);color:var(--pri);font-weight:700;font-size:.85em;border-radius:10px;min-height:40px;text-align:left;padding:0 12px}
 .lg.p{width:16px;height:0;border-top:3px dotted var(--ink);border-radius:0}
+.legend .lgb{display:flex;align-items:center;gap:4px;background:var(--card);padding:0 10px;border-radius:14px;border:1px solid var(--line);min-height:32px;font-size:11px;font-weight:700;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.legend .lgb.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .gslot{position:absolute;inset:0}
 .hslot{position:absolute;inset:0}
 #hmap{position:absolute;inset:0;background:var(--sea)}
@@ -616,7 +618,7 @@ function editStage(){
       <button class="pill on" data-a="edit">완료</button></div>
     <div class="ovl f2">${['전체', '관광', '맛집'].map(c => `<button class="chip ${mf === c ? 'on' : ''}" data-a="mf" data-v="${c}">${c === '전체' ? '전체' : ico(c, 14) + ' ' + c}</button>`).join('')}${OM.ok ? `<button class="chip ${S.op !== false ? 'on' : ''}" data-a="optog">지도 인기 장소</button><button class="chip" data-a="opop" ${OP.busy ? 'disabled' : ''}>${OP.busy ? '찾는 중…' : '이 지역 다시 찾기'}</button>` : ''}</div>
     ${OM.ok && OP.msg ? `<p class="gerr">${esc(OP.msg)}</p>` : ''}
-    <div class="legend ${OM.ok ? 'gm' : ''}" style="bottom:${ph + 8}px"><span><i class="lg n"></i>내 동선</span>${S.rprev ? '<span><i class="lg p"></i>추천 순서</span>' : ''}<span><i class="lg t"></i>관광</span><span><i class="lg f"></i>맛집</span>${OM.ok ? '<span><i class="lg o"></i>지도 인기 장소</span>' : `<span><i class="lg r"></i>역·노선(대략)</span><span id="scl" data-s="${P.s}">${nice < 1 ? nice * 1000 + 'm' : nice + 'km'} <i class="sc" style="width:${(nice / 111.32 * P.s).toFixed(0)}px"></i></span>`}</div>
+    <div class="legend ${OM.ok ? 'gm' : ''}" style="bottom:${ph + 8}px"><span><i class="lg n"></i>내 동선</span>${S.rprev ? '<span><i class="lg p"></i>추천 순서</span>' : ''}<button class="lgb ${mf === '관광' ? 'on' : ''}" data-a="mf" data-v="${mf === '관광' ? '전체' : '관광'}" aria-pressed="${mf === '관광'}"><i class="lg t"></i>관광만</button><button class="lgb ${mf === '맛집' ? 'on' : ''}" data-a="mf" data-v="${mf === '맛집' ? '전체' : '맛집'}" aria-pressed="${mf === '맛집'}"><i class="lg f"></i>맛집만</button>${OM.ok ? `<button class="lgb ${S.op !== false ? 'on' : ''}" data-a="optog" aria-pressed="${S.op !== false}"><i class="lg o"></i>지도 인기 장소</button>` : `<span><i class="lg r"></i>역·노선(대략)</span><span id="scl" data-s="${P.s}">${nice < 1 ? nice * 1000 + 'm' : nice + 'km'} <i class="sc" style="width:${(nice / 111.32 * P.s).toFixed(0)}px"></i></span>`}</div>
     <div class="epanel ${mode}" style="height:${ph}px">${mode === 'day' ? dayList(p, r, d) : nearPanel(p, r, d, sel, mode, where)}</div>
   </div>`;
 }
@@ -859,9 +861,9 @@ function syncOM(){
       L.control.zoom({ position:'topright' }).addTo(OM.map);
       const esri = (n, a) => L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/' + n + '/MapServer/tile/{z}/{y}/{x}', { maxZoom:19, attribution:'Tiles &copy; Esri' + (a || '') });
       const base = withKo({ '기본 지도':esri('World_Street_Map', ' &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors'), 'OpenStreetMap':L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'&copy; OpenStreetMap contributors' }), '위성':esri('World_Imagery', ' &mdash; Esri, Maxar, Earthstar Geographics') });
-      let pick = base['한국어 지도'] ? '한국어 지도' : '기본 지도'; try { const v = localStorage.getItem('dongseon-basemap2'); if (base[v]) pick = v; } catch (e) {}
+      let pick = base['한국어 지도'] ? '한국어 지도' : '기본 지도'; try { const v = localStorage.getItem('dongseon-basemap3'); if (base[v]) pick = v; } catch (e) {}
       base[pick].addTo(OM.map); L.control.layers(base, null, { position:'topright', collapsed:true }).addTo(OM.map);
-      OM.map.on('baselayerchange', e => { try { localStorage.setItem('dongseon-basemap2', e.name); } catch (err) {} });
+      OM.map.on('baselayerchange', e => { try { localStorage.setItem('dongseon-basemap3', e.name); } catch (err) {} });
       OM.layer = L.layerGroup().addTo(OM.map);
     } else if (moved) setTimeout(() => { OM.map.invalidateSize(); kickKo(); }, 0);
     const p = pack(), r = route(p), d = Math.max(0, Math.min(S.day, r.length - 1)), mf = S.mf || '전체';
@@ -885,9 +887,13 @@ async function fetchPop(city, center, radius){
   const c = center || { lat:CITY[city].la, lng:CITY[city].lo }, R = Math.round(Math.min(15000, Math.max(1500, radius || 4500))), at = `(around:${R},${c.lat.toFixed(5)},${c.lng.toFixed(5)})`;
   const q = `[out:json][timeout:25];(nwr["tourism"~"^(attraction|museum|viewpoint|zoo|aquarium|theme_park|gallery)$"]["wikidata"]${at};nwr["historic"~"^(castle|monument|memorial)$"]["wikidata"]${at};nwr["amenity"="place_of_worship"]["wikidata"]["wikipedia"]${at};nwr["amenity"~"^(restaurant|cafe|fast_food)$"][~"^(name:ko|wikidata)$"~"."]${at};);out center 150;`;
   try {
-    const res = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', body:'data=' + encodeURIComponent(q), headers:{ 'Content-Type':'application/x-www-form-urlencoded' } });
-    if (!res.ok) throw new Error('http ' + res.status);
-    const js = await res.json(), els = (js.elements || []).filter(e => e.tags && (e.tags['name:ko'] || e.tags.name));
+    let js = null;
+    for (const ep of ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter', 'https://overpass-api.de/api/interpreter']){
+      try { const res = await fetch(ep, { method:'POST', body:'data=' + encodeURIComponent(q), headers:{ 'Content-Type':'application/x-www-form-urlencoded' } }); if (res.ok){ js = await res.json(); break; } } catch (e) {}
+      await new Promise(r => setTimeout(r, 800));
+    }
+    if (!js) throw new Error('overpass busy');
+    const els = (js.elements || []).filter(e => e.tags && (e.tags['name:ko'] || e.tags.name));
     const isFood = t => /^(restaurant|cafe|fast_food)$/.test(t.amenity || '');
     const dist = e => km({ la:e.lat ?? e.center.lat, lo:e.lon ?? e.center.lon }, { la:c.lat, lo:c.lng });
     const rank = e => (e.tags.wikipedia ? 0 : 5) + (e.tags['wikipedia'] && /^ko:/.test(e.tags.wikipedia) ? -3 : 0) + dist(e) / 2;
@@ -917,9 +923,9 @@ const HM = { map:null, el:null, layer:null };
 function baseLayer(map){
   const esri = n => L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/' + n + '/MapServer/tile/{z}/{y}/{x}', { maxZoom:19, attribution:'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors' });
   const base = withKo({ '기본 지도':esri('World_Street_Map'), 'OpenStreetMap':L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'&copy; OpenStreetMap contributors' }), '위성':esri('World_Imagery') });
-  let pick = base['한국어 지도'] ? '한국어 지도' : '기본 지도'; try { const v = localStorage.getItem('dongseon-basemap2'); if (base[v]) pick = v; } catch (e) {}
+  let pick = base['한국어 지도'] ? '한국어 지도' : '기본 지도'; try { const v = localStorage.getItem('dongseon-basemap3'); if (base[v]) pick = v; } catch (e) {}
   base[pick].addTo(map); L.control.layers(base, null, { position:'topright' }).addTo(map);
-  map.on('baselayerchange', e => { try { localStorage.setItem('dongseon-basemap2', e.name); } catch (err) {} });
+  map.on('baselayerchange', e => { try { localStorage.setItem('dongseon-basemap3', e.name); } catch (err) {} });
 }
 function sheetH(){ const b = document.querySelector('.bsheet'); return b ? b.offsetHeight : 0; }
 function fitJapan(animate){ if (!HM.map) return; HM.map.invalidateSize(); HM.map.fitBounds(JP_BOUNDS, { paddingTopLeft:[16, 110], paddingBottomRight:[16, sheetH() + 16], maxZoom:7, animate:!!animate }); setTimeout(kickKo, 50); }
