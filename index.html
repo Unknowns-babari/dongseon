@@ -236,6 +236,17 @@ main.full>*{animation:none}
 .pcar .pcb{gap:2px;padding:8px 12px 10px}
 .pcar .pact{margin-top:6px}
 .pcar{align-items:stretch;flex-shrink:0}
+.ropts{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px;scroll-snap-type:x mandatory}
+.ropt{flex:0 0 82%;scroll-snap-align:start;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:3px}
+.ropt.on{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.rseq{font-size:.82em;line-height:1.5}
+.rseq i{font-style:normal;color:var(--sub);margin:0 4px}
+.rseq .nw,.nwk{font-weight:800;color:var(--pri)}
+.ropt b.up{color:var(--red)}.ropt b.down{color:#14795a}
+.lleg{display:flex;align-items:center;gap:6px;font-size:.78em;color:var(--sub);padding:2px 4px 2px 22px;position:relative;min-height:30px}
+.lleg .lline{position:absolute;left:25px;top:-4px;bottom:-4px;border-left:2px dashed var(--c);opacity:.5}
+.lleg svg{position:relative;background:var(--card);margin-left:-8px;color:var(--c)}
+.lleg a{font-weight:700;white-space:nowrap}
 .gslot{position:absolute;inset:0}
 .hslot{position:absolute;inset:0}
 #hmap{position:absolute;inset:0;background:var(--sea)}
@@ -623,21 +634,35 @@ function detours(r, d, city){
   const pick = [], cats = {}; for (const o of out){ if (o.add > 35) continue; if ((cats[PL[o.id].cat] || 0) >= 2) continue; pick.push(o); cats[PL[o.id].cat] = (cats[PL[o.id].cat] || 0) + 1; if (pick.length === 3) break; }
   return pick;
 }
+function routeOpts(p, r, d){
+  const ids = r[d] || [], used = new Set(r.flat()), out = [], cur = dayMin(ids);
+  const push = (key, title, desc, seq) => { if (!seq.length || seq.join() === ids.join() || out.some(o => o.seq.join() === seq.join())) return; out.push({ key, title, desc, seq, m:dayMin(seq) }); };
+  const base = bestOrder(ids);
+  const insBest = filt => { let b = null; cityPlaces(p.city).filter(id => !used.has(id) && filt(PL[id], id)).forEach(id => { for (let i = 0; i <= base.length; i++){ const seq = base.slice(0, i).concat([id], base.slice(i)), sc = score(seq); if (!b || sc < b.sc) b = { id, seq, sc }; } }); return b; };
+  if (ids.length >= 2){ const save = cur - dayMin(base); push('fast', '이동 최소', save > 0 ? `순서만 바꿔서 이동 ${minT(save)} 줄이기` : '저녁·야경 장소를 뒤로 보낸 순서', base); }
+  if (ids.length){
+    const f = insBest(x => x.cat === '맛집'); if (f) push('food', '맛집 넣기', `${PL[f.id].k} 추가 · 이동 +${minT(Math.max(0, dayMin(f.seq) - dayMin(base)))}`, f.seq);
+    const t = insBest(x => x.cat === '관광' && true); if (t) push('sight', '관광지 하나 더', `${PL[t.id].k} 추가 · 이동 +${minT(Math.max(0, dayMin(t.seq) - dayMin(base)))}`, t.seq);
+    if (!ids.some(id => tslot(id) === 2)){ const last = base[base.length - 1]; let n = null; cityPlaces(p.city).filter(id => !used.has(id) && /밤|야경|저녁|해 질|노을/.test(PL[id].when || '')).forEach(id => { const k = km(PL[last], PL[id]); if (!n || k < n.k) n = { id, k }; }); if (n) push('night', '저녁·야경으로 마무리', `${PL[n.id].k}에서 하루 마무리`, base.concat([n.id])); }
+    if (ids.length >= 3){ let e = null; base.forEach((id, i) => { const seq = base.slice(0, i).concat(base.slice(i + 1)), m = dayMin(seq); if (!e || m < e.m) e = { id, seq, m }; }); if (e) push('easy', '여유 있게', `${PL[e.id].k} 빼고 이동 ${minT(Math.max(0, dayMin(base) - e.m))} 줄이기`, e.seq); }
+  }
+  return out;
+}
+function prevSeq(r, d){ if (!S.rprev) return null; const o = routeOpts(pack(), r, d).find(x => x.key === S.rprev); return o ? o.seq : null; }
 function recoBox(p, r, d){
   const ids = r[d] || []; if (!ids.length && !cityPlaces(p.city).length) return '';
-  const bo = bestOrder(ids), same = bo.join() === ids.join(), cur = dayMin(ids), nb = dayMin(bo), save = cur - nb;
-  const night = ids.some(id => tslot(id) === 2) && !same && timePen(bo) < timePen(ids);
-  let html = `<div class="reco"><div class="row"><b class="grow">${S.chg ? '바뀐 동선 기준 추천 경로' : '추천 경로'}</b><span class="xs sub">${ids.length}곳 · 이동 약 ${minT(cur)}</span></div>`;
-  if (ids.length >= 2){
-    html += same ? `<p class="xs ok2">지금 순서가 이동 시간이 가장 짧은 순서예요.</p>`
-      : `<p class="xs">${bo.map(id => esc(PL[id].k)).join(' → ')}</p>
-        <p class="xs sub">${save > 0 ? `이동이 약 ${minT(save)} 줄어요` : '이동 시간은 비슷해요'}${night ? ' · 야경·저녁 명소를 뒤로 보냈어요' : ''}</p>
-        <div class="pact"><button class="mini add" data-a="reorder" data-v="${d}">추천 순서로 바꾸기</button><button class="mini ${S.rprev ? 'on' : ''}" data-a="rprev">${S.rprev ? '미리 보기 끄기' : '지도에서 미리 보기'}</button></div>`;
-  }
+  const cur = dayMin(ids), opts = routeOpts(p, r, d);
+  let html = `<div class="reco"><div class="row"><b class="grow">${S.chg ? '바뀐 동선 기준 추천 경로' : '추천 경로'}</b><span class="xs sub">지금 ${ids.length}곳 · 이동 약 ${minT(cur)}</span></div>`;
+  if (ids.length >= 2 && !opts.some(o => o.key === 'fast')) html += `<p class="xs ok2">지금 순서가 이동 시간이 가장 짧은 순서예요.</p>`;
+  if (opts.length) html += `<div class="ropts">${opts.map(o => { const diff = o.m - cur, on = S.rprev === o.key;
+    return `<div class="ropt ${on ? 'on' : ''}"><b>${esc(o.title)}</b><span class="xs sub">${esc(o.desc)}</span>
+      <p class="rseq">${o.seq.map(id => `<span class="${ids.includes(id) ? '' : 'nw'}">${esc(PL[id].k)}</span>`).join('<i>→</i>')}</p>
+      <span class="xs">${o.seq.length}곳 · 이동 약 ${minT(o.m)} <b class="${diff > 0 ? 'up' : 'down'}">${diff === 0 ? '(같음)' : diff > 0 ? `(+${minT(diff)})` : `(−${minT(-diff)})`}</b></span>
+      <div class="pact"><button class="mini ${on ? 'on' : ''}" data-a="rprev" data-v="${o.key}">${on ? '미리 보기 끄기' : '지도에서 보기'}</button><button class="mini add" data-a="ropt" data-v="${d}:${o.key}">이 경로로</button></div></div>`; }).join('')}</div>`;
   const dt = detours(r, d, p.city);
   if (dt.length) html += `<span class="xs sub" style="margin-top:4px">${ids.length ? '가는 길에 들르기 좋은 곳' : '이 날 넣기 좋은 곳'}</span>
     ${dt.map(o => { const x = PL[o.id]; return `<div class="drow"><button class="dname" data-a="sel" data-v="${o.id}"><span class="dic ${x.cat === '맛집' ? 'food' : ''}">${ico(x.cat, 14)}</span><span class="grow"><b>${esc(x.n)}</b><span class="xs sub">${ids.length ? (o.add ? `이동 +${minT(o.add)}` : '거의 같은 길') + ` · ${o.pos === 0 ? '맨 앞' : o.pos >= ids.length ? '맨 뒤' : esc(PL[ids[o.pos - 1]].k) + ' 다음'}` : esc(x.when)} · ${esc(x.feeT)}</span></span></button><button class="mini add" data-a="ins" data-v="${o.id}:${d}:${o.pos}">넣기</button></div>`; }).join('')}`;
-  return html + `<p class="xs sub">이동 시간은 가까운 역 기준 어림값이에요.</p></div>`;
+  return html + `<p class="xs sub">새로 들어가는 곳은 <span class="nwk">굵게</span> 표시했어요. 이동 시간은 가까운 역 기준 어림값이에요.</p></div>`;
 }
 
 
@@ -658,7 +683,7 @@ function editStage(){
   const where = {}; r.forEach((ids, k) => ids.forEach((id, i) => where[id] = [k, i]));
   let grid = ''; for (let x = 40; x < W; x += 40) grid += `<line x1="${x}" y1="-2000" x2="${x}" y2="${H + 2000}" stroke="var(--grid)" vector-effect="non-scaling-stroke"/>`; for (let y = 40; y < H; y += 40) grid += `<line x1="-2000" y1="${y}" x2="${W + 2000}" y2="${y}" stroke="var(--grid)" vector-effect="non-scaling-stroke"/>`;
   const lines = r.map((ids, k) => ids.length > 1 ? `<polyline points="${ids.map(id => P(PL[id].lo, PL[id].la).map(v => v.toFixed(1)).join(',')).join(' ')}" fill="none" stroke="${COLORS[k % 5]}" stroke-width="${k === d ? 4 : 2}" vector-effect="non-scaling-stroke" stroke-dasharray="${k === d ? '9 6' : '4 6'}" stroke-linecap="round" opacity="${k === d ? 1 : .35}"/>` : '').join('');
-  const bo = S.rprev ? bestOrder(r[d] || []) : null;
+  const bo = prevSeq(r, d);
   const prevLine = bo && bo.length > 1 ? `<polyline points="${bo.map(id => P(PL[id].lo, PL[id].la).map(v => v.toFixed(1)).join(',')).join(' ')}" fill="none" stroke="var(--ink)" stroke-width="3" stroke-dasharray="2 7" stroke-linecap="round" vector-effect="non-scaling-stroke" opacity=".7"/>` : '';
   const arrows = (r[d] || []).slice(0, -1).map((id, i) => { const [x1, y1] = P(PL[id].lo, PL[id].la), [x2, y2] = P(PL[r[d][i + 1]].lo, PL[r[d][i + 1]].la), mx = (x1 + x2) / 2, my = (y1 + y2) / 2, ang = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
     return `<g transform="translate(${mx.toFixed(1)},${my.toFixed(1)}) rotate(${ang.toFixed(1)})"><path d="M-6,-6 L4,0 L-6,6" fill="none" stroke="${COLORS[d % 5]}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></g>`; }).join('');
@@ -681,7 +706,7 @@ function editStage(){
       <button class="pill on" data-a="edit">완료</button></div>
     <div class="ovl f2">${['전체', '관광', '맛집'].map(c => `<button class="chip ${mf === c ? 'on' : ''}" data-a="mf" data-v="${c}">${c === '전체' ? '전체' : ico(c, 14) + ' ' + c}</button>`).join('')}${OM.ok ? `<button class="chip ${S.op !== false ? 'on' : ''}" data-a="optog">지도 인기 장소</button><button class="chip" data-a="opop" ${OP.busy ? 'disabled' : ''}>${OP.busy ? '찾는 중…' : '이 지역 다시 찾기'}</button>` : ''}</div>
     ${OM.ok && OP.msg ? `<p class="gerr">${esc(OP.msg)}</p>` : ''}
-    <div class="legend ${OM.ok ? 'gm' : ''}" style="bottom:${ph + 8}px"><span><i class="lg n"></i>내 동선</span>${S.rprev ? '<span><i class="lg p"></i>추천 순서</span>' : ''}<button class="lgb ${mf === '관광' ? 'on' : ''}" data-a="mf" data-v="${mf === '관광' ? '전체' : '관광'}" aria-pressed="${mf === '관광'}"><i class="lg t"></i>관광만</button><button class="lgb ${mf === '맛집' ? 'on' : ''}" data-a="mf" data-v="${mf === '맛집' ? '전체' : '맛집'}" aria-pressed="${mf === '맛집'}"><i class="lg f"></i>맛집만</button>${OM.ok ? `<button class="lgb ${S.op !== false ? 'on' : ''}" data-a="optog" aria-pressed="${S.op !== false}"><i class="lg o"></i>지도 인기 장소</button>` : `<span><i class="lg r"></i>역·노선(대략)</span><span id="scl" data-s="${P.s}">${nice < 1 ? nice * 1000 + 'm' : nice + 'km'} <i class="sc" style="width:${(nice / 111.32 * P.s).toFixed(0)}px"></i></span>`}</div>
+    <div class="legend ${OM.ok ? 'gm' : ''}" style="bottom:${ph + 8}px"><span><i class="lg n"></i>내 동선</span>${S.rprev ? '<span><i class="lg p"></i>추천 경로</span>' : ''}<button class="lgb ${mf === '관광' ? 'on' : ''}" data-a="mf" data-v="${mf === '관광' ? '전체' : '관광'}" aria-pressed="${mf === '관광'}"><i class="lg t"></i>관광만</button><button class="lgb ${mf === '맛집' ? 'on' : ''}" data-a="mf" data-v="${mf === '맛집' ? '전체' : '맛집'}" aria-pressed="${mf === '맛집'}"><i class="lg f"></i>맛집만</button>${OM.ok ? `<button class="lgb ${S.op !== false ? 'on' : ''}" data-a="optog" aria-pressed="${S.op !== false}"><i class="lg o"></i>지도 인기 장소</button>` : `<span><i class="lg r"></i>역·노선(대략)</span><span id="scl" data-s="${P.s}">${nice < 1 ? nice * 1000 + 'm' : nice + 'km'} <i class="sc" style="width:${(nice / 111.32 * P.s).toFixed(0)}px"></i></span>`}</div>
     <div class="epanel ${mode}" style="${mode === 'card' ? `max-height:${Math.round(H * 0.66)}px` : `height:${ph}px`}">${mode === 'day' ? dayList(p, r, d) : nearPanel(p, r, d, sel, mode, where)}</div>
   </div>`;
 }
@@ -717,7 +742,7 @@ function dayList(p, r, d){
   return `<div class="row"><h3>${d + 1}일차 동선 · ${ids.length}곳</h3>${edited(p) ? '<button class="pill" data-a="reset">원래 동선으로</button>' : ''}</div>
    <p class="xs sub">지도의 깃발(관광)·수저(맛집) 아이콘을 누르면 주변 장소 카드가 떠요. 사진·리뷰를 보고 바로 동선에 넣을 수 있어요.</p>
    ${recoBox(p, r, d)}
-   ${ids.length ? ids.map((id, i) => `<button class="lrow" data-a="sel" data-v="${id}"><b class="num" style="background:${COLORS[d % 5]}">${i + 1}</b><span class="grow"><b style="font-size:.92em">${esc(PL[id].n)}</b><span class="xs sub">${PL[id].cat} · ${esc(PL[id].feeT)}${ids[i + 1] ? (g => ' · 다음까지 ' + (g.ic === 'walk' ? '걸어서' : g.ic === 'ferry' ? '전철+페리' : g.t.includes('역 →') ? '전철' : g.t.replace(' 또는 택시', '')) + ' 약 ' + minT(g.m))(legInfo(id, ids[i + 1])) : ''}</span></span><span class="xs" style="color:var(--pri)">›</span></button>`).join('')
+   ${ids.length ? ids.map((id, i) => `${i ? (g => `<div class="lleg" style="--c:${COLORS[d % 5]}"><span class="lline"></span>${legIco(g.ic)}<span class="grow">${esc(g.t)} · <b>약 ${minT(g.m)}</b></span><a href="${legURL(ids[i - 1], id)}" target="_blank" rel="noopener">길찾기</a></div>`)(legInfo(ids[i - 1], id)) : ''}<button class="lrow" data-a="sel" data-v="${id}"><b class="num" style="background:${COLORS[d % 5]}">${i + 1}</b><span class="grow"><b style="font-size:.92em">${esc(PL[id].n)}</b><span class="xs sub">${PL[id].cat} · ${esc(PL[id].feeT)}</span></span><span class="xs" style="color:var(--pri)">›</span></button>`).join('')
      : '<p class="sub">이 날은 정해진 장소가 없어요. 지도에서 + 핀을 눌러 추가해 보세요.</p>'}
    <div class="row" style="flex-wrap:wrap">${ids.length ? `<a class="glink" href="${gdir(ids)}" target="_blank" rel="noopener">구글 지도에서 ${d + 1}일차 경로 열기</a>` : ''}<button class="pill" data-a="pl" data-v="list">${esc(p.city)} 장소 목록 보기</button></div>`;
 }
@@ -936,7 +961,7 @@ function syncOM(){
     OM.layer.clearLayers();
     r.forEach((ids, k) => { if (ids.length < 2) return; const cur = k === d;
       L.polyline(ids.map(id => [PL[id].la, PL[id].lo]), { color:COLORS[k % 5], weight:cur ? 5 : 3, opacity:cur ? .9 : .35, dashArray:cur ? '10 8' : '4 8', lineCap:'round' }).addTo(OM.layer); });
-    if (S.rprev){ const bo = bestOrder(r[d] || []); if (bo.length > 1) L.polyline(bo.map(id => [PL[id].la, PL[id].lo]), { color:'#141b2b', weight:3, opacity:.8, dashArray:'2 8', lineCap:'round' }).addTo(OM.layer); }
+    { const bo = prevSeq(r, d); if (bo && bo.length > 1) L.polyline(bo.map(id => [PL[id].la, PL[id].lo]), { color:'#141b2b', weight:3, opacity:.8, dashArray:'2 8', lineCap:'round' }).addTo(OM.layer); }
     cityPlaces(p.city).forEach(id => { const x = PL[id], w = where[id];
       if (!w && mf !== '전체' && x.cat !== mf && S.sel !== id) return;
       if (x.o && !w && S.op === false && S.sel !== id) return;
@@ -1082,7 +1107,8 @@ const A = {
   cclose:() => { S.cityOpen = false; render(); if (OM.ok && HM.map) setTimeout(() => fitJapan(true), 0); },
   sel:v => { S.sel = v || null; render(); },
   reorder:v => { const d = +v, r = route(pack()).map(x => x.slice()); r[d] = bestOrder(r[d]); setRoute(r); S.rprev = false; S.chg = false; render(); },
-  rprev:() => { S.rprev = !S.rprev; render(); },
+  rprev:v => { S.rprev = S.rprev === v ? '' : v; render(); },
+  ropt:v => { const [d, key] = v.split(':'), r = route(pack()).map(x => x.slice()), o = routeOpts(pack(), r, +d).find(x => x.key === key); if (!o) return; r[+d] = o.seq.slice(); setRoute(r); S.rprev = ''; S.chg = false; render(); },
   showreco:() => { S.sel = null; S.pl = ''; render(); },
   ins:v => { const [id, d, pos] = v.split(':'), r = route(pack()).map(x => x.slice()); r[+d].splice(+pos, 0, id); setRoute(r); S.chg = true; S.rprev = false; render(); },
   shift:v => { const [k, i, sd] = v.split(':').map(Number), r = route(pack()).map(x => x.slice()), id = r[k][i];
