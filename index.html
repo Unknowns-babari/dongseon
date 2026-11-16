@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>동선팩 (무료 지도)</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* VOICE: 차분하고 친절한 여행 앱, 큰 글씨·큰 버튼
+   IDEA: 실제 여행자 동선을 실제 좌표 위 번호 핀으로 따라가는 '동선 카드'
+   PICTURE: 날짜별 동선 지도(실제 위·경도 비율, 점선 경로, 축척)
+   COLOUR and TYPE: 흰 바탕·진남색 글자·파랑 주색·노랑 인증 배지 / Noto Sans KR
+   LAYOUT: 휴대폰 한 열, 상단 바 + 스크롤 본문 + 하단 고정 버튼/탭 */
+:root{color-scheme:light dark;--bg:light-dark(#f4f6f9,#0f1420);--card:light-dark(#fff,#182033);--ink:light-dark(#141b2b,#eef2f8);--sub:light-dark(#4b5567,#aab4c6);--line:light-dark(#e1e5ec,#2a3550);--pri:light-dark(#1f4fbf,#7ea6ff);--priInk:light-dark(#fff,#0f1420);--soft:light-dark(#eef3ff,#1d2a4a);--yel:#ffd84a;--yelInk:#3a2c00;--warn:light-dark(#fff3e2,#3a2a14);--warnLine:light-dark(#d9821a,#e7a14a);--warnInk:light-dark(#6a3a00,#ffd9a8);--map:light-dark(#e9eef5,#172036);--grid:light-dark(#d6dee9,#24304d);--red:light-dark(#b42318,#ff9b8f);--sea:light-dark(#d9e7f5,#13203a);--land:light-dark(#f6f3ea,#26314c);--coast:light-dark(#b9c4d2,#3d4b6b);--rail:light-dark(#8e99ad,#56637f)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:light-dark(#dfe4ec,#080b12);color:var(--ink);font:16px/1.55 'Noto Sans KR',system-ui,sans-serif;overflow-x:clip}
+body.big{font-size:19px}
+.app{position:relative;max-width:480px;margin:0 auto;height:100dvh;display:flex;flex-direction:column;background:var(--bg);box-shadow:0 0 0 1px var(--line);overflow:hidden}
+header{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--card);border-bottom:1px solid var(--line);min-height:62px}
+header h1{flex:1;margin:0;font-size:1.15em;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+button,select{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--pri);outline-offset:2px}
+.ib{width:44px;height:44px;border:0;background:none;display:grid;place-items:center;border-radius:10px;flex-shrink:0}
+.pill{min-height:44px;padding:0 14px;border-radius:22px;border:1px solid var(--line);background:var(--card);font-weight:700;font-size:.85em;white-space:nowrap}
+.pill.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+main{flex:1;overflow-y:auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:16px}
+h2{margin:0;font-size:1.45em;line-height:1.3;font-weight:900;text-wrap:balance}
+h3{margin:0;font-size:1.05em;font-weight:700}
+p{margin:0}.sub{color:var(--sub);font-size:.88em}.xs{font-size:.78em}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:6px 12px;border-radius:18px;border:1px solid var(--line);background:var(--card);font-size:.85em;min-height:40px}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px}
+.pack{display:flex;flex-direction:column;text-align:left;padding:0;overflow:hidden;width:100%}
+.cover{height:92px;width:100%;display:flex;align-items:flex-end;justify-content:space-between;padding:12px 16px;color:#fff}
+.cover b{font-size:1.3em;font-weight:900}.cover span{font-size:.82em}
+.pbody{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;width:100%}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.badge{display:inline-block;padding:2px 8px;border-radius:6px;background:var(--yel);color:var(--yelInk);font-size:.75em;font-weight:700}
+.tag{display:inline-block;padding:2px 8px;border-radius:6px;background:var(--soft);font-size:.75em;font-weight:700;white-space:nowrap}
+.tag.food{background:light-dark(#fde8dc,#43281a)}
+.price{font-weight:700;white-space:nowrap}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.tabs button{flex:1 0 auto;min-width:64px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--card);font-weight:700;font-size:.85em;padding:0 10px}
+.tabs button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.map{position:relative;aspect-ratio:4/3;border-radius:16px;overflow:hidden;background:var(--map);border:1px solid var(--line)}
+.map svg{position:absolute;inset:0;width:100%;height:100%}
+.pin{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:none;padding:0}
+.pin b{width:30px;height:30px;border-radius:50%;color:#fff;border:3px solid var(--card);display:grid;place-items:center;font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.pin span{padding:1px 6px;border-radius:6px;background:var(--card);font-size:11px;font-weight:700;white-space:nowrap;color:var(--ink)}
+.scale{position:absolute;left:10px;bottom:8px;font-size:11px;color:var(--sub);display:flex;flex-direction:column;gap:2px}
+.scale i{display:block;height:4px;border:2px solid var(--sub);border-top:0}
+.mapnote{position:absolute;right:8px;top:8px;font-size:11px;color:var(--sub);background:var(--card);padding:2px 6px;border-radius:6px}
+.maplinks{display:flex;gap:8px;flex-wrap:wrap}
+.maplinks a{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border-radius:12px;background:var(--soft);color:var(--pri);font-weight:700;font-size:.88em;text-decoration:none}
+.tl{display:flex;flex-direction:column}
+.st{display:flex;gap:12px}
+.rail{display:flex;flex-direction:column;align-items:center;width:32px;flex-shrink:0}
+.dot{width:32px;height:32px;border-radius:50%;background:var(--pri);color:var(--priInk);display:grid;place-items:center;font-weight:700;font-size:.85em}
+.dot.off{background:#8a93a3}.dot.new{background:#d9821a}
+.bar{width:2px;flex:1;min-height:18px;background:var(--line)}
+.sb{flex:1;display:flex;flex-direction:column;gap:4px;padding-bottom:16px}
+.stop{text-align:left;width:100%;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.stop b{font-size:1em}
+.move{font-size:.78em;color:var(--pri);font-weight:700;margin-top:2px}
+.ed{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.ed button,.ed select{min-height:40px;border-radius:10px;border:1px solid var(--line);background:var(--card);padding:0 10px;font-size:.82em;font-weight:700}
+.ed .del{color:var(--red)}
+.list{padding:16px;display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:12px;border:2px solid var(--line);background:var(--card);text-align:left;width:100%;min-height:58px}
+.opt.on{border-color:var(--pri);background:var(--soft)}
+.box{width:26px;height:26px;border-radius:7px;border:2px solid #8a93a3;display:grid;place-items:center;flex-shrink:0}
+.opt.on .box{background:var(--pri);border-color:var(--pri)}
+.grow{flex:1;display:flex;flex-direction:column;gap:2px}
+.foot{padding:12px 16px 16px;background:var(--card);border-top:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.btns{display:flex;gap:8px}
+.btn{flex:1;min-height:54px;border-radius:12px;border:0;background:var(--pri);color:var(--priInk);font-weight:700;padding:0 12px}
+.btn.ghost{background:var(--card);color:var(--ink);border:1px solid var(--ink)}
+.btn.dark{background:var(--ink);color:var(--bg)}
+nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:var(--card);border-top:1px solid var(--line)}
+nav button{height:62px;border:0;background:none;font-size:.85em;color:var(--sub);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+nav button.on{color:var(--pri);font-weight:700}
+.warn{background:var(--warn);border:2px solid var(--warnLine);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;color:var(--warnInk)}
+.alt{background:var(--card);color:var(--ink);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.done{background:var(--soft);border:2px solid var(--pri);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.ok{display:flex;flex-direction:column;align-items:center;gap:10px;padding:10px 0;text-align:center}
+.ok i{width:64px;height:64px;border-radius:50%;background:var(--pri);display:grid;place-items:center}
+textarea,input[type=text]{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit;font-size:16px;background:var(--card);color:var(--ink)}
+textarea{resize:none}
+a{color:var(--pri)}
+.note{font-size:.78em;color:var(--sub);text-align:center}
+.sheet{position:absolute;inset:0;background:var(--bg);display:flex;flex-direction:column;z-index:5}
+.pts{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:.92em}
+.srcs{display:flex;flex-direction:column;gap:4px;font-size:.8em}
+.stars{display:flex;gap:4px}
+.stars button{width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--card);font-size:1.2em;color:#b8860b}
+.stars button.on{background:#fff4cc;border-color:#e5c43a}
+.rev{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:4px}
+.rev .s{color:#b8860b;letter-spacing:1px}
+.msg{font-size:.85em;padding:10px 12px;border-radius:10px;background:var(--soft)}
+.jmap{position:relative;aspect-ratio:4/3;border-radius:18px;overflow:hidden;background:var(--sea);border:1px solid var(--line)}
+.jmap svg{position:absolute;inset:0;width:100%;height:100%}
+.cpin{position:absolute;width:44px;height:44px;transform:translate(-50%,-50%);border:0;background:none;padding:0;display:grid;place-items:center}
+.cpin i{width:16px;height:16px;border-radius:50%;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.cpin.on i{width:22px;height:22px}
+.cpin span{position:absolute;left:50%;top:50%;margin-top:-12px;white-space:nowrap;padding:3px 8px;border-radius:8px;background:var(--card);color:var(--ink);font-size:12px;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.cpin.on span{background:var(--ink);color:var(--bg)}
+.cpin small{font-weight:500;opacity:.75}
+.rec{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:8px}
+.rcards{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x mandatory}
+.rcard{flex:0 0 78%;scroll-snap-align:start;background:var(--soft);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.rcard p{font-size:.88em}
+main.full{padding:0;overflow:hidden;position:relative;display:block}
+main.full>*{animation:none}
+.stage{position:absolute;inset:0;background:var(--sea);overflow:hidden}
+.stage.edit{background:var(--map)}
+.stage>svg{position:absolute;inset:0;width:100%;height:100%}
+.pan{position:absolute;inset:0;touch-action:none;cursor:grab;overflow:hidden}
+.pan:active{cursor:grabbing}
+.pan>svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.ovl.col{flex-direction:column;align-items:stretch;pointer-events:none}
+.ovl.col>*{pointer-events:auto}
+.ovl.col .hint{align-self:flex-start;font-size:.75em;font-weight:500}
+.zoom{position:absolute;right:10px;display:flex;flex-direction:column;gap:6px;z-index:4}
+.zoom button{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:1.3em;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.ovl{position:absolute;top:10px;left:10px;right:10px;display:flex;gap:8px;align-items:center;justify-content:space-between;z-index:3}
+.hint{background:var(--card);padding:8px 14px;border-radius:20px;font-size:.85em;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.cdot{position:absolute;pointer-events:none;width:10px;height:10px;border-radius:50%;background:var(--ink);transform:translate(-50%,-50%);border:2px solid var(--card)}
+.tagpin{position:absolute;transform:translate(calc(-50% + var(--dx,0%)),calc(-100% - 10px));border:0;background:var(--card);color:var(--ink);border-radius:12px;padding:6px 10px;display:flex;flex-direction:column;align-items:center;line-height:1.2;box-shadow:0 2px 8px rgba(0,0,0,.25);min-height:44px;justify-content:center;z-index:2}
+.tagpin::after{content:'';position:absolute;left:calc(50% - var(--dx,0%));bottom:-6px;width:12px;height:12px;background:inherit;transform:translateX(-50%) rotate(45deg);border-radius:2px}
+.tagpin.down{transform:translate(calc(-50% + var(--dx,0%)),10px)}
+.tagpin.down::after{bottom:auto;top:-6px}
+.tagpin b{font-size:.92em}.tagpin span{font-size:.72em;color:var(--sub);white-space:nowrap}
+.tagpin.on{background:var(--pri);color:#fff;z-index:4}.tagpin.on span{color:#e8eeff}
+.bsheet{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:20px 20px 0 0;box-shadow:0 -6px 20px rgba(0,0,0,.18);display:flex;flex-direction:column;z-index:5;max-height:100%}
+.bsheet.full{height:78%}
+.grab{border:0;background:none;height:24px;display:grid;place-items:center;width:100%}
+.grab i{width:40px;height:5px;border-radius:3px;background:var(--line)}
+.bhead{display:flex;gap:6px;align-items:center;padding:0 12px 8px 16px}
+.carousel{display:flex;gap:10px;overflow-x:auto;padding:4px 16px 16px;scroll-snap-type:x mandatory}
+.ccard{flex:0 0 82%;scroll-snap-align:center;text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:14px;padding:0 0 12px;display:flex;flex-direction:column;gap:4px;overflow:hidden}
+.ccard>*:not(.cstrip){padding:0 12px}
+.cstrip{color:#fff;font-size:.78em;font-weight:700;padding:6px 12px;margin-bottom:4px}
+.blist{overflow-y:auto;padding:4px 16px 16px;display:flex;flex-direction:column;gap:12px}
+.daychips{display:flex;gap:6px;overflow-x:auto;flex:1}
+.daychips .chip{white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.epin{position:absolute;transform:translate(-50%,-50%);border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:1px;z-index:2;min-width:32px;min-height:32px}
+.epin b{width:30px;height:30px;border-radius:50%;color:#fff;border:3px solid var(--card);display:grid;place-items:center;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.epin span{padding:0 5px;border-radius:5px;background:var(--card);font-size:10.5px;font-weight:700;white-space:nowrap;color:var(--ink)}
+.epin.dim{opacity:.55}
+.epin.rec b{width:24px;height:24px;background:var(--card);color:#2b6fd6;border:2px solid #2b6fd6;font-size:15px}
+.epin.rec.food b{color:#c2410c;border-color:#c2410c}
+.epin.rec span{font-weight:500;color:var(--sub)}
+.epin.sel{z-index:4}.epin.sel b{outline:3px solid var(--ink);outline-offset:2px}
+.legend{position:absolute;left:10px;right:10px;display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--sub);z-index:3}
+.legend span{display:flex;align-items:center;gap:4px;background:var(--card);padding:2px 7px;border-radius:8px}
+.lg{width:10px;height:10px;border-radius:50%;display:inline-block}.lg.n{background:#1f4fbf}.lg.t{border:2px solid #2b6fd6}.lg.f{border:2px solid #c2410c}
+.sc{display:inline-block;height:4px;border:2px solid var(--sub);border-top:0}
+.ovl.f2{top:62px;justify-content:flex-start}
+.ovl.f2 .chip{display:inline-flex;align-items:center;gap:4px;box-shadow:0 1px 4px rgba(0,0,0,.12);min-height:36px}
+.sta{position:absolute;transform:translate(-5px,-50%);display:flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--sub);pointer-events:none;z-index:1;white-space:nowrap;text-shadow:0 0 3px var(--map),0 0 3px var(--map)}
+.sta i{width:10px;height:10px;border:2px solid var(--rail);background:var(--card);border-radius:3px;flex-shrink:0}
+.lg.r{width:16px;height:5px;border-radius:2px;background:var(--rail)}
+.epin.rec b{width:30px;height:30px}
+.epin span em{font-style:normal;color:#b8860b}
+.epanel.card{gap:8px}
+.pcar{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 2px 6px;margin:0 -4px}
+.pc{flex:0 0 86%;scroll-snap-align:center;border:1px solid var(--line);border-radius:14px;background:var(--bg);overflow:hidden;display:flex;flex-direction:column;cursor:pointer}
+.pc.on{border-color:var(--pri);box-shadow:0 0 0 2px var(--pri)}
+.ph{height:96px;display:flex;gap:2px;position:relative;background:var(--soft);flex-shrink:0}
+.ph img{flex:1;min-width:0;height:100%;object-fit:cover}
+.ph.none{flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#2b6fd6;font-size:.75em;font-weight:600;background:linear-gradient(135deg,light-dark(#e6efff,#1d2a4a),light-dark(#f4f8ff,#16203a))}
+.ph.none.food{color:#c2410c;background:linear-gradient(135deg,light-dark(#fde8dc,#43281a),light-dark(#fff6f0,#2f1f16))}
+.ph .more{position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.65);color:#fff;border-radius:8px;padding:1px 7px;font-size:.75em}
+.pcb{padding:9px 12px 10px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.pn{font-size:1em;line-height:1.3}
+.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rt{color:#b8860b;font-weight:700;font-size:.85em}
+.pact{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px}
+.mini{min-height:38px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);font-size:.8em;font-weight:700}
+.mini.add{background:var(--pri);color:var(--priInk);border-color:var(--pri)}
+.mini.del{color:var(--red)}
+.mini:disabled{opacity:.4}
+.plist{display:flex;flex-direction:column;gap:12px;overflow-y:auto}
+.pl{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--bg);flex-shrink:0}
+.pl.on{border-color:var(--pri)}
+.pl .ph{height:120px}
+.pname{border:0;background:none;padding:0;text-align:left;min-height:36px;font-size:1em}
+.gal .ph{height:150px;border-radius:14px;overflow:hidden}
+.rph{display:flex;gap:4px}.rph img{width:88px;height:88px;object-fit:cover;border-radius:8px}
+.phin{display:flex;gap:8px;flex-wrap:wrap}
+.thumb{position:relative}.thumb img{width:72px;height:72px;object-fit:cover;border-radius:10px;display:block}
+.thumb button{position:absolute;top:-8px;right:-8px;width:28px;height:28px;border-radius:50%;border:0;background:var(--ink);color:var(--bg);font-weight:700}
+.addph{width:72px;height:72px;border:2px dashed var(--line);border-radius:10px;display:grid;place-items:center;font-size:.8em;font-weight:700;color:var(--pri);cursor:pointer;position:relative;overflow:hidden}
+.addph input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.reco{background:var(--soft);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.ok2{color:#14795a;font-weight:700}
+.drow{display:flex;gap:8px;align-items:center}
+.dname{flex:1;display:flex;gap:8px;align-items:center;text-align:left;border:0;background:var(--card);border-radius:10px;padding:6px 8px;min-height:48px;min-width:0}
+.dname b{display:block;font-size:.88em}
+.dic{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;border:2px solid #2b6fd6;color:#2b6fd6;flex-shrink:0}
+.dic.food{border-color:#c2410c;color:#c2410c}
+.mini.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chgbar{border:0;background:var(--soft);color:var(--pri);font-weight:700;font-size:.85em;border-radius:10px;min-height:40px;text-align:left;padding:0 12px}
+.lg.p{width:16px;height:0;border-top:3px dotted var(--ink);border-radius:0}
+.gslot{position:absolute;inset:0}
+#gmap{position:absolute;inset:0;background:var(--map)}
+.omk{background:none;border:0}
+.epin.gp{position:relative;transform:translate(-50%,-50%);width:max-content;cursor:pointer}
+.epin.gpop b{border-color:#5f6368;color:#3c4043}
+.legend.gm{left:10px;right:auto;z-index:500}
+.lg.o{border:2px solid #5f6368}
+.gerr{position:absolute;top:104px;left:10px;right:10px;z-index:600;background:var(--warn);color:var(--warnInk);border-radius:10px;padding:8px 12px;font-size:.8em}
+.ovl.f2{flex-wrap:wrap}
+.stage .ovl,.stage .epanel,.stage .keybar{z-index:600}
+.leaflet-top.leaflet-right{top:104px}
+.leaflet-control-layers{font-size:14px}
+.leaflet-control-layers label{min-height:32px;display:flex;align-items:center}
+.epanel{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:20px 20px 0 0;box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:14px 16px 16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;z-index:5}
+.lrow{display:flex;gap:10px;align-items:center;text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:8px 12px;min-height:52px;width:100%}
+.num{width:28px;height:28px;border-radius:50%;color:#fff;display:grid;place-items:center;font-size:.8em;flex-shrink:0}
+.glink{font-size:.85em;font-weight:700;text-decoration:none}
+.linkbtn{align-self:flex-start;border:0;background:none;color:var(--pri);font-weight:700;font-size:.85em;min-height:40px;padding:0}
+@media (prefers-reduced-motion:no-preference){main>*{animation:up .22s ease both}@keyframes up{from{opacity:0;transform:translateY(6px)}}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header id="hd"></header>
+  <main id="mn"></main>
+  <div id="ft"></div>
+  <div id="sh"></div>
+</div>
+<script>
+{
+const YEN = 8.5; // 원/엔 어림값 (100엔≈850원, 2026년 10월 기준)
+const won = n => '₩' + Math.round(n).toLocaleString('ko-KR');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const COLORS = ['#1f4fbf','#d9821a','#14795a','#8a3fb5','#b42318'];
+
+/* 장소: 후기 요약은 아래 출처의 내용을 짧게 정리한 것 */
+const PL = {
+ senso:{ n:'센소지·나카미세 거리', k:'센소지', c:'도쿄', la:35.7148, lo:139.7967, cat:'관광', fee:null, feeT:'무료', when:'오전', pts:['가미나리몬부터 본당까지 약 250m 참배길에 가게가 90곳쯤 늘어서 있어요.','나카미세에서 산 음식은 걸으면서 먹으면 안 되고, 가게 근처에서 먹어야 해요.','절 자체는 크지 않아 30분이면 충분했다는 후기가 있어요. 돌아갈 땐 옆길로 빠지면 덜 붐벼요.'], src:[['나카미세 상점가 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/14456/'],['센소지 후기 (Trip To Japan)','https://www.triptojapan.com/ko/places/sensoji-temple/HnkVcQbyR_SrQrTEhP4vGA'],['센소지 가이드 (jeepe)','https://www.jeepe.jp/ko/articles/senso-ji-tokyo-temple-culture-1051']] },
+ culture:{ n:'아사쿠사 문화관광센터 전망대', k:'관광센터', c:'도쿄', la:35.7106, lo:139.7962, cat:'관광', fee:null, feeT:'무료', when:'센소지 전후', pts:['가미나리몬 바로 앞 관광안내소인데, 무료로 위층에 올라가 가미나리몬을 내려다볼 수 있어요.'], src:[['후기 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/review/item/11194/']] },
+ skytree:{ n:'도쿄 스카이트리', k:'스카이트리', c:'도쿄', la:35.7101, lo:139.8107, cat:'관광', fee:1800, feeT:'350m 전망대 ¥1,800부터', when:'해 질 무렵', pts:['350m 전망대는 성인 ¥1,800부터, 450m까지 가는 콤보는 ¥3,000부터예요. 날짜마다 달라요.','당일 창구·편의점에서 사면 1장당 ¥500 수수료가 붙어서 미리 예약하는 게 이득이에요.','450m 갤러리아까지 올라가길 추천한다는 후기가 있어요.'], src:[['스카이트리 티켓 2026 (Japan Travel Kit)','https://www.japan-travel-kit.com/ko/guides/attractions/tokyo-skytree-tickets'],['스카이트리 티켓 가이드 (트래블로그)','https://www.trvlogue.com/ko/tokyo-skytree-tickets-guide']] },
+ tsukiji:{ n:'츠키지 장외시장', k:'츠키지', c:'도쿄', la:35.6655, lo:139.7707, cat:'맛집', fee:null, feeT:'입장 무료 · 식사 별도', when:'아침 9시쯤', pts:['400곳 넘는 가게가 모인 시장이고, 해산물 덮밥과 스시가 대표 메뉴예요.','오후 2시쯤이면 대부분 문을 닫아요. 9시쯤 가서 간식을 먹고 11시쯤 이른 점심을 먹는 동선을 추천하는 글이 있어요.','수·일요일과 공휴일엔 쉬는 가게가 많아요. 길이 좁아서 캐리어나 큰 짐은 들고 가지 말라는 안내가 있어요.'], src:[['도쿄 시장 BEST 3 (트립스토어)','https://www.tripstore.kr/blog/%EB%8F%84%EC%BF%84-%EC%8B%9C%EC%9E%A5-%ED%88%AC%EC%96%B4-%EC%B6%94%EC%B2%9C'],['쓰키지 장외시장 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/13938/'],['쓰키지 장외 시장 이용 규칙 (LIVE JAPAN)','https://livejapan.com/ko/in-tokyo/in-pref-tokyo/in-tsukiji/spot-lj0000583']] },
+ toyosu:{ n:'도요스 시장 식당가', k:'도요스', c:'도쿄', la:35.6456, lo:139.7840, cat:'맛집', fee:null, feeT:'입장 무료 · 식사 별도', when:'아침 일찍', pts:['츠키지 장내시장이 옮겨 온 곳으로, 스시다이처럼 원래 츠키지에 있던 유명 가게가 들어와 있어요.','오전 11시부터 가장 붐벼서 아침 일찍 가는 게 철칙이라는 평이에요.'], src:[['도요스 시장 맛집 (LIVE JAPAN)','https://livejapan.com/ko/in-tokyo/in-pref-tokyo/in-odaiba/article-a0002910/']] },
+ meiji:{ n:'메이지 신궁', k:'메이지신궁', c:'도쿄', la:35.6764, lo:139.6993, cat:'관광', fee:null, feeT:'무료', when:'오전', pts:['하라주쿠역에서 1분 거리인데 숲에 둘러싸여 도시 소음이 거의 들리지 않는 곳이에요.','평일 아침엔 한적하지만, 새해 첫 사흘에는 수백만 명이 몰려요.'], src:[['메이지 신궁 가이드 (Have a Good Holiday)','https://haveagood-holiday.com/ko/articles/meiji-shrine-guide']] },
+ takeshita:{ n:'하라주쿠 다케시타 거리', k:'다케시타', c:'도쿄', la:35.6716, lo:139.7031, cat:'관광', fee:null, feeT:'무료', when:'점심 전후', pts:['하라주쿠역 바로 앞 약 350m 상점가로, 크레페 같은 길거리 디저트가 유명해요.','붐벼서 11~18시에는 차가 못 들어오는 보행자 전용 거리가 돼요. 코인로커와 무료 와이파이는 없다는 공식 안내가 있어요.'], src:[['다케시타 거리 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/12452/']] },
+ shibuya:{ n:'시부야 스카이 전망대', k:'시부야스카이', c:'도쿄', la:35.6585, lo:139.7022, cat:'관광', fee:2500, feeT:'온라인 ¥2,500부터 (시간대별 다름)', when:'일몰 회차', pts:['온라인으로 미리 사면 ¥2,500부터로 현장 창구(¥3,000)보다 싸요. 시간대에 따라 요금이 달라요.','일몰 회차는 낮, 노을, 야경을 한 번에 볼 수 있어서 가장 먼저 매진돼요. 2주 전부터 예약했다는 후기가 많아요.'], src:[['시부야 스카이 예약 2026 (Japan Travel Kit)','https://www.japan-travel-kit.com/ko/guides/attractions/shibuya-sky-tickets'],['시부야 스카이 후기 (트래블로그)','https://www.trvlogue.com/ko/shibuya-sky-tokyo-guide'],['시부야 스카이 요금 (GO TOKYO)','https://www.gotokyo.org/kr/spot/1749/index.html']] },
+ omoide:{ n:'신주쿠 오모이데요코초', k:'오모이데', c:'도쿄', la:35.6931, lo:139.6996, cat:'맛집', fee:null, feeT:'자릿세 1인 ¥300~500', when:'저녁', pts:['옛날 분위기의 좁은 골목에 꼬치구이집이 모여 있어서 분위기가 좋다는 평이 많아요.','앉으면 1인 ¥300~500의 자릿세(오토시)가 붙어요. 가게가 작고 카운터석 위주라 가성비가 아쉬웠다는 후기도 있어요.','옆자리 흡연이 불편했다는 후기가 있고, 현금을 준비하는 게 안전해요.'], src:[['오모이데요코초 가이드 (트립스토어)','https://www.tripstore.kr/blog/%EC%8B%A0%EC%A3%BC%EC%BF%A0-%EC%98%A4%EB%AA%A8%EC%9D%B4%EB%8D%B0%EC%9A%94%EC%BD%94%EC%B4%88-%EA%BC%AC%EC%B9%98%EA%B5%AC%EC%9D%B4-%EB%A1%9C%EC%BB%AC-%EB%A7%9B%EC%A7%91'],['오모이데 요코초 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/11194/'],['후기 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/review/item/5274/']] },
+
+ dotonbori:{ n:'도톤보리·글리코 간판', k:'도톤보리', c:'오사카', la:34.6687, lo:135.5013, cat:'관광', fee:2000, feeName:'톤보리 리버크루즈', feeT:'거리 무료 · 리버크루즈 ¥2,000', when:'저녁', pts:['에비스바시 다리에서 보는 글리코 간판이 오사카를 대표하는 풍경이에요.','저녁에는 야경을 보려는 사람들로 다리 위가 붐벼요. 오전부터 이른 오후까지는 한산한 편이에요.','톤보리 리버크루즈는 성인 ¥2,000, 약 20분이에요. 네온이 켜지는 밤에 타야 제맛이에요.'], src:[['도톤보리 여행 (tali)','https://baby.tali.kr/osaka-dotonbori-travel'],['도톤보리 리버크루즈 2026 (Japan Travel Kit)','https://www.japan-travel-kit.com/ko/guides/attractions/dotonbori-river-cruise']] },
+ ebisu:{ n:'에비스 타워 대관람차', k:'관람차', c:'오사카', la:34.6694, lo:135.5030, cat:'관광', fee:null, feeT:'현장 결제', when:'저녁', pts:['도톤보리 돈키호테 건물의 노란 대관람차로, 한 바퀴에 약 15분, 꼭대기 높이는 약 77m예요.'], src:[['도톤보리 관광 가이드 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/article/item/20444/']] },
+ kuromon:{ n:'구로몬시장', k:'구로몬', c:'오사카', la:34.6654, lo:135.5066, cat:'맛집', fee:null, feeT:'입장 무료 · 식사 별도', when:'점심', pts:['다른 곳보다 비싸고 관광객 상대 느낌이 있어서, 가볍게 구경하고 사진 찍는 정도면 충분하다는 후기가 있어요.'], src:[['구로몬 시장 후기 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/review/item/3981/']] },
+ castle:{ n:'오사카성 천수각', k:'오사카성', c:'오사카', la:34.6873, lo:135.5262, cat:'관광', fee:1200, feeT:'성인 ¥1,200', when:'오전', pts:['천수각 입장료는 성인 ¥1,200, 중학생 이하는 무료예요.','8층 전망대에서 오사카 시내가 내려다보여요. 지상 엘리베이터 입구가 따로 있어요.','시간대에 따라 매표소 줄이 길어서 웹 티켓을 미리 사 두면 수월해요.'], src:[['오사카성 안내도·요금 (오사카성 공식)','https://osakacastle.net/pdf/access/bf_map_jp.pdf'],['오사카성 천수각 입장료 2026 (트래블로그)','https://www.trvlogue.com/ja/osaka-castle-tickets-guide'],['오사카성 공원 해설 (tabiiro)','https://tabiiro.jp/likes/articles/view/2224/']] },
+ sky:{ n:'우메다 스카이빌딩 공중정원', k:'공중정원', c:'오사카', la:34.7053, lo:135.4896, cat:'관광', fee:2000, feeT:'성인 ¥2,000', when:'해 질 무렵', pts:['성인 ¥2,000이고, 9:30~22:30에 운영해요(마지막 입장 22:00).','해 질 무렵 실내에서 노을을 보고, 옥상에 나가 야경을 보는 코스가 부모님 반응이 좋았다는 후기가 있어요.','낙뢰나 강풍이 있으면 옥상이 예고 없이 닫힐 수 있어요.'], src:[['공중정원 입장료 (travelcontentsapp)','https://travelcontentsapp.com/kr/guide/osaka/b593/'],['오사카 부모님 동반 코스 (트립스토어)','https://www.tripstore.kr/blog/%EC%98%A4%EC%82%AC%EC%B9%B4-%EC%97%AC%EB%A6%84-%EC%97%AC%ED%96%89-%EC%BD%94%EC%8A%A4-%EB%B6%80%EB%AA%A8%EB%8B%98-%EB%8F%99%EB%B0%98-3%EB%B0%95-4%EC%9D%BC-%ED%9E%90%EB%A7%81'],['운영 안내 (travelcontentsapp)','https://travelcontentsapp.com/kr/attraction/osaka/umeda-sky-building/']] },
+ kushi:{ n:'신세카이 쿠시카츠 다루마 총본점', k:'쿠시카츠', c:'오사카', la:34.6519, lo:135.5063, cat:'맛집', fee:null, feeT:'식사 별도', when:'점심·저녁', pts:['1929년에 문을 연 오래된 가게로, 신세카이 쿠시카츠의 대표 가게예요.','공용 소스에 두 번 찍으면 안 돼요. 양배추도 두 번 찍지 말고 새것을 쓰세요.','겉은 바삭한데 많이 기름지지 않았다는 후기가 있어요.'], src:[['오사카 쿠시카츠 먹는 법 (jeepe)','https://www.jeepe.jp/ko/articles/osaka-kushikatsu-1426'],['소스 두 번 찍기 금지 (LIVE JAPAN)','https://livejapan.com/ko/in-kansai/in-pref-osaka/in-umeda_osaka-station_kitashinchi/article-a2000100/'],['다루마 총본점 후기 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/review/item/12169/']] },
+
+ kiyomizu:{ n:'기요미즈데라', k:'기요미즈', c:'교토', la:34.9949, lo:135.7850, cat:'관광', fee:500, feeT:'성인 ¥500', when:'아침 또는 오후 4시 이후', pts:['성인 입장료는 ¥500이고, 현금을 준비하는 게 편해요.','경치와 분위기는 뛰어나지만 관광객이 정말 많은 게 가장 큰 단점이라는 평이에요.','오르막길에 사람까지 많아서 생각보다 체력 소모가 컸다는 후기가 있어요. 아침 일찍 가길 권해요.'], src:[['기요미즈데라 입장료 (트립스토어)','https://www.tripstore.kr/blog/%EA%B8%B0%EC%9A%94%EB%AF%B8%EC%A6%88%EB%8D%B0%EB%9D%BC-%EC%9E%85%EC%9E%A5%EB%A3%8C-%EB%B6%80%EB%AA%A8%EB%8B%98-%EC%98%A4%ED%9B%84-%EB%85%B8%EC%9D%84-%EC%BD%94%EC%8A%A4'],['기요미즈데라 후기 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/review/item/10608/'],['기요미즈데라 후기 (Trip To Japan)','https://www.triptojapan.com/ko/places/kiyomizu-dera-temple/UtwRoFGTSNWWyWjDIIPntg']] },
+ nishiki:{ n:'니시키 시장', k:'니시키', c:'교토', la:35.0050, lo:135.7649, cat:'맛집', fee:null, feeT:'입장 무료 · 먹거리 별도', when:'오전 10~11시', pts:['약 390m 아케이드에 가게가 130곳쯤 모여 있어서 교토의 부엌이라고 불려요.','걸으면서 먹으면 안 돼요. 산 가게 앞이나 먹는 자리에서 먹고 이동하세요.','오전 10~11시가 여유롭고, 오후 2시가 넘으면 붐벼요. 잔돈을 넉넉히 챙기세요.'], src:[['니시키 시장 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/11922/'],['니시키 시장 시간대별 팁 (트립스토어)','https://www.tripstore.kr/blog/%EA%B5%90%ED%86%A0-%EB%8B%88%EC%8B%9C%ED%82%A4-%EC%8B%9C%EC%9E%A5-%EC%8B%9C%EA%B0%84%EB%8C%80%EB%B3%84-%EA%B3%B5%EB%9E%B5-%ED%95%84%EC%88%98-%EB%A8%B9%EA%B1%B0%EB%A6%AC']] },
+ kinkaku:{ n:'금각사', k:'금각사', c:'교토', la:35.0394, lo:135.7292, cat:'관광', fee:500, feeT:'성인 ¥500 (현금만)', when:'오전', pts:['성인 입장료는 ¥500이고 현금만 받아요.','표 대신 부적 모양의 종이를 줘서 그 자체로 기념품이 된다는 평이에요.','교토역에서 205번 버스로 갈 수 있지만, 버스가 붐벼서 3명 이상이면 택시를 권해요.'], src:[['금각사 입장료·가족 경비 (트립스토어)','https://www.tripstore.kr/blog/%EA%B8%88%EA%B0%81%EC%82%AC-%EC%9E%85%EC%9E%A5%EB%A3%8C-%EB%B6%80%EB%AA%A8%EB%8B%98-%EA%B0%80%EC%A1%B1-%EC%97%AC%ED%96%89-%EA%B2%BD%EB%B9%84']] },
+ bamboo:{ n:'아라시야마 대나무숲', k:'대나무숲', c:'교토', la:35.0170, lo:135.6713, cat:'관광', fee:null, feeT:'무료', when:'아침 7~8시', pts:['대나무숲 산책은 무료이고 길이 평탄해요.','오후가 되면 매우 붐벼서 아침 7~8시에 가길 권하는 글이 많아요.','숲길만 걸으면 15~30분이면 충분해요.'], src:[['대나무숲 가이드 (jeepe)','https://www.jeepe.jp/ko/articles/arashiyama-bamboo-grove-kyoto-guide-1043'],['대나무숲 소개 (ExcursionMania)','https://www.excursionmania.com/ko/ttd/4990/arashiyama-bamboo-forest-blg-4990']] },
+ togetsu:{ n:'도게츠교', k:'도게츠교', c:'교토', la:35.0129, lo:135.6777, cat:'관광', fee:null, feeT:'무료', when:'아침', pts:['가쓰라강을 가로지르는 약 155m 다리로, 봄 벚꽃 명소예요.','봄과 가을에는 모두 붐벼서 아침 일찍 가는 게 좋아요.'], src:[['아라시야마 가이드 (Have a Good Holiday)','https://haveagood-holiday.com/ko/articles/arashiyama-bamboo-grove-guide']] },
+ fushimi:{ n:'후시미 이나리 신사', k:'후시미이나리', c:'교토', la:34.9671, lo:135.7727, cat:'관광', fee:null, feeT:'무료 · 24시간', when:'오전 8시 이전', pts:['입장은 무료이고, 24시간 언제든 들어갈 수 있어요.','센본도리이만 왕복하면 30~40분, 정상까지 돌면 약 2시간 걸려요.','낮에는 도리이 길이 막혀요. 오전 8시 이전에 가길 권해요.'], src:[['후시미 이나리 가이드 (jeepe)','https://www.jeepe.jp/ko/articles/kyoto-fushimi-inari-shrine-guide-1035'],['후시미이나리 후기 (트래블로그)','https://www.trvlogue.com/ko/fushimi-inari-kyoto-guide']] },
+
+ ncastle:{ n:'나고야성·혼마루 어전', k:'나고야성', c:'나고야', la:35.1856, lo:136.8999, cat:'관광', fee:1000, feeT:'성인 ¥1,000 (2026.10~)', when:'오전', pts:['천수각 안에는 들어갈 수 없어요. 복원된 혼마루 어전의 금박 장식이 하이라이트예요.','어전은 신발을 벗고 들어가요. 나무 바닥이 미끄러워서 두꺼운 양말을 권해요.','성인 입장료가 2026년 10월부터 ¥500에서 ¥1,000으로 올랐어요.'], src:[['나고야성 반나절 코스 (트립스토어)','https://www.tripstore.kr/blog/%EB%82%98%EA%B3%A0%EC%95%BC-%EC%84%B1-%ED%95%B5%EC%8B%AC-%EA%B4%80%EB%9E%8C-%ED%8F%AC%EC%9D%B8%ED%8A%B8-%EB%B0%98%EB%82%98%EC%A0%88-%EC%99%84%EB%B2%BD-%EC%BD%94%EC%8A%A4'],['나고야성 입장료 (FUN! JAPAN)','https://www.fun-japan.jp/ko/articles/14583'],['나고야성 (Aichi Now)','https://www.aichinow.pref.aichi.jp/en/spots/detail/17/']] },
+ osu:{ n:'오스칸논·오스 상점가', k:'오스', c:'나고야', la:35.1593, lo:136.8989, cat:'관광', fee:null, feeT:'무료', when:'오후', pts:['오스칸논 문 앞에 가게 약 1,200곳이 모인 나고야 최대 상점가예요.','아케이드라 비 와도 괜찮아요. 오후를 넉넉히 잡고 천천히 둘러보라는 후기가 있어요.','전자상가와 서브컬처 가게도 많아요.'], src:[['오스 상점가 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/11734/'],['오스 상점가 후기 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/review/item/12771/']] },
+ compal:{ n:'콘파루 오스 본점', k:'콘파루', c:'나고야', la:35.1610, lo:136.9040, cat:'맛집', fee:null, feeT:'식사 별도', when:'아침·간식', pts:['나고야 3대 킷사텐(찻집)으로 꼽히는 곳으로, 에비 후라이산도(¥980)와 오구라토스트(¥520)가 유명해요.'], src:[['나고야 숨은 명소 (트래블로그)','https://www.trvlogue.com/ko/nagoya-hidden-gems-2026']] },
+ yabaton:{ n:'야바톤 야바초 본점', k:'야바톤', c:'나고야', la:35.1627, lo:136.9065, cat:'맛집', fee:null, feeT:'식사 별도', when:'저녁', pts:['1947년에 문을 연 나고야 명물 미소카츠 가게예요.','된장 소스가 짤 줄 알았는데 달고 부드러워서 밥과 잘 맞았다는 후기가 있어요.','점심에 붐비지만, 홈페이지에서 매장별 대기 시간을 실시간으로 볼 수 있어요.'], src:[['야바톤 야바초 본점 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/11886/'],['야바톤 후기 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/review/item/12556/']] },
+ horai:{ n:'아츠타 호라이켄 본점 (아츠타 신궁 앞)', k:'호라이켄', c:'나고야', la:35.1257, lo:136.9080, cat:'맛집', fee:null, feeT:'식사 별도', when:'점심 일찍', pts:['1873년 아츠타 신궁 앞에서 시작한 히츠마부시 원조 가게예요.','장어를 그대로 먹고, 고명을 얹어 먹고, 마지막엔 국물을 부어 먹는 식으로 세 번에 나눠 먹어요.','어느 지점이든 웨이팅이 있다는 후기가 많아요. 식사 시간을 피하면 덜 기다려요.'], src:[['아쓰타 호라이켄 본점 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/11887/'],['호라이켄 후기 (polle)','https://polle.com/place/3yLBvS/%E3%81%82%E3%81%A4%E3%81%9F%E8%93%AC%E8%8E%B1%E8%BB%92']] },
+
+ canal:{ n:'캐널시티 하카타', k:'캐널시티', c:'후쿠오카', la:33.5897, lo:130.4111, cat:'관광', fee:null, feeT:'무료', when:'오후~저녁', pts:['운하를 따라 지은 복합 쇼핑몰이라 구경만 해도 즐겁다는 평이 많아요.','분수쇼는 볼 만하다는 후기와 큰 감흥은 없었다는 후기가 갈려요.','5층에 라멘 스타디움이 있고, 나카스 포장마차까지 걸어갈 수 있어요.'], src:[['캐널시티 하카타 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/13873/'],['캐널시티 후기 (Trip To Japan)','https://www.triptojapan.com/ko/places/canal-city-hakata/DxwOXIF4TsyHC88OUn0hEg']] },
+ yatai:{ n:'나카스 포장마차(야타이)', k:'야타이', c:'후쿠오카', la:33.5925, lo:130.4060, cat:'맛집', fee:null, feeT:'식사 별도 · 현금', when:'저녁', pts:['나카스 강변을 따라 포장마차가 늘어서 있고, 진한 하카타 라멘이 대표 메뉴예요.','현금이 꼭 필요해요. 관광객은 나카스로 몰리고, 현지인은 나가하마 쪽을 더 좋아한다는 글도 있어요.'], src:[['나카스 야타이·크루즈 (트립스토어)','https://www.tripstore.kr/blog/%ED%9B%84%EC%BF%A0%EC%98%A4%EC%B9%B4-%EB%82%98%EC%B9%B4%EC%8A%A4-%EC%97%AC%ED%96%89-%ED%8F%AC%EC%9E%A5%EB%A7%88%EC%B0%A8-%ED%81%AC%EB%A3%A8%EC%A6%88'],['후쿠오카 쇼핑·문화 (Cities Insider)','https://citiesinsider.com/country/japan/fukuoka/shopping-%26-culture/ko']] },
+ ncruise:{ n:'나카스 리버 크루즈', k:'크루즈', c:'후쿠오카', la:33.5930, lo:130.4045, cat:'관광', fee:null, feeT:'현장 결제', when:'밤', pts:['나카스 강을 가로지르며 하카타 야경을 보는 30분짜리 크루즈예요.'], src:[['나카스 야타이·크루즈 (트립스토어)','https://www.tripstore.kr/blog/%ED%9B%84%EC%BF%A0%EC%98%A4%EC%B9%B4-%EB%82%98%EC%B9%B4%EC%8A%A4-%EC%97%AC%ED%96%89-%ED%8F%AC%EC%9E%A5%EB%A7%88%EC%B0%A8-%ED%81%AC%EB%A3%A8%EC%A6%88']] },
+ dazaifu:{ n:'다자이후 텐만구', k:'다자이후', c:'후쿠오카', la:33.5215, lo:130.5349, cat:'관광', fee:null, feeT:'무료', when:'오전', pts:['텐진에서 니시테츠 전철을 타고 후츠카이치에서 한 번 갈아타면 약 30분, 편도 ¥480이에요.','본전은 2026년 말까지 보수 중이라 지붕 위에 숲이 있는 임시 본전을 보게 돼요.'], src:[['텐진역에서 다자이후 가는 법 (트립스토어)','https://www.tripstore.kr/blog/%ED%85%90%EC%A7%84%EC%97%AD%EC%97%90%EC%84%9C-%EB%8B%A4%EC%9E%90%EC%9D%B4%ED%9B%84-%EA%B0%80%EB%8A%94%EB%B2%95-%ED%99%98%EC%8A%B9-%EA%BF%80%ED%8C%81-%EC%B9%B4%EB%A7%88%EB%8F%84-%EC%8B%A0%EC%82%AC'],['후쿠오카 여가 가이드 (Cities Insider)','https://citiesinsider.com/country/japan/fukuoka/recreation/ko']] },
+ fktower:{ n:'후쿠오카타워·모모치 해변', k:'후쿠오카타워', c:'후쿠오카', la:33.5933, lo:130.3515, cat:'관광', fee:1000, feeT:'성인 ¥1,000', when:'해 질 무렵', pts:['전망대 입장료는 성인 ¥1,000이에요.','오후에 모모치 해변을 걷다가 해 질 무렵 타워에 올라가면 노을과 야경을 한 번에 볼 수 있어요.'], src:[['후쿠오카타워·모모치 해변 (트래블로그)','https://www.trvlogue.com/ko/fukuoka-tower-momochi-beach']] },
+ ichiran:{ n:'이치란 본사 총본점', k:'이치란', c:'후쿠오카', la:33.5926, lo:130.4068, cat:'맛집', fee:null, feeT:'돈코츠 라멘 ¥980부터', when:'언제든 (24시간)', pts:['이치란 본사 빌딩에 있는 총본점이고, 메뉴는 돈코츠 라멘 하나예요. 24시간 문을 열어요.','칸막이로 나뉜 1인 좌석에서 라멘에만 집중할 수 있는 게 독특하다는 평이 많아요.','조미료 맛이 강하고, 옵션을 더하면 ¥1,000이 훌쩍 넘는다는 아쉬운 후기도 있어요.'], src:[['이치란 본사 총본점 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/14462/'],['이치란 본사 총본점 (Crossroad Fukuoka)','https://www.crossroadfukuoka.jp/kr/inbound-shop/15138'],['총본점 후기 (polle)','https://polle.com/marious/posts/2569']] },
+
+ ameyoko:{ n:'우에노 아메요코 시장', k:'아메요코', c:'도쿄', la:35.7101, lo:139.7745, cat:'맛집', fee:null, feeT:'입장 무료 · 먹거리 별도', when:'정오 또는 오후 5~7시', pts:['우에노역과 오카치마치역 사이 약 500m 거리에 가게가 400곳 넘게 모여 있어요.','시장 분위기를 즐기며 쇼핑하다 보면 오후가 금방 지나간다는 후기가 있어요.','노점과 작은 식당은 현금만 받는 곳이 많아요. 정오나 오후 5~7시가 구경하기 좋아요.'], src:[['아메요코 상점가 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/11018/'],['우에노 쇼핑 BEST 5 (트립스토어)','https://www.tripstore.kr/blog/%EB%8F%84%EC%BF%84-%EC%9A%B0%EC%97%90%EB%85%B8-%EC%87%BC%ED%95%91-%EA%B0%80%EC%84%B1%EB%B9%84-%EC%BD%94%EC%8A%A4']] },
+ tokyotower:{ n:'도쿄타워', k:'도쿄타워', c:'도쿄', la:35.6586, lo:139.7454, cat:'관광', fee:1500, feeT:'메인 데크 성인 ¥1,500', when:'오전 9~10시 또는 야경', pts:['1958년에 문을 연 높이 333m 타워로, 도쿄 시내가 한눈에 내려다보여요.','메인 데크(150m)는 성인 ¥1,500이에요. 가족이라면 붐비는 일몰 대신 오전 9~10시를 권하는 글이 있어요.'], src:[['도쿄타워 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/10541/'],['도쿄타워 전망대 가격 (트립스토어)','https://www.tripstore.kr/blog/%EB%8F%84%EC%BF%84%ED%83%80%EC%9B%8C-%EC%A0%84%EB%A7%9D%EB%8C%80-%EA%B0%80%EA%B2%A9-%EA%B0%80%EC%A1%B1-%EB%8F%99%EB%B0%98-%EC%98%A4%EC%A0%84-%EC%82%B0%EC%B1%85']] },
+ harukas:{ n:'아베노 하루카스 300 전망대', k:'하루카스', c:'오사카', la:34.6463, lo:135.5133, cat:'관광', fee:null, feeT:'요금 현장·온라인 확인', when:'해 질 무렵', pts:['아베노 하루카스 58~60층에 있는, 오사카에서 가장 높은 전망대예요.','난바에서 미도스지선으로 덴노지역까지 환승 없이 약 10분 걸려요.','에비스초역에서 내려 신세카이 거리를 구경하며 20분쯤 걸어가는 코스도 많이 가요.'], src:[['하루카스 300 가이드 (Enjoy Osaka Kyoto Kobe)','https://enjoy-osaka-kyoto-kobe.com/ko/article/a/harukas-300-observatory/'],['하루카스 300 총정리 (트립닷컴 블로그)','https://kr.trip.com/blog/harukas300/']] },
+ usj:{ n:'유니버설 스튜디오 재팬', k:'USJ', c:'오사카', la:34.6654, lo:135.4323, cat:'관광', fee:null, feeT:'스튜디오 패스 날짜별 요금', when:'하루 종일', pts:['2026년은 개장 25주년이라 붐벼서, 인기 놀이기구 대기가 180~240분까지 갈 수 있어요.','슈퍼 닌텐도 월드는 붐비는 날 정리권이 필요하고, 2026년부터는 공식 앱에서만 받을 수 있어요.','대기 시간을 줄이려면 익스프레스 패스를 같이 사라는 조언이 많아요.'], src:[['USJ 티켓·익스프레스 패스 2026 (Japan Travel Kit)','https://www.japan-travel-kit.com/ko/guides/attractions/usj-tickets-express-pass'],['USJ 완전 가이드 2026 (happyell)','https://happyell.co.jp/ko/usjstrategy/']] },
+ hanami:{ n:'기온 하나미코지', k:'하나미코지', c:'교토', la:35.0026, lo:135.7752, cat:'관광', fee:null, feeT:'무료', when:'오후~저녁', pts:['기온 한가운데를 남북으로 가로지르는 거리로, 안쪽으로 들어갈수록 조용해져요.','주변 사유지는 촬영 금지예요. 게이코·마이코를 따라가거나 허락 없이 찍으면 안 돼요.'], src:[['하나미코지도리 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/12624/'],['교토 방문 지침 (교토시 관광협회)','https://kyoto.travel/ko/news/sightseeing-guidelines/']] },
+ ginkaku:{ n:'은각사', k:'은각사', c:'교토', la:35.0270, lo:135.7982, cat:'관광', fee:500, feeT:'성인 ¥500', when:'오전', pts:['성인 입장료는 ¥500이에요.','금각사처럼 화려하진 않지만, 모래 정원이 또 다른 멋을 준다는 평이에요.','정원을 한 바퀴 도는 데 45분~1시간쯤 걸려요.'], src:[['은각사·철학의 길 코스 (트립스토어)','https://www.tripstore.kr/blog/%EC%9D%80%EA%B0%81%EC%82%AC-%EA%B5%90%ED%86%A0-%EC%97%AC%ED%96%89-%EC%BD%94%EC%8A%A4'],['은각사 후기 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/review/item/4984/'],['은각사 (Trip To Japan)','https://www.triptojapan.com/ko/places/ginkakuji-temple-kyoto/LmQ2UmJJRk6zl6fhfjxkUQ']] },
+ tetsu:{ n:'철학의 길', k:'철학의길', c:'교토', la:35.0230, lo:135.7945, cat:'관광', fee:null, feeT:'무료', when:'오후', pts:['은각사에서 난젠지 쪽으로 이어지는 약 2km 운하 산책길이에요.','쉬지 않고 걸으면 30분이지만, 카페와 절에 들르면 1시간 넘게 걸려요.','벚꽃 철에는 붐비지만 해가 지면 조용해져요.'], src:[['철학자의 길 (Trip To Japan)','https://www.triptojapan.com/ko/places/philosopher-s-path/eWWNEucwRpKKxm95rpU26g'],['철학의 길 (JAPAN.TRAVEL)','https://www.japan.travel/ko/spot/1162/']] },
+ toyota:{ n:'도요타 산업기술기념관', k:'도요타', c:'나고야', la:35.1824, lo:136.8778, cat:'관광', fee:1000, feeT:'성인 ¥1,000 · 월요일 휴관', when:'오전', pts:['섬유기계관과 자동차관으로 나뉜 산업 박물관이에요. 성인 ¥1,000이고 월요일엔 쉬어요.','직접 작동하는 전시가 많아 ¥1,000 값을 한다는 후기가 있지만, 한글 안내가 거의 없다는 아쉬움도 있어요.','자세히 보려면 2시간쯤 걸려요.'], src:[['도요타 산업기술 기념관 (나고야 관광정보)','https://www.nagoya-info.jp/ko/spot/detail/15/'],['도요타 산업기술 기념관 후기 (Trip To Japan)','https://www.triptojapan.com/ko/places/toyota-commemorative-museum-of-industry-and-technology/AgXgn_ykRteehtxTi_FSgg']] },
+ misonikomi:{ n:'야마모토야 소혼케 (미소니코미 우동)', k:'미소니코미', c:'나고야', la:35.1650, lo:136.9055, cat:'맛집', fee:null, feeT:'식사 별도', when:'점심', pts:['콩된장 국물에 면을 넣고 끓이는 나고야 명물 미소니코미 우동의 노포예요.','뚝배기에서 보글보글 끓는 채로 나오고, 짭짤하지만 너무 짜지 않다는 후기가 있어요.'], src:[['야마모토야 소혼케 후기 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/review/item/12556/']] },
+ kcastle:{ n:'구마모토성', k:'구마모토성', c:'구마모토', la:32.8061, lo:130.7058, cat:'관광', fee:null, feeT:'입장료 현장 확인', when:'오전', pts:['일본 3대 명성 중 하나로, 2016년 지진 뒤 오랜 복구를 거쳐 원래 모습을 되찾았어요.','천수각 꼭대기 6층 전망대에서 시내가 보이고, 운이 좋으면 아소산도 보인다는 후기가 있어요.','꼼꼼히 보면 1시간 20분 넘게 걸려요. 역사에 관심이 없다면 내부 관람은 건너뛰어도 된다는 의견도 있어요.'], src:[['구마모토성 후기 (Trip To Japan)','https://www.triptojapan.com/ko/places/kumamoto-castle/PZYBOtOxT8OmODr0QlSC6A'],['구마모토 후기 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/review/item/13106/']] },
+ josaien:{ n:'사쿠라노바바 조사이엔', k:'조사이엔', c:'구마모토', la:32.8040, lo:130.7028, cat:'맛집', fee:null, feeT:'입장 무료 · 식사 별도', when:'점심', pts:['구마모토성 아래 옛 성하마을을 재현한 곳으로, 향토 요리 가게가 20곳 넘게 모여 있어요.','말고기 회(바사시)와 겨자 연근 튀김(가라시렌콘)이 대표 명물이에요.','규모는 크지 않지만 성을 본 뒤 먹고 쉬어 가기 좋다는 후기가 있어요.'], src:[['사쿠라노바바 조사이엔 (일본 관광청 다국어 해설)','https://www.mlit.go.jp/tagengo-db/common/001773678.pdf'],['구마모토 후기 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/review/item/13106/']] },
+ suizenji:{ n:'스이젠지 조주엔', k:'스이젠지', c:'구마모토', la:32.7926, lo:130.7350, cat:'관광', fee:500, feeT:'성인 ¥500', when:'오전', pts:['성인 입장료는 2026년 4월부터 ¥500이에요.','아소산 샘물로 만든 연못을 도는 정원이라 한 바퀴 돌면 마음이 차분해진다는 후기가 많아요.','생각보다 작아서 금방 다 본다는 아쉬운 후기도 있어요.'], src:[['스이젠지 조주엔 입장료·후기 (오박사투어)','https://www.okinawaobaksa.com/info/?p=7454'],['스이젠지 조주엔 후기 (Trip To Japan)','https://www.triptojapan.com/ko/places/suizenji-jojuen/ERmypOrSR-GdfdUM1TdfYA']] },
+ kokutei:{ n:'구마모토 라멘 고쿠테이 본점', k:'고쿠테이', c:'구마모토', la:32.7915, lo:130.6905, cat:'맛집', fee:null, feeT:'식사 별도', when:'점심·저녁', pts:['1957년에 문을 연 구마모토 라멘 명점으로, 돈코츠 국물에 흑마늘 기름을 더한 게 특징이에요.','생달걀 노른자 2개가 올라가는 달걀 라멘이 대표 메뉴예요.','국물이 진하지만 느끼하지 않다는 후기가 있어요. 구마모토역에서 걸어서 5분이에요.'], src:[['고쿠테이 본점 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/14168/'],['고쿠테이 후기 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/review/item/13141/']] },
+ basashi:{ n:'스가노야 긴자도리점 (말고기 요리)', k:'바사시', c:'구마모토', la:32.8015, lo:130.7080, cat:'맛집', fee:null, feeT:'식사 별도', when:'저녁', pts:['아소의 자사 목장에서 키운 말고기를 쓰는 말고기 요리 전문점이에요.','바사시는 살코기, 마블링 부위 등 부위마다 맛이 달라서 모둠으로 비교해 보길 권해요.'], src:[['구마모토 인기 음식점 21선 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/article/item/20939/'],['바사시 먹는 법 (jeepe)','https://www.jeepe.jp/ko/articles/kumamoto-basashi-1444']] },
+ dogo:{ n:'도고온천 본관', k:'도고온천', c:'마쓰야마', la:33.8520, lo:132.7863, cat:'관광', fee:700, feeT:'욕장 ¥700', when:'저녁', pts:['욕장만 이용하면 ¥700이고, 수건은 유료라 챙겨 가는 게 좋아요.','1894년에 지은 건물로, 공중목욕탕으로는 처음 국가 중요문화재가 됐어요.'], src:[['도고온천 후기 (트래블로그)','https://www.trvlogue.com/ko/dogo-onsen-matsuyama-guide'],['도고 온천 본관 (시코쿠 88경)','https://www.skr.mlit.go.jp/kikaku/88-kei/scenery/pdf/88-kei_54(kr).pdf']] },
+ mcastle:{ n:'마쓰야마성', k:'마쓰야마성', c:'마쓰야마', la:33.8457, lo:132.7656, cat:'관광', fee:520, feeName:'마쓰야마성 로프웨이 왕복', feeT:'로프웨이 왕복 ¥520', when:'오전', pts:['로프웨이·리프트 왕복은 성인 ¥520이고, 로프웨이는 3분 걸려요.','천수각까지 보면 2~3시간쯤 걸려요. 성 아래에서 먹은 귤 아이스크림이 맛있었다는 후기가 많아요.','리프트를 탈 땐 소지품을 꼭 잘 잡으라는 조언이 있어요.'], src:[['마쓰야마성 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/11345/'],['마쓰야마성 가이드 (jeepe)','https://www.jeepe.jp/ko/articles/matsuyama-castle-ehime-guide-1289'],['마쓰야마성 후기 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/review/item/10960/']] },
+ taimeshi:{ n:'도미밥 아키요시 도고점', k:'도미밥', c:'마쓰야마', la:33.8500, lo:132.7845, cat:'맛집', fee:null, feeT:'도미솥밥 ¥2,350', when:'점심', pts:['에히메 도미밥은 통째로 지은 마쓰야마식 솥밥과 회에 양념장을 곁들이는 우와지마식이 있어서 비교해 먹는 재미가 있어요.','아키요시의 도미솥밥은 ¥2,350이고, 수요일에 쉬어요.','도미밥 가게는 인기가 많아 오픈 시간에 맞춰 가길 권해요.'], src:[['에히메 도미밥 (jeepe)','https://www.jeepe.jp/ko/articles/tai-meshi-ehime-1437'],['아키요시 후기 (트래블로그)','https://www.trvlogue.com/ko/akiyoshi-matsuyama-sea-bream-rice'],['카도야 후기 (트래블로그)','https://www.trvlogue.com/ko/matsuyama-taimeshi-kadoya']] },
+ bocchan:{ n:'봇짱 열차', k:'봇짱열차', c:'마쓰야마', la:33.8420, lo:132.7720, cat:'관광', fee:null, feeT:'세트권 ¥1,700 (열차+성)', when:'오전', pts:['옛 증기기관차 모양의 관광 열차인데, 인기가 많아 표가 자주 매진되고 하루 운행이 8~10회뿐이에요.','열차 1회, 마쓰야마성 로프웨이 왕복, 천수각, 니노마루 입장이 묶인 ¥1,700 세트권이 가성비 좋다는 후기가 있어요.'], src:[['봇짱 열차 후기 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/review/item/2162/']] },
+ tvtower:{ n:'오도리공원·삿포로 TV타워', k:'TV타워', c:'삿포로', la:43.0611, lo:141.3564, cat:'관광', fee:1200, feeT:'전망대 성인 ¥1,200', when:'해 질 무렵', pts:['지상 약 90m 전망대에서 오도리공원과 시내가 보여요. 성인 ¥1,200이에요.','해가 지면 일본 신 3대 야경으로 꼽힌 삿포로 야경을 볼 수 있어요.','가을엔 단풍과 빨간 타워, 파란 하늘이 어우러져 아무렇게나 찍어도 예쁘다는 후기가 있어요.'], src:[['삿포로 TV 타워 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/13587/'],['삿포로 TV 타워 가이드 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/article/item/20440/'],['오도리공원 후기 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/review/item/14927/']] },
+ beer:{ n:'삿포로 맥주박물관', k:'맥주박물관', c:'삿포로', la:43.0713, lo:141.3687, cat:'맛집', fee:null, feeT:'관람 무료 · 시음 별도', when:'오후', pts:['일본 유일의 맥주 박물관으로, 관람은 무료이고 시음은 따로 돈을 내요.','2026년 7월 1일 리뉴얼을 마치고 다시 문을 열었어요.','전시는 금방 본다는 후기도 있어요. 옆 비어가든에서 징기스칸을 먹는 코스가 인기예요.'], src:[['삿포로 맥주 박물관 예약·시음 (트립스토어)','https://www.tripstore.kr/blog/%EC%82%BF%ED%8F%AC%EB%A1%9C-%EB%A7%A5%EC%A3%BC-%EB%B0%95%EB%AC%BC%EA%B4%80-%EC%98%88%EC%95%BD-%EA%B0%80%EC%9D%B4%EB%93%9C'],['삿포로 맥주박물관 리뉴얼 (LIVE JAPAN)','https://livejapan.com/ko/in-hokkaido/in-pref-hokkaido/in-sapporo_chitose/article-a1000630/'],['삿포로 맥주 박물관 후기 (Trip To Japan)','https://www.triptojapan.com/ko/places/sapporo-beer-museum/eH3lzMn_Qba0Z8_g7VPoTQ']] },
+ otaru:{ n:'오타루 운하', k:'오타루', c:'삿포로', la:43.1990, lo:140.9940, cat:'관광', fee:null, feeT:'무료 · 크루즈 별도', when:'오후~밤', pts:['삿포로에서 JR로 30~45분, 오타루역에서 걸어서 10분쯤이에요.','석조 창고와 60개가 넘는 가스등이 있어서 밤 풍경이 특히 예뻐요.','운하 크루즈는 약 40분 코스이고, 밤에 타면 조명이 비친 운하를 볼 수 있어요.'], src:[['삿포로에서 오타루 당일치기 (LIVE JAPAN)','https://livejapan.com/ko/in-hokkaido/in-pref-hokkaido/in-otaru/article-a1000081/'],['오타루 운하 크루즈 (JAPAN.TRAVEL)','https://www.japan.travel/ko/experiences-in-japan/1947/']] },
+ daruma:{ n:'징기스칸 다루마 본점', k:'다루마', c:'삿포로', la:43.0545, lo:141.3540, cat:'맛집', fee:null, feeT:'징기스칸 ¥1,280', when:'저녁 오픈', pts:['1954년에 문을 연 스스키노 명물 징기스칸 가게예요. 징기스칸 1인분은 ¥1,280이에요.','인기가 많아 줄을 각오해야 해요. 저녁 오픈 시간에 맞춰 가길 권해요.','고기 굽는 연기가 자욱해서 옷에 냄새가 밴다는 후기도 있어요.'], src:[['징기스칸 다루마 본점 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/14002/'],['다루마 후기 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/review/item/5963/'],['다루마 후기 (polle)','https://polle.com/Yunnanssal/posts/273']] },
+ peace:{ n:'평화기념공원·원폭돔', k:'원폭돔', c:'히로시마', la:34.3955, lo:132.4536, cat:'관광', fee:200, feeName:'평화기념자료관', feeT:'공원 무료 · 자료관 ¥200', when:'오전', pts:['원폭돔과 공원은 언제든 무료로 볼 수 있어요.','평화기념자료관은 성인 ¥200이에요. 전시 내용이 깊어서 1~2시간은 잡아야 해요.','강 건너편에서 보면 원폭돔 전체가 한 장에 담겨요.'], src:[['원폭 돔 가이드 (jeepe)','https://www.jeepe.jp/ko/articles/hiroshima-atomic-dome-guide-1261'],['평화기념공원 가이드 (jeepe)','https://www.jeepe.jp/ko/articles/hiroshima-peace-memorial-park-guide-1264']] },
+ miyajima:{ n:'미야지마 이쓰쿠시마 신사', k:'미야지마', c:'히로시마', la:34.2960, lo:132.3198, cat:'관광', fee:300, feeName:'이쓰쿠시마 신사', feeT:'신사 ¥300 · 페리·방문세 별도', when:'밀물 시간', pts:['페리는 편도 ¥200, 섬 방문세는 1인 ¥100, 신사 입장료는 ¥300이에요.','밀물 때 바다 위 도리이가 떠 있는 것처럼 보이는 풍경이 압도적이라는 후기가 많아요.','신사로 가는 오모테산도 상점가에서 굴, 아나고메시, 모미지 만주를 먹어 보세요.'], src:[['히로시마 당일치기 (jeepe)','https://www.jeepe.jp/ko/articles/hiroshima-miyajima-day-trip-2447'],['이쓰쿠시마 신사 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/11490/'],['미야지마 오모테산도 상점가 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/14804/']] },
+ okonomi:{ n:'오코노미야키 밋짱 소혼텐 오리즈루타워점', k:'오코노미야키', c:'히로시마', la:34.3962, lo:132.4548, cat:'맛집', fee:null, feeT:'식사 별도', when:'점심·저녁', pts:['히로시마 오코노미야키 노포의 매장으로, 8m 철판 카운터에서 굽는 모습을 바로 앞에서 볼 수 있어요.','면과 양배추가 두툼하게 들어가 든든하고, 소스가 짭짤달콤하다는 후기가 있어요.'], src:[['밋짱 소혼텐 후기 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/review/item/8310/']] },
+ tsutenkaku:{ n:'쓰텐카쿠·신세카이', k:'쓰텐카쿠', c:'오사카', la:34.6525, lo:135.5063, cat:'관광', fee:1500, feeName:'쓰텐카쿠 전망대', feeT:'전망대 ¥1,500', when:'오후~밤', pts:['신세카이 번화가 한가운데 있는 높이 108m 전망 타워예요. 5층 황금 전망대에는 발바닥을 만지면 복이 온다는 빌리켄상이 있어요.','전망대 입장권 정가는 ¥1,500이에요. 오사카 주유패스로 타워 슬라이더까지 즐길 수 있어 이득이라는 후기가 있어요.','밤에는 조명이 켜진 타워를 쓰텐카쿠 혼도리 상점가 쪽에서 보는 게 가장 예쁘다고 해요.'], src:[['쓰텐카쿠 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/11772/'],['쓰텐카쿠 관광 가이드 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/article/item/20340/'],['츠텐카쿠 후기 (트래블로그)','https://www.trvlogue.com/ko/tsutenkaku-shinsekai-daytime']] },
+ nijo:{ n:'니조성', k:'니조성', c:'교토', la:35.0142, lo:135.7481, cat:'관광', fee:1300, feeName:'니조성 (니노마루 고텐 포함)', feeT:'성인 ¥1,300 (고텐 포함)', when:'오전', pts:['도쿠가와 이에야스가 1603년에 지은 세계유산이에요. 국보 니노마루 고텐의 장벽화와 정원이 볼거리예요.','고텐 포함 입장권은 성인 ¥1,300이고, 고텐과 정원을 천천히 보면 1시간 30분~2시간 걸려요.','고텐에서는 신발을 벗고, 실내 촬영은 금지예요. 정원은 자갈길이 많아 편한 신발을 권해요.'], src:[['니조성 가이드 (jeepe)','https://www.jeepe.jp/ko/articles/kyoto-nijo-castle-guide-1032'],['모토리큐 니조성 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/12036/'],['니조성 관람 팁 (트립스토어)','https://www.tripstore.kr/blog/%EB%8B%88%EC%A1%B0%EC%84%B1-%EC%95%BC%EA%B0%84%EA%B0%9C%EC%9E%A5-%EC%9B%A8%EC%9D%B4%ED%8C%85-%ED%8C%81-%EA%B5%90%ED%86%A0-%EC%95%BC%EA%B0%84-%EC%BD%94%EC%8A%A4']] },
+ atsuta:{ n:'아쓰타 신궁', k:'아쓰타신궁', c:'나고야', la:35.1283, lo:136.9087, cat:'관광', fee:null, feeT:'참배 무료 · 보물관 별도', when:'오전', pts:['삼종신기 중 하나인 구사나기 검을 모신 신사예요. 숲에 둘러싸여 조용히 걷기 좋아요.','보물관은 9:00~16:30에 열고, 매월 마지막 수요일과 그다음 날에는 쉬어요.'], src:[['나고야 대표 명소 10곳 (jeepe)','https://www.jeepe.jp/ko/articles/nagoya-standard-spots-2272'],['아쓰타 신궁 (Aichi Now)','https://aichinow.pref.aichi.jp/ko/spots/detail/2742/']] },
+ oasis21:{ n:'오아시스21', k:'오아시스21', c:'나고야', la:35.1711, lo:136.9100, cat:'관광', fee:null, feeT:'무료', when:'밤', pts:['2002년에 생긴 사카에의 입체 공원으로, 유리 지붕 ‘물의 우주선’이 상징이에요.','지상 14m 높이 지붕 둘레를 걸으며 사카에 거리를 내려다볼 수 있어요. 물의 우주선은 10:00~21:00에 열어요.','밤에는 오아시스21과 옆의 미라이 타워에 조명이 켜져 야경이 예쁘다는 후기가 있어요.'], src:[['나고야 대표 명소 10곳 (jeepe)','https://www.jeepe.jp/ko/articles/nagoya-standard-spots-2272'],['오아시스21 (Aichi Now)','https://aichinow.pref.aichi.jp/ko/spots/detail/2742/'],['사카에 후기 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/member/profile/100008697/']] },
+ ohori:{ n:'오호리 공원', k:'오호리공원', c:'후쿠오카', la:33.5860, lo:130.3765, cat:'관광', fee:null, feeT:'무료', when:'오후', pts:['후쿠오카성 해자로 쓰이던 바다 후미를 정비해 1929년에 연 공원이에요. 연못 둘레에 약 2km 산책길이 있어요.','오호리코엔역에서 걸어서 5~7분이고, 하카타역에서 지하철로 10분이면 가요.','밤에는 조명이 켜져요(18~22시, 4~9월은 19시부터). 탁 트여서 쉬어 가기 좋았다는 후기가 있어요.'], src:[['오호리공원 (크로스로드 후쿠오카)','https://www.crossroadfukuoka.jp/kr/spot/12492'],['하카타 근처 가볼만한 곳 (트래블로그)','https://www.trvlogue.com/ko/fukuoka-attractions-guide']] },
+ maizuru:{ n:'후쿠오카 성터 (마이즈루 공원)', k:'후쿠오카성터', c:'후쿠오카', la:33.5845, lo:130.3835, cat:'관광', fee:null, feeT:'무료', when:'오전', pts:['오호리 공원 바로 옆 마이즈루 공원에 후쿠오카 성터가 있어요.','후쿠오카성 무카시 탐방관에서 옛 지도와 모형, CG 영상으로 성의 역사를 볼 수 있어요.'], src:[['오호리 공원 산책 코스 (크로스로드 후쿠오카)','https://www.crossroadfukuoka.jp/kr/itineraries/ohoripark']] },
+ momochi:{ n:'모모치 해변', k:'모모치해변', c:'후쿠오카', la:33.5962, lo:130.3478, cat:'관광', fee:null, feeT:'무료', when:'해 질 녘', pts:['후쿠오카 타워와 페이페이 돔 앞에 있는 인공 해변이에요.','늦은 오후에 일몰을 보고 바로 앞 후쿠오카 타워에서 야경을 보는 코스를 추천하는 후기가 많아요.','지하철역에서는 걸어서 약 20분이라 하카타·텐진에서 버스를 타는 편이 편해요.'], src:[['모모치 해변 (JAPAN.TRAVEL)','https://www.japan.travel/ko/spot/791/'],['모모치 해변 후기 (맘맘)','https://mom-mom.net/travel/places/687f713798d3947ee34781b3']] },
+ kumamon:{ n:'구마몬 스퀘어', k:'구마몬', c:'구마모토', la:32.8031, lo:130.7118, cat:'관광', fee:null, feeT:'무료', when:'오후', pts:['구마모토현 캐릭터 구마몬의 사무실이에요. 구마몬이 있는 날엔 평일 15:00, 주말·공휴일 11:30과 15:00에 무대가 열려요.','여기서만 파는 굿즈와 구마몬 라테, 소프트아이스크림이 있어요.','생각보다 공간이 작아서 아쉬웠다는 후기도 있어요. 사쿠라마치의 구마몬 빌리지가 더 낫다는 의견도 있어요.'], src:[['구마몬 스퀘어 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/12795/'],['구마몬 스퀘어 후기 (Trip To Japan)','https://www.triptojapan.com/ko/places/kumamon-square-kumamoto/WqvyZvE-R6Oa6vLu3T-bCA']] },
+ sakuramachi:{ n:'사쿠라마치 구마모토', k:'사쿠라마치', c:'구마모토', la:32.8012, lo:130.7052, cat:'관광', fee:null, feeT:'무료', when:'오후', pts:['2019년에 문을 연 쇼핑몰·호텔·버스터미널 복합시설이에요. 공항버스와 시내버스가 여기서 출발해요.','옥상 정원에서 구마모토성이 보이고, 날씨가 좋으면 아소산까지 보여요.','5층의 커다란 구마몬 조형물이 인기 포토존이에요.'], src:[['사쿠라마치 구마모토 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/14252/'],['구마모토 자유여행 (트래비 매거진)','https://brunch.co.kr/@travie/1959']] },
+ shimotori:{ n:'시모토리·가미토리 아케이드', k:'시모토리', c:'구마모토', la:32.8038, lo:130.7098, cat:'관광', fee:null, feeT:'무료', when:'저녁', pts:['지붕 덮인 긴 아케이드 상점가예요. 기념품 가게, 드러그스토어, 돈키호테가 모여 있어요.','이자카야와 구마모토 라멘 가게도 많아 저녁 먹으러 가기 좋아요.'], src:[['구마모토 자유여행 (트래비 매거진)','https://brunch.co.kr/@travie/1959']] },
+ haikara:{ n:'도고 하이카라 거리', k:'하이카라거리', c:'마쓰야마', la:33.8509, lo:132.7851, cat:'맛집', fee:null, feeT:'먹거리 별도', when:'온천 전후', pts:['도고온천역에서 본관까지 이어지는 약 250m의 L자 아케이드 상점가예요.','온천을 즐긴 뒤 먹거리를 사 먹고 기념품을 고르며 걷기 좋아요.','역 앞 봇짱 가라쿠리 시계가 산책 출발점으로 많이 소개돼요.'], src:[['마쓰야마 관광 가이드 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/article/item/20106/'],['마쓰야마 관광 명소 10선 (jeepe)','https://www.jeepe.jp/ko/articles/matsuyama-dogo-castle-spots-2277']] },
+ ishiteji:{ n:'이시테지', k:'이시테지', c:'마쓰야마', la:33.8478, lo:132.8027, cat:'관광', fee:null, feeT:'요금 현장 확인', when:'오전', pts:['시코쿠 88개소 순례의 제51번 사찰이에요.','도고온천과 가까워 온천과 묶어 다녀오는 코스로 많이 소개돼요.'], src:[['마쓰야마 관광 명소 10선 (jeepe)','https://www.jeepe.jp/ko/articles/matsuyama-dogo-castle-spots-2277'],['마쓰야마 관광 가이드 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/article/item/20106/']] },
+ bansuiso:{ n:'반스이소', k:'반스이소', c:'마쓰야마', la:33.8434, lo:132.7680, cat:'관광', fee:400, feeT:'¥400', when:'오후', pts:['1922년 옛 마쓰야마 번주의 후손인 백작이 별장으로 지은 서양식 건물이에요.','에히메현에서 가장 오래된 철근콘크리트 건물이고, 관람료는 ¥400이에요.'], src:[['마쓰야마 관광 가이드 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/article/item/20106/'],['마쓰야마 관광 명소 10선 (jeepe)','https://www.jeepe.jp/ko/articles/matsuyama-dogo-castle-spots-2277']] },
+ dogopark:{ n:'도고 공원 (유즈키 성터)', k:'도고공원', c:'마쓰야마', la:33.8484, lo:132.7882, cat:'관광', fee:null, feeT:'무료', when:'오후', pts:['도고온천 가까이에 있는 유즈키 성터 공원이고, 입장은 무료예요.','온천 거리에서 걸어가 성터를 산책하기 좋아요.'], src:[['마쓰야마 관광 명소 10선 (jeepe)','https://www.jeepe.jp/ko/articles/matsuyama-dogo-castle-spots-2277']] },
+ clock:{ n:'삿포로 시계탑', k:'시계탑', c:'삿포로', la:43.0626, lo:141.3536, cat:'관광', fee:null, feeT:'입장료 현장 확인', when:'오전', pts:['1878년 삿포로농학교 연무장으로 지은 건물로, 140년 넘게 삿포로의 상징이에요.','삿포로역에서 걸어서 약 10분이고, 1층에서 홋카이도 개척 역사를 전시해요.','건물 전체를 정면에서 찍으려면 길 건너 MN빌딩의 ‘시계탑 촬영 플라자’로 가 보세요.'], src:[['삿포로시 시계탑 가이드 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/article/item/20543/'],['삿포로시 시계탑 (삿포로 관광 공식)','https://www.sapporo.travel/ko/spot/facility/clock_tower/']] },
+ nijoichi:{ n:'삿포로 니조시장', k:'니조시장', c:'삿포로', la:43.0587, lo:141.3573, cat:'맛집', fee:null, feeT:'식사 별도', when:'아침·점심', pts:['메이지 초기 어부들이 생선을 팔기 시작한 데서 생겨났다고 전해지는 시장이에요.','시계탑·TV타워와 가까워 함께 둘러보기 좋아요.'], src:[['삿포로시 시계탑 가이드 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/article/item/20543/'],['처음 삿포로 엄선 스폿 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/article/item/20215/']] },
+ moiwa:{ n:'모이와산 전망대', k:'모이와산', c:'삿포로', la:43.0223, lo:141.3174, cat:'관광', fee:null, feeT:'로프웨이 요금 현장 확인', when:'밤', pts:['해발 531m 전망대에서 삿포로 시가지가 한눈에 보이는 야경 명소예요.','‘일본 백명월’에 등록된 곳이라 달 보기 좋은 곳으로도 꼽혀요.','노면전차 로프웨이이리구치역에서 내려서 가요.'], src:[['삿포로에서 꼭 해야 할 일 (LIVE JAPAN)','https://livejapan.com/ko/in-hokkaido/in-pref-hokkaido/in-sapporo_chitose/article-a1000252/'],['모이와산 (삿포로 관광 공식)','https://www.sapporo.travel/ko/spot/facility/']] },
+ jogai:{ n:'삿포로 장외시장', k:'장외시장', c:'삿포로', la:43.0662, lo:141.3375, cat:'맛집', fee:null, feeT:'식사 별도', when:'아침', pts:['삿포로 중앙도매시장 바로 옆에 있는 시장으로, 가게가 약 60곳 모여 있어요.'], src:[['처음 삿포로 엄선 스폿 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/article/item/20215/']] },
+ shukkeien:{ n:'슛케이엔', k:'슛케이엔', c:'히로시마', la:34.4004, lo:132.4672, cat:'관광', fee:null, feeT:'입장료 현장 확인', when:'오전', pts:['1620년부터 히로시마 번주의 별저 정원으로 만들어졌고, 원폭으로 망가진 뒤 약 30년에 걸쳐 복구됐어요.','연못·다리·다실이 어우러져 도심에서 보기 힘든 고요한 공간이라는 후기가 있어요.','히로시마 미술관과 붙어 있어 같은 날 함께 보기 좋아요.'], src:[['슛케이엔 후기 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/review/item/13696/'],['슛케이엔 후기 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/member/reviews/100008121/']] },
+ hcastle:{ n:'히로시마성', k:'히로시마성', c:'히로시마', la:34.4027, lo:132.4594, cat:'관광', fee:null, feeT:'천수각 요금 현장 확인', when:'오후', pts:['16세기 말 모리 데루모토가 오타강 삼각주에 쌓은 성으로, 일본 100대 명성 중 하나예요.','5층 천수각 안에서 히로시마와 성의 역사를 보여 주는 전시를 볼 수 있어요.'], src:[['히로시마성 관광 가이드 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/article/item/20344/']] },
+ okonomimura:{ n:'오코노미무라', k:'오코노미무라', c:'히로시마', la:34.3922, lo:132.4619, cat:'맛집', fee:null, feeT:'식사 별도', when:'저녁', pts:['히로시마 오코노미야키를 맛볼 수 있는 곳으로 자주 추천돼요.','오코노미야키 가게는 자리 앞이 철판이라, 아이와 함께라면 뜨거운 철판을 조심하라는 조언이 있어요.'], src:[['히로시마 명소 5선 (Have a Good Holiday)','https://haveagood-holiday.com/ko/articles/234627'],['히로시마 가족 여행 명소 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/article/item/21097/']] }
+};
+
+const CITY = {
+ '도쿄':{ la:35.6812, lo:139.7671, color:'#1f4fbf', night:160000, hotel:'신주쿠역 근처 호텔', upName:'시부야 전망 좋은 호텔', dx:8, dy:-8, transit:[] },
+ '오사카':{ la:34.6937, lo:135.5023, color:'#d9821a', night:150000, hotel:'난바역 근처 호텔', upName:'도톤보리 강변 호텔 (조식)', dx:0, dy:10, transit:[{ name:'라피트 공항↔난바 왕복 (편도 ¥1,490)', yen:5960 }] },
+ '교토':{ la:35.0116, lo:135.7681, color:'#14795a', night:170000, hotel:'가와라마치 근처 호텔', upName:'기온 근처 료칸 (조식)', dx:-8, dy:-14, transit:[{ name:'한큐 오사카우메다↔교토가와라마치 왕복 (편도 ¥410)', yen:1640 }] },
+ '나고야':{ la:35.1709, lo:136.8815, color:'#8a3fb5', night:130000, hotel:'사카에 근처 호텔', upName:'나고야역 직결 호텔', dx:8, dy:-8, transit:[] },
+ '삿포로':{ la:43.0621, lo:141.3544, color:'#0e7490', night:150000, hotel:'스스키노 근처 호텔', upName:'대욕장 있는 삿포로역 호텔', dx:0, dy:-8, transit:[{ name:'JR 삿포로↔오타루 왕복 (편도 ¥800)', yen:3200, need:'otaru' }] },
+ '히로시마':{ la:34.3853, lo:132.4553, color:'#be185d', night:130000, hotel:'히로시마역 근처 호텔', upName:'평화공원 전망 호텔', dx:-8, dy:-8, transit:[{ name:'미야지마 페리 왕복 + 방문세 (편도 ¥200, 세금 ¥100)', yen:1000, need:'miyajima' }] },
+ '마쓰야마':{ la:33.8392, lo:132.7657, color:'#a16207', night:120000, hotel:'오카이도 근처 호텔', upName:'도고온천 료칸 (조식)', dx:8, dy:10, transit:[] },
+ '구마모토':{ la:32.8031, lo:130.7079, color:'#9a3412', night:110000, hotel:'구마모토역 근처 호텔', upName:'시모토리 근처 호텔 (조식)', dx:8, dy:10, transit:[] },
+ '후쿠오카':{ la:33.5902, lo:130.4017, color:'#b42318', night:120000, hotel:'하카타역 근처 호텔', upName:'대욕장 있는 하카타 호텔', dx:-8, dy:-8, transit:[{ name:'공항↔하카타 지하철 왕복 (편도 ¥260)', yen:1040 },{ name:'니시테츠 텐진↔다자이후 왕복 (편도 ¥480)', yen:1920, need:'dazaifu' }] }
+};
+const RAW = [
+ ['tk1','도쿄','처음 가는 도쿄, 아사쿠사부터 시부야까지','옛 도쿄와 지금의 도쿄를 하루씩. 전망대는 일몰 회차로','친구와 2인',['첫 해외여행'],[['senso','skytree'],['tsukiji','meiji','takeshita'],['shibuya','omoide'],[]]],
+ ['tk2','도쿄','도쿄 시장 먹방 2박 3일','아침엔 시장, 저녁엔 꼬치 골목','친구와 2인',['맛집'],[['tsukiji','ameyoko'],['toyosu','omoide'],['senso']]],
+ ['tk3','도쿄','도쿄 전망대 세 곳 비교','스카이트리·도쿄타워·시부야 스카이를 하루 하나씩','연인과 2인',['야경'],[['senso','skytree'],['tokyotower'],['meiji','shibuya']]],
+ ['tk4','도쿄','부모님과 걷기 적게, 도쿄 3박 4일','하루 한두 곳, 평지 위주','부모님과 2인',['부모님과'],[['senso','culture'],['meiji'],['ameyoko','tokyotower'],[]]],
+ ['tk5','도쿄','도쿄 1박 2일 핵심만','아사쿠사와 츠키지만 짧게','혼자',['짧은 일정'],[['senso','skytree'],['tsukiji']]],
+ ['os1','오사카','오사카 2박 3일, 먹고 보고 야경까지','난바에 숙소, 오사카성과 공중정원은 하루에','부모님과 2인',['첫 해외여행'],[['dotonbori'],['castle','kuromon','sky'],['kushi']]],
+ ['os2','오사카','USJ 하루 넣은 오사카 3박 4일','테마파크 하루, 시내 하루','친구와 2인',['첫 해외여행'],[['dotonbori'],['usj'],['castle','sky'],['kushi']]],
+ ['os3','오사카','오사카 먹방 1박 2일','시장 → 도톤보리 → 쿠시카츠','친구와 2인',['맛집','짧은 일정'],[['kuromon','dotonbori'],['kushi','harukas']]],
+ ['os4','오사카','부모님과 느긋한 오사카 2박 3일','하루 한 곳, 엘리베이터 있는 곳 위주','부모님과 2인',['부모님과'],[['castle'],['sky'],['dotonbori','ebisu']]],
+ ['os5','오사카','오사카 전망대 비교 2박 3일','공중정원과 하루카스 300, 어디가 더 좋을까','연인과 2인',['야경'],[['sky'],['harukas','kushi'],['dotonbori']]],
+ ['ky1','교토','교토 2박 3일, 사람 몰리기 전 아침 코스','유명한 곳은 이른 아침에, 시장은 오전에','부모님과 2인',['첫 해외여행'],[['kiyomizu','nishiki'],['bamboo','kinkaku'],['fushimi']]],
+ ['ky2','교토','오사카에서 교토 당일치기','후시미 이나리 → 기요미즈데라 → 기온','친구와 2인',['짧은 일정'],[['fushimi','kiyomizu','hanami']]],
+ ['ky3','교토','교토 동쪽 산책 1박 2일','은각사·철학의 길, 기요미즈·기온','혼자',['걷기 좋아함'],[['ginkaku','tetsu'],['kiyomizu','hanami']]],
+ ['ky4','교토','아라시야마 집중 1박 2일','대나무숲은 아침 7시에, 금각사까지','연인과 2인',['짧은 일정'],[['bamboo','togetsu'],['kinkaku','nishiki']]],
+ ['ky5','교토','교토 사찰·정원 3박 4일','금각사·은각사 비교부터 후시미 이나리까지','부모님과 2인',['부모님과'],[['kinkaku','ginkaku'],['tetsu','kiyomizu'],['bamboo','togetsu'],['fushimi']]],
+ ['ng1','나고야','나고야 1박 2일, 성 하나와 명물 두 그릇','나고야성·오스 상점가, 미소카츠와 히츠마부시','혼자',['맛집','짧은 일정'],[['ncastle','osu','yabaton'],['horai']]],
+ ['ng2','나고야','나고야 명물 먹방 1박 2일','킷사텐 아침부터 히츠마부시까지','친구와 2인',['맛집'],[['compal','osu','yabaton'],['misonikomi','horai']]],
+ ['ng3','나고야','나고야 당일치기','나고야성 보고 히츠마부시','혼자',['짧은 일정'],[['ncastle','horai']]],
+ ['ng4','나고야','나고야 산업·역사 2박 3일','도요타 기념관과 나고야성','가족 2인',['첫 해외여행'],[['toyota','ncastle'],['osu','misonikomi'],['horai']]],
+ ['ng5','나고야','부모님과 나고야 2박 3일','하루 한 곳, 식사는 명물로','부모님과 2인',['부모님과'],[['ncastle'],['horai'],['osu','compal']]],
+ ['fk1','후쿠오카','후쿠오카 2박 3일, 유후인 빼고 여유롭게','공항에서 지하철 5분. 다자이후 하루, 나머지는 시내','친구와 2인',['첫 해외여행'],[['canal','yatai'],['dazaifu','fktower'],[]]],
+ ['fk2','후쿠오카','라멘과 야타이 1박 2일','이치란 총본점, 캐널시티, 포장마차','친구와 2인',['맛집','짧은 일정'],[['ichiran','canal','yatai'],['dazaifu']]],
+ ['fk3','후쿠오카','후쿠오카 당일치기','다자이후 보고 캐널시티','혼자',['짧은 일정'],[['dazaifu','canal']]],
+ ['fk4','후쿠오카','후쿠오카 야경 2박 3일','크루즈, 타워, 그리고 야식 라멘','연인과 2인',['야경'],[['canal','ncruise'],['fktower'],['ichiran']]],
+ ['fk5','후쿠오카','부모님과 후쿠오카 2박 3일','하루 한 곳, 이동은 짧게','부모님과 2인',['부모님과'],[['dazaifu'],['fktower'],['canal']]],
+ ['km1','구마모토','구마모토 1박 2일, 성과 정원','첫날 구마모토성, 둘째 날 스이젠지와 라멘','친구와 2인',['첫 해외여행'],[['kcastle','josaien'],['suizenji','kokutei']]],
+ ['km2','구마모토','후쿠오카에서 구마모토 당일치기','성 보고, 조사이엔에서 먹고, 라멘으로 마무리','혼자',['짧은 일정'],[['kcastle','josaien','kokutei']]],
+ ['km3','구마모토','구마모토 먹방 1박 2일','라멘, 향토 요리, 말고기까지','친구와 2인',['맛집'],[['kokutei','josaien'],['basashi']]],
+ ['km4','구마모토','부모님과 구마모토 2박 3일','하루 한 곳, 노면전차로 이동','부모님과 2인',['부모님과'],[['kcastle'],['suizenji'],['josaien']]],
+ ['km5','구마모토','구마모토 정원·성 2박 3일','정원 산책, 성 관람, 저녁엔 바사시','연인과 2인',['걷기 좋아함'],[['suizenji','basashi'],['kcastle','josaien'],['kokutei']]],
+ ['mt1','마쓰야마','마쓰야마 1박 2일, 성과 온천','로프웨이로 성에 오르고 도고온천에서 마무리','친구와 2인',['첫 해외여행'],[['mcastle','taimeshi'],['dogo']]],
+ ['mt2','마쓰야마','마쓰야마 당일치기','성 → 봇짱 열차 → 도고온천','혼자',['짧은 일정'],[['mcastle','bocchan','dogo']]],
+ ['mt3','마쓰야마','도고온천에서 느긋하게 2박 3일','온천 하루, 성 하루, 도미밥 하루','부모님과 2인',['부모님과'],[['dogo'],['mcastle'],['taimeshi']]],
+ ['mt4','마쓰야마','마쓰야마 먹방 1박 2일','도미밥 두 가지 비교하고 온천','연인과 2인',['맛집'],[['taimeshi','dogo'],['mcastle']]],
+ ['mt5','마쓰야마','봇짱 열차 타고 2박 3일','옛 열차와 성, 온천을 천천히','친구와 2인',['야경'],[['bocchan','dogo'],['mcastle','taimeshi'],[]]],
+ ['sp1','삿포로','삿포로·오타루 2박 3일','시내 야경, 오타루 운하, 맥주박물관','친구와 2인',['첫 해외여행'],[['tvtower','daruma'],['otaru'],['beer']]],
+ ['sp2','삿포로','맥주와 징기스칸 1박 2일','맥주박물관부터 스스키노 징기스칸까지','친구와 2인',['맛집','짧은 일정'],[['beer','daruma'],['tvtower']]],
+ ['sp3','삿포로','삿포로에서 오타루 당일치기','운하 산책과 크루즈','혼자',['짧은 일정'],[['otaru']]],
+ ['sp4','삿포로','부모님과 삿포로 3박 4일','하루 한 곳, 이동은 JR로','부모님과 2인',['부모님과'],[['tvtower'],['otaru'],['beer'],[]]],
+ ['sp5','삿포로','삿포로 야경 2박 3일','TV타워와 오타루 운하의 밤','연인과 2인',['야경'],[['tvtower'],['otaru','daruma'],[]]],
+ ['hs1','히로시마','히로시마 1박 2일, 시내와 미야지마','평화공원과 오코노미야키, 다음 날 미야지마','친구와 2인',['첫 해외여행'],[['peace','okonomi'],['miyajima']]],
+ ['hs2','히로시마','히로시마 시내 당일치기','평화기념공원과 오코노미야키','혼자',['짧은 일정'],[['peace','okonomi']]],
+ ['hs3','히로시마','미야지마 당일치기','밀물 시간에 맞춰 바다 위 도리이 보기','연인과 2인',['짧은 일정'],[['miyajima']]],
+ ['hs4','히로시마','부모님과 히로시마 2박 3일','하루 한 곳, 미야지마는 페리로','부모님과 2인',['부모님과'],[['peace'],['miyajima'],['okonomi']]],
+ ['hs5','히로시마','미야지마 먼저, 히로시마 1박 2일','아침 미야지마, 다음 날 시내','친구와 2인',['맛집'],[['miyajima'],['peace','okonomi']]]
+];
+const PACKS = RAW.map(([id, city, title, sub, who, tags, days]) => { const n = days.length - 1, c = CITY[city];
+  return { id, city, title, sub, who, tags, days, color:c.color, nights:n ? n + '박 ' + (n + 1) + '일' : '당일치기',
+    hotel:n ? { name:c.hotel + ' ' + n + '박', krw:c.night * n } : null, up:n ? { name:c.upName + ' ' + n + '박', krw:Math.round(c.night * n * 1.35 / 1000) * 1000 } : null }; });
+const cityPlaces = c => Object.keys(PL).filter(id => PL[id].c === c);
+
+const SAVE_KEY = 'dongseon-routes-v3';
+let saved = {}; try { saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}') || {}; } catch (e) { saved = {}; }
+const S = { scr:'home', cityOpen:false, cs:'peek', sel:null, city:'도쿄', rf:'전체', pid:'tk1', day:0, edit:false, routes:saved, up:false, off:{}, place:null, mf:'전체', pl:'', chg:false, rprev:false, filter:'전체', big:false, alt:null, loaded:false, made:false, shared:false };
+const R = { name:'', text:'', stars:0, msg:'', busy:false, files:[] };
+const $ = id => document.getElementById(id);
+const pack = () => PACKS.find(p => p.id === S.pid);
+const route = p => (S.routes[p.id] || p.days).map(d => d.filter(id => PL[id]));
+function setRoute(days){ S.routes[S.pid] = days; try { localStorage.setItem(SAVE_KEY, JSON.stringify(S.routes)); } catch (e) {} }
+const edited = p => !!S.routes[p.id];
+
+function km(a, b){ const r = Math.PI / 180, dLa = (b.la - a.la) * r, dLo = (b.lo - a.lo) * r; const h = Math.sin(dLa/2)**2 + Math.cos(a.la*r) * Math.cos(b.la*r) * Math.sin(dLo/2)**2; return 12742 * Math.asin(Math.sqrt(h)); }
+const kmT = d => d < 1 ? Math.round(d * 1000) + 'm' : d.toFixed(1) + 'km';
+const gmap = id => 'https://www.google.com/maps/search/?api=1&query=' + PL[id].la + ',' + PL[id].lo;
+function gdir(ids){ if (!ids.length) return ''; const q = id => PL[id].la + ',' + PL[id].lo; if (ids.length === 1) return gmap(ids[0]);
+  return 'https://www.google.com/maps/dir/?api=1&origin=' + q(ids[0]) + '&destination=' + q(ids[ids.length - 1]) + (ids.length > 2 ? '&waypoints=' + ids.slice(1, -1).slice(0, 8).map(q).join('%7C') : ''); }
+
+function items(p){
+  const ids = route(p).flat(), list = [];
+  const h = S.up ? p.up : p.hotel; if (h) list.push({ id:'hotel', kind:'숙소', name:h.name, detail:'2인 1실 · 예시 요금', krw:h.krw });
+  CITY[p.city].transit.forEach((t, i) => { if (!t.need || ids.includes(t.need)) list.push({ id:'t' + i, kind:'교통', name:t.name, detail:'2인 왕복', krw:t.yen * YEN }); });
+  ids.forEach(id => { const x = PL[id]; if (x.fee) list.push({ id, kind:'입장권', name:x.feeName || x.n, detail:'¥' + x.fee.toLocaleString() + ' × 2인', krw:x.fee * 2 * YEN }); });
+  return list;
+}
+const sum = l => l.reduce((a, i) => a + i.krw, 0);
+
+/* ---------- map ---------- */
+function mapHTML(groups){
+  const pts = groups.flatMap(g => g.ids.map(id => PL[id]));
+  if (!pts.length) return `<div class="map" style="display:grid;place-items:center"><p class="sub">이 날은 정해진 장소가 없어요. 아래에서 장소를 추가해 보세요.</p></div>`;
+  const mid = pts.reduce((a, p) => a + p.la, 0) / pts.length, kx = Math.cos(mid * Math.PI / 180);
+  const xs = pts.map(p => p.lo * kx), ys = pts.map(p => -p.la);
+  const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+  const W = 400, H = 300, pad = 46, rx = Math.max(maxX - minX, 0.004), ry = Math.max(maxY - minY, 0.004);
+  const s = Math.min((W - pad * 2) / rx, (H - pad * 2) / ry);
+  const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+  const P = p => [W / 2 + (p.lo * kx - cx) * s, H / 2 + (-p.la - cy) * s];
+  const kmPer100 = 100 / s * 111.32; const nice = [0.1,0.2,0.5,1,2,5,10,20,50].find(v => v >= kmPer100 * 0.6) || 50; const barPx = nice / 111.32 * s;
+  let lines = '', pins = '';
+  groups.forEach(g => {
+    const xy = g.ids.map(id => P(PL[id]));
+    if (xy.length > 1) lines += `<polyline points="${xy.map(a => a.join(',')).join(' ')}" fill="none" stroke="${g.color}" stroke-width="3" stroke-dasharray="7 5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
+    g.ids.forEach((id, i) => { const [x, y] = xy[i]; pins += `<button class="pin" data-a="place" data-v="${id}" style="left:${(x / W * 100).toFixed(2)}%;top:${(y / H * 100).toFixed(2)}%" aria-label="${esc(PL[id].n)} 후기 보기"><b style="background:${g.color}">${g.label ? g.label + '-' : ''}${i + 1}</b><span>${esc(PL[id].k)}</span></button>`; });
+  });
+  let grid = ''; for (let i = 1; i < 8; i++) grid += `<line x1="${i * 50}" y1="0" x2="${i * 50}" y2="300" stroke="var(--grid)" stroke-width="1"/>`; for (let i = 1; i < 6; i++) grid += `<line x1="0" y1="${i * 50}" x2="400" y2="${i * 50}" stroke="var(--grid)" stroke-width="1"/>`;
+  return `<div class="map" role="img" aria-label="동선 지도: ${esc(groups.flatMap(g => g.ids.map(id => PL[id].n)).join(', '))}">
+    <svg viewBox="0 0 400 300" preserveAspectRatio="none" aria-hidden="true">${grid}${lines}</svg>${pins}
+    <div class="scale"><span>${nice < 1 ? nice * 1000 + 'm' : nice + 'km'}</span><i style="width:${(barPx / W * 100).toFixed(1)}%"></i></div>
+    <div class="mapnote">실제 위치 비율 · 북쪽 위</div></div>`;
+}
+
+/* ---------- screens ---------- */
+function header(){
+  const p = pack();
+  const titles = { home:'동선팩 · 일본', detail:S.edit ? '동선 편집 · ' + p.city : p.city + ' · ' + p.nights, book:'예약 내용', paid:'예약 완료', trip:'여행 중', make:'동선 만들기', src:'참고한 자료' };
+  const back = S.scr === 'detail' && S.edit ? null : { detail:'home', book:'detail', paid:'home', src:'home' }[S.scr];
+  return (back ? `<button class="ib" aria-label="뒤로 가기" data-a="go" data-v="${back}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>` : '')
+    + `<h1>${esc(titles[S.scr])}</h1><button class="pill ${S.big ? 'on' : ''}" aria-pressed="${S.big}" data-a="big">가 큰 글씨</button>`;
+}
+
+/* 일본 해안선: 대략적인 윤곽선 (위·경도) */
+const JP = [
+ [[140.9,41.5],[141.5,40.5],[142.0,39.5],[141.5,38.3],[141.0,37.5],[140.9,36.9],[140.6,36.3],[140.8,35.7],[140.3,35.1],[139.9,35.0],[139.8,35.3],[139.6,35.3],[139.2,35.2],[139.0,34.7],[138.8,34.6],[138.3,34.6],[137.3,34.6],[137.0,34.7],[136.9,35.0],[136.6,34.6],[136.9,34.3],[136.2,33.9],[135.8,33.4],[135.3,33.7],[135.1,34.3],[135.3,34.7],[134.6,34.7],[133.9,34.5],[133.3,34.4],[132.4,34.3],[131.8,34.0],[131.0,33.9],[130.9,34.1],[131.1,34.4],[131.7,34.6],[132.0,35.0],[132.7,35.4],[133.3,35.5],[134.2,35.6],[135.3,35.6],[135.9,35.8],[136.1,36.0],[136.6,36.4],[136.7,36.9],[136.8,37.4],[137.3,37.5],[137.1,36.9],[137.6,36.9],[138.3,37.2],[138.8,37.8],[139.4,38.2],[139.8,38.9],[140.0,39.6],[139.9,40.5],[140.3,41.2],[140.9,41.5]],
+ [[130.9,33.9],[131.4,33.7],[131.9,33.1],[131.8,32.5],[131.5,31.7],[131.1,31.2],[130.7,31.0],[130.2,31.3],[130.3,32.0],[130.1,32.5],[129.7,32.7],[129.6,33.2],[130.0,33.6],[130.4,33.6],[130.9,33.9]],
+ [[132.8,34.0],[133.6,34.3],[134.2,34.3],[134.7,34.2],[134.7,33.8],[134.2,33.3],[133.6,33.5],[133.0,32.8],[132.5,32.9],[132.4,33.5],[132.8,34.0]],
+ [[140.0,41.4],[141.0,41.8],[141.2,42.4],[141.8,42.6],[143.3,42.0],[144.8,42.9],[145.8,43.4],[145.0,44.0],[144.3,44.1],[143.0,44.6],[142.0,45.5],[141.6,45.3],[141.7,44.3],[141.4,43.4],[140.4,43.3],[139.9,42.6],[140.0,41.4]]
+];
+function packCard(p){ const r = route(p), n = r.flat().length, foods = r.flat().filter(id => PL[id].cat === '맛집').length;
+  return `<button class="card pack" data-a="open" data-v="${p.id}"><div class="cover" style="background:${p.color}"><b>${esc(p.title)}</b><span>${p.nights}</span></div>
+    <div class="pbody"><p class="sub">${esc(p.sub)}</p>
+    <p><span class="badge">예약 인증</span> <span class="xs sub">${esc(p.who)} · 예시 작성자</span>${edited(p) ? ' <span class="tag">내가 바꾼 동선</span>' : ''}</p>
+    <div class="row" style="margin-top:4px"><span class="sub">관광 ${n - foods}곳 · 맛집 ${foods}곳</span><span class="price">${won(sum(items(p)))}~ <span class="xs sub">2인·항공 제외</span></span></div></div></button>`; }
+const mw = () => ($('mn') && $('mn').clientWidth) || 390, mh = () => ($('mn') && $('mn').clientHeight) || 640;
+/* 점들을 화면(W×H)에 맞추는 투영: 실제 위·경도 비율 유지, 위(top)·아래(bottom) 여백 제외한 영역 가운데에 */
+function fit(pts, W, H, pad, top, bottom){
+  const mid = pts.reduce((a, p) => a + p.la, 0) / pts.length, kx = Math.cos(mid * Math.PI / 180);
+  const xs = pts.map(p => p.lo * kx), ys = pts.map(p => -p.la);
+  const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+  const rx = Math.max(maxX - minX, 0.004), ry = Math.max(maxY - minY, 0.004), aw = W - pad * 2, ah = Math.max(H - top - bottom - pad * 2, 80);
+  const s = Math.min(aw / rx, ah / ry), cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+  const f = (lo, la) => [W / 2 + (lo * kx - cx) * s, top + pad + ah / 2 + (-la - cy) * s];
+  f.s = s; return f;
+}
+const pct = (v, T) => (v / T * 100).toFixed(2) + '%';
+const priceMan = n => Math.round(n / 10000) + '만';
+let HP = null;
+function home(){
+  const W = mw(), H = mh(), open = !!S.cityOpen, full = S.cs === 'full';
+  const P = fit([{ lo:129.4, la:30.9 }, { lo:141.4, la:40.8 }], W, H, 10, 96, 0); HP = P;
+  const land = JP.map(poly => `<polygon points="${poly.map(([lo, la]) => P(lo, la).map(v => v.toFixed(1)).join(',')).join(' ')}" fill="var(--land)" stroke="var(--coast)" stroke-width="1.2" vector-effect="non-scaling-stroke"/>`).join('');
+  const pins = Object.entries(CITY).map(([name, c]) => { const [x, y] = P(c.lo, c.la), on = open && S.city === name, l = PACKS.filter(p => p.city === name), min = Math.min(...l.map(p => sum(items(p))));
+    return `<span class="cdot" data-bx="${x.toFixed(1)}" data-by="${y.toFixed(1)}"></span><button class="tagpin ${on ? 'on' : ''} ${c.dy > 0 ? 'down' : ''}" data-a="city" data-v="${name}" data-bx="${x.toFixed(1)}" data-by="${y.toFixed(1)}" style="--dx:${c.dx < 0 ? -30 : c.dx > 0 ? 30 : 0}%" aria-pressed="${on}" aria-label="${name} 동선팩 ${l.length}개, ${priceMan(min)}원부터"><b>${name}</b><span>${l.length}개 · ₩${priceMan(min)}~</span></button>`; }).join('');
+  const list = PACKS.filter(p => p.city === S.city);
+  return `<div class="stage">
+    <div class="pan" data-key="home"><svg aria-hidden="true"><g class="world">${land}</g></svg>${pins}</div>
+    <div class="ovl col"><div class="daychips">${Object.keys(CITY).map(x => `<button class="chip ${open && S.city === x ? 'on' : ''}" data-a="city" data-v="${x}">${x}</button>`).join('')}</div>
+      <span class="hint">지도를 끌어서 움직이고, 두 손가락·휠로 확대해 보세요</span></div>
+    <div class="zoom" style="bottom:${open ? (full ? H * 0.78 + 12 : 274) : 16}px"><button data-a="zin" aria-label="확대">+</button><button data-a="zout" aria-label="축소">−</button><button data-a="zreset" aria-label="처음 위치로">⟲</button></div>
+    ${open ? `<div class="bsheet ${full ? 'full' : ''}" role="region" aria-label="${S.city} 동선팩 목록">
+      <button class="grab" data-a="cs" aria-label="${full ? '목록 접기' : '목록 펼치기'}"><i></i></button>
+      <div class="bhead"><div class="grow"><h3>${S.city} 동선팩 ${list.length}개</h3><span class="xs sub">2인 · 항공 제외 · 관광지·맛집 ${cityPlaces(S.city).length}곳 수록</span></div>
+        <button class="pill" data-a="cs">${full ? '지도 보기' : '목록 보기'}</button><button class="ib" data-a="cclose" aria-label="닫기"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      ${full ? `<div class="blist">${list.map(packCard).join('')}<p class="note">동선과 후기 요약은 여행 블로그·가이드를 참고한 샘플이에요. 작성자와 숙소 요금은 예시예요. <a href="#" data-a="go" data-v="src">참고한 자료 보기</a></p></div>`
+        : `<div class="carousel">${list.map(p => { const r = route(p).flat(); return `<button class="ccard" data-a="open" data-v="${p.id}"><span class="cstrip" style="background:${p.color}">${p.nights}</span><b>${esc(p.title)}</b><span class="xs sub">${esc(p.who)} · ${r.length}곳 · ${r.slice(0, 3).map(id => esc(PL[id].k)).join(' → ')}${r.length > 3 ? ' …' : ''}</span><span class="price">${won(sum(items(p)))}~</span></button>`; }).join('')}</div>`}
+    </div>` : ''}
+  </div>`;
+}
+
+
+/* 주요 역·노선 (대략 위치) */
+const STA = {
+ '도쿄':{ st:[['도쿄',35.6812,139.7671],['우에노',35.7138,139.7773],['아키하바라',35.6984,139.7731],['이케부쿠로',35.7295,139.7109],['신주쿠',35.6896,139.7006],['하라주쿠',35.6702,139.7027],['시부야',35.658,139.7016],['시나가와',35.6285,139.7388],['아사쿠사',35.7106,139.7966]],
+   ln:[[[35.6812,139.7671],[35.6984,139.7731],[35.7138,139.7773],[35.7281,139.7707],[35.7295,139.7109],[35.6896,139.7006],[35.6702,139.7027],[35.658,139.7016],[35.6467,139.7101],[35.6285,139.7388],[35.6556,139.757],[35.6663,139.7583],[35.6812,139.7671]],[[35.7138,139.7773],[35.7106,139.7966]]] },
+ '오사카':{ st:[['신오사카',34.7334,135.5001],['우메다',34.7025,135.4959],['혼마치',34.6823,135.5009],['난바',34.6666,135.5011],['텐노지',34.6466,135.5145],['오사카성공원',34.6876,135.534],['유니버설시티',34.6672,135.4363]],
+   ln:[[[34.7334,135.5001],[34.7025,135.4959],[34.6823,135.5009],[34.675,135.501],[34.6666,135.5011],[34.646,135.5063],[34.6466,135.5145]],[[34.7025,135.4959],[34.6966,135.534],[34.6876,135.534],[34.6807,135.5336],[34.6655,135.5302],[34.6466,135.5145],[34.6497,135.501],[34.6693,135.4615],[34.6826,135.4664],[34.6973,135.4865],[34.7025,135.4959]],[[34.6826,135.4664],[34.6672,135.4363]]] },
+ '교토':{ st:[['교토',34.9858,135.7588],['가와라마치',35.0037,135.769],['가라스마오이케',35.0105,135.7597],['니조조마에',35.0108,135.7487],['사가아라시야마',35.0182,135.6812],['이나리',34.9672,135.7708]],
+   ln:[[[34.9858,135.7588],[35.0037,135.7597],[35.0105,135.7597],[35.03,135.7596]],[[35.0108,135.7487],[35.0105,135.7597],[35.0094,135.772]],[[34.9858,135.7588],[35.011,135.7417],[35.0182,135.6812]],[[34.9858,135.7588],[34.98,135.7693],[34.9672,135.7708]],[[35.0037,135.7597],[35.0037,135.769]]] },
+ '나고야':{ st:[['나고야',35.1709,136.8815],['사카에',35.17,136.9086],['시야쿠쇼',35.1814,136.9065],['가미마에즈',35.1577,136.9054],['가나야마',35.143,136.9006],['진구마에',35.127,136.9122]],
+   ln:[[[35.1709,136.8815],[35.1693,136.8975],[35.17,136.9086]],[[35.1814,136.9065],[35.17,136.9086],[35.1614,136.9087],[35.1577,136.9054],[35.143,136.9006]],[[35.1709,136.8815],[35.143,136.9006],[35.127,136.9122]]] },
+ '후쿠오카':{ st:[['하카타',33.5897,130.4207],['나카스카와바타',33.5947,130.4062],['텐진',33.5915,130.399],['오호리코엔',33.5847,130.379],['니시진',33.5832,130.3592],['다자이후',33.5195,130.5345]],
+   ln:[[[33.5939,130.4507],[33.5897,130.4207],[33.5925,130.414],[33.5947,130.4062],[33.5915,130.399],[33.5885,130.3896],[33.5847,130.379],[33.5848,130.3683],[33.5832,130.3592]],[[33.5885,130.3991],[33.5596,130.4268],[33.4985,130.5172],[33.5195,130.5345]]] },
+ '삿포로':{ st:[['삿포로',43.0687,141.3508],['오도리',43.0605,141.3543],['스스키노',43.0553,141.353],['로프웨이이리구치',43.0436,141.3197],['오타루',43.1977,140.9937]],
+   ln:[[[43.0687,141.3508],[43.062,141.3332],[43.0798,141.3013],[43.1103,141.2436],[43.1393,141.1657],[43.1593,141.0739],[43.1974,141.0178],[43.1977,140.9937]],[[43.0687,141.3508],[43.0605,141.3543],[43.0553,141.353],[43.0455,141.3532]],[[43.0553,141.353],[43.0475,141.338],[43.0436,141.3197]]] },
+ '히로시마':{ st:[['히로시마',34.3973,132.4753],['원폭돔마에',34.3953,132.4535],['미야지마구치',34.3127,132.3029],['미야지마 선착장',34.3001,132.322]],
+   ln:[[[34.3973,132.4753],[34.3901,132.4351],[34.3657,132.3611],[34.3127,132.3029]],[[34.3973,132.4753],[34.394,132.458],[34.3953,132.4535],[34.3925,132.443],[34.3901,132.4351]]], fe:[[[34.3127,132.3029],[34.3001,132.322]]] },
+ '마쓰야마':{ st:[['마쓰야마',33.837,132.751],['마쓰야마시',33.8363,132.7635],['오카이도',33.8425,132.77],['도고온천',33.8501,132.7856]],
+   ln:[[[33.837,132.751],[33.8412,132.7605],[33.8425,132.77],[33.8438,132.777],[33.8501,132.7856]],[[33.8363,132.7635],[33.8412,132.7605]]] },
+ '구마모토':{ st:[['구마모토',32.7898,130.6888],['사쿠라마치 BT',32.8008,130.7038],['도리초스지',32.803,130.7105],['스이젠지코엔',32.7905,130.733]],
+   ln:[[[32.7898,130.6888],[32.7972,130.6981],[32.8,130.703],[32.8015,130.706],[32.803,130.7105],[32.8018,130.7175],[32.796,130.726],[32.7905,130.733]]] }
+};
+const ICON = { '관광':'M5 21V4h12l-2 3.5L17 11H5', '맛집':'M7 3v18M4.5 3v5a2.5 2.5 0 0 0 5 0V3M17 21V3c-2.2.8-3.5 3.6-3.5 7.5H17' };
+const ico = (cat, z) => `<svg width="${z}" height="${z}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICON[cat] || ICON['관광']}"/></svg>`;
+const rate = id => { const l = REV[id] || [], n = l.length; return { n, avg:n ? l.reduce((a, r) => a + (+r.stars || 0), 0) / n : 0 }; };
+const okPh = p => typeof p === 'string' && (/^[\w.-]+$/.test(p) || /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(p));
+const psrc = p => p.startsWith('data:') ? p : '/_blob/' + p;
+const photosOf = id => (REV[id] || []).flatMap(r => Array.isArray(r.photos) ? r.photos.filter(okPh) : []);
+function photoStrip(id, n){
+  const x = PL[id], ph = photosOf(id);
+  if (!ph.length) return `<div class="ph none ${x.cat === '맛집' ? 'food' : ''}">${ico(x.cat, 26)}<span>아직 여행자 사진이 없어요</span></div>`;
+  return `<div class="ph">${ph.slice(0, n).map(p => `<img src="${psrc(p)}" alt="${esc(x.n)} 여행자 사진" loading="lazy">`).join('')}${ph.length > n ? `<span class="more">+${ph.length - n}</span>` : ''}</div>`;
+}
+const rateT = id => { const t = rate(id); return t.n ? `<span class="rt">★ ${t.avg.toFixed(1)}</span> <span class="xs sub">리뷰 ${t.n}</span>` : '<span class="xs sub">아직 리뷰 없음</span>'; };
+
+
+/* ---------- 추천 경로 ---------- */
+const legMin = (a, b) => { const k = km(PL[a], PL[b]) * 1.25; return k < 1.3 ? Math.round(k / 4.5 * 60) : Math.round(k / 25 * 60 + 12); };
+const minT = m => m < 60 ? m + '분' : Math.floor(m / 60) + '시간' + (m % 60 ? ' ' + (m % 60) + '분' : '');
+const tslot = id => { const w = PL[id].when || ''; return /밤|야경|저녁|해 질|노을/.test(w) ? 2 : /아침|오전|개장|오픈/.test(w) ? 0 : 1; };
+const dayMin = ids => ids.slice(0, -1).reduce((t, id, i) => t + legMin(id, ids[i + 1]), 0);
+const timePen = ids => ids.reduce((p, id, i) => { const pos = ids.length > 1 ? i / (ids.length - 1) : 0, sl = tslot(id); return p + (sl === 2 ? (1 - pos) * 40 : sl === 0 ? pos * 40 : 0); }, 0);
+const score = ids => dayMin(ids) + timePen(ids);
+function perms(a){ if (a.length < 2) return [a]; const out = []; a.forEach((x, i) => perms(a.slice(0, i).concat(a.slice(i + 1))).forEach(p => out.push([x].concat(p)))); return out; }
+function bestOrder(ids){
+  if (ids.length < 3 && !(ids.length === 2 && score([ids[1], ids[0]]) < score(ids))) return ids.slice();
+  if (ids.length <= 7) return perms(ids).reduce((b, p) => score(p) < score(b) ? p : b, ids.slice());
+  let best = ids.slice(), go = true; while (go){ go = false; for (let i = 0; i < best.length - 1; i++) for (let j = i + 1; j < best.length; j++){ const c = best.slice(); [c[i], c[j]] = [c[j], c[i]]; if (score(c) < score(best) - .5){ best = c; go = true; } } } return best;
+}
+function detours(r, d, city){
+  const ids = r[d] || [], used = new Set(r.flat());
+  const cand = cityPlaces(city).filter(id => !used.has(id));
+  const out = cand.map(id => { if (!ids.length) return { id, add:0, pos:0 };
+    let best = { add:1e9, pos:ids.length };
+    for (let i = 0; i <= ids.length; i++){ const t = ids.slice(0, i).concat([id], ids.slice(i)), add = score(t) - score(ids); if (add < best.add) best = { add, pos:i }; }
+    return { id, add:Math.max(0, Math.round(dayMin(ids.slice(0, best.pos).concat([id], ids.slice(best.pos))) - dayMin(ids))), pos:best.pos, sc:best.add }; });
+  out.sort((a, b) => (a.sc ?? 0) - (b.sc ?? 0) || rate(b.id).n - rate(a.id).n);
+  const pick = [], cats = {}; for (const o of out){ if (o.add > 35) continue; if ((cats[PL[o.id].cat] || 0) >= 2) continue; pick.push(o); cats[PL[o.id].cat] = (cats[PL[o.id].cat] || 0) + 1; if (pick.length === 3) break; }
+  return pick;
+}
+function recoBox(p, r, d){
+  const ids = r[d] || []; if (!ids.length && !cityPlaces(p.city).length) return '';
+  const bo = bestOrder(ids), same = bo.join() === ids.join(), cur = dayMin(ids), nb = dayMin(bo), save = cur - nb;
+  const night = ids.some(id => tslot(id) === 2) && !same && timePen(bo) < timePen(ids);
+  let html = `<div class="reco"><div class="row"><b class="grow">${S.chg ? '바뀐 동선 기준 추천 경로' : '추천 경로'}</b><span class="xs sub">${ids.length}곳 · 이동 약 ${minT(cur)}</span></div>`;
+  if (ids.length >= 2){
+    html += same ? `<p class="xs ok2">지금 순서가 이동 시간이 가장 짧은 순서예요.</p>`
+      : `<p class="xs">${bo.map(id => esc(PL[id].k)).join(' → ')}</p>
+        <p class="xs sub">${save > 0 ? `이동이 약 ${minT(save)} 줄어요` : '이동 시간은 비슷해요'}${night ? ' · 야경·저녁 명소를 뒤로 보냈어요' : ''}</p>
+        <div class="pact"><button class="mini add" data-a="reorder" data-v="${d}">추천 순서로 바꾸기</button><button class="mini ${S.rprev ? 'on' : ''}" data-a="rprev">${S.rprev ? '미리 보기 끄기' : '지도에서 미리 보기'}</button></div>`;
+  }
+  const dt = detours(r, d, p.city);
+  if (dt.length) html += `<span class="xs sub" style="margin-top:4px">${ids.length ? '가는 길에 들르기 좋은 곳' : '이 날 넣기 좋은 곳'}</span>
+    ${dt.map(o => { const x = PL[o.id]; return `<div class="drow"><button class="dname" data-a="sel" data-v="${o.id}"><span class="dic ${x.cat === '맛집' ? 'food' : ''}">${ico(x.cat, 14)}</span><span class="grow"><b>${esc(x.n)}</b><span class="xs sub">${ids.length ? (o.add ? `이동 +${minT(o.add)}` : '거의 같은 길') + ` · ${o.pos === 0 ? '맨 앞' : o.pos >= ids.length ? '맨 뒤' : esc(PL[ids[o.pos - 1]].k) + ' 다음'}` : esc(x.when)} · ${esc(x.feeT)}</span></span></button><button class="mini add" data-a="ins" data-v="${o.id}:${d}:${o.pos}">넣기</button></div>`; }).join('')}`;
+  return html + `<p class="xs sub">이동 시간은 직선거리로 어림한 값이에요(걷기 시속 4.5km, 1.3km 넘으면 대중교통).</p></div>`;
+}
+
+/* ---------- 동선 편집: 지도에서 보기 ---------- */
+function editStage(){
+  const p = pack(), r = route(p), d = Math.max(0, Math.min(S.day, r.length - 1));
+  const W = mw(), H = mh(), bottom = Math.max(240, Math.round(H * 0.42));
+  const cp = cityPlaces(p.city), P = fit(cp.map(id => PL[id]), W, H, 34, 64, bottom);
+  const where = {}; r.forEach((ids, k) => ids.forEach((id, i) => where[id] = [k, i]));
+  let grid = ''; for (let x = 40; x < W; x += 40) grid += `<line x1="${x}" y1="-2000" x2="${x}" y2="${H + 2000}" stroke="var(--grid)" vector-effect="non-scaling-stroke"/>`; for (let y = 40; y < H; y += 40) grid += `<line x1="-2000" y1="${y}" x2="${W + 2000}" y2="${y}" stroke="var(--grid)" vector-effect="non-scaling-stroke"/>`;
+  const lines = r.map((ids, k) => ids.length > 1 ? `<polyline points="${ids.map(id => P(PL[id].lo, PL[id].la).map(v => v.toFixed(1)).join(',')).join(' ')}" fill="none" stroke="${COLORS[k % 5]}" stroke-width="${k === d ? 4 : 2}" vector-effect="non-scaling-stroke" stroke-dasharray="${k === d ? '9 6' : '4 6'}" stroke-linecap="round" opacity="${k === d ? 1 : .35}"/>` : '').join('');
+  const bo = S.rprev ? bestOrder(r[d] || []) : null;
+  const prevLine = bo && bo.length > 1 ? `<polyline points="${bo.map(id => P(PL[id].lo, PL[id].la).map(v => v.toFixed(1)).join(',')).join(' ')}" fill="none" stroke="var(--ink)" stroke-width="3" stroke-dasharray="2 7" stroke-linecap="round" vector-effect="non-scaling-stroke" opacity=".7"/>` : '';
+  const arrows = (r[d] || []).slice(0, -1).map((id, i) => { const [x1, y1] = P(PL[id].lo, PL[id].la), [x2, y2] = P(PL[r[d][i + 1]].lo, PL[r[d][i + 1]].la), mx = (x1 + x2) / 2, my = (y1 + y2) / 2, ang = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+    return `<g transform="translate(${mx.toFixed(1)},${my.toFixed(1)}) rotate(${ang.toFixed(1)})"><path d="M-6,-6 L4,0 L-6,6" fill="none" stroke="${COLORS[d % 5]}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></g>`; }).join('');
+  const mf = S.mf || '전체', sd = STA[p.city] || { st:[], ln:[] }, pl = ([la, lo]) => P(lo, la).map(v => v.toFixed(1)).join(',');
+  const rails = sd.ln.map(l => `<polyline points="${l.map(pl).join(' ')}" fill="none" stroke="var(--rail)" stroke-width="5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/><polyline points="${l.map(pl).join(' ')}" fill="none" stroke="var(--map)" stroke-width="2" stroke-dasharray="7 7" vector-effect="non-scaling-stroke"/>`).join('')
+    + (sd.fe || []).map(l => `<polyline points="${l.map(pl).join(' ')}" fill="none" stroke="#2b8fd6" stroke-width="2.5" stroke-dasharray="3 6" vector-effect="non-scaling-stroke"/>`).join('');
+  const stas = sd.st.map(([n, la, lo]) => { const [x, y] = P(lo, la); return `<span class="sta" data-bx="${x.toFixed(1)}" data-by="${y.toFixed(1)}"><i></i>${esc(n)}역</span>`; }).join('');
+  const pins = cp.map(id => { const [x, y] = P(PL[id].lo, PL[id].la), w = where[id], sel = S.sel === id, x0 = PL[id], t = rate(id);
+    if (w){ const [k, i] = w, cur = k === d;
+      return `<button class="epin ${sel ? 'sel' : ''} ${cur ? '' : 'dim'}" data-a="sel" data-v="${id}" data-bx="${x.toFixed(1)}" data-by="${y.toFixed(1)}" aria-label="${k + 1}일차 ${i + 1}번 ${esc(x0.n)}"><b style="background:${COLORS[k % 5]}">${cur ? i + 1 : (k + 1) + '-' + (i + 1)}</b><span>${esc(x0.k)}</span></button>`; }
+    if (mf !== '전체' && x0.cat !== mf && !sel) return '';
+    return `<button class="epin rec ${x0.cat === '맛집' ? 'food' : ''} ${sel ? 'sel' : ''}" data-a="sel" data-v="${id}" data-bx="${x.toFixed(1)}" data-by="${y.toFixed(1)}" aria-label="${x0.cat} ${esc(x0.n)}${t.n ? ', 별점 ' + t.avg.toFixed(1) : ''}"><b>${ico(x0.cat, 15)}</b><span>${esc(x0.k)}${t.n ? ` <em>★${t.avg.toFixed(1)}</em>` : ''}</span></button>`; }).join('');
+  const kmPer = 80 / P.s * 111.32, nice = [0.1,0.2,0.5,1,2,5,10,20].find(v => v >= kmPer * 0.6) || 20;
+  const sel = S.sel && PL[S.sel] ? S.sel : null, mode = S.pl === 'list' ? 'list' : sel ? 'card' : 'day';
+  const ph = mode === 'list' ? H - 116 : mode === 'card' ? Math.min(Math.round(H * 0.58), 350) : bottom;
+  return `<div class="stage edit">
+    ${OM.ok ? '<div class="gslot"></div>' : `<div class="pan" data-key="edit:${p.id}"><svg aria-hidden="true"><g class="world">${grid}${rails}${lines}${arrows}${prevLine}</g></svg>${stas}${pins}</div>
+    <div class="zoom" style="bottom:${ph + 40}px"><button data-a="zin" aria-label="확대">+</button><button data-a="zout" aria-label="축소">−</button><button data-a="zreset" aria-label="처음 위치로">⟲</button></div>`}
+    <div class="ovl"><div class="daychips">${r.map((x, i) => `<button class="chip ${i === d ? 'on' : ''}" data-a="day" data-v="${i}" style="${i === d ? `background:${COLORS[i % 5]};border-color:${COLORS[i % 5]};color:#fff` : ''}">${i + 1}일차 · ${x.length}곳</button>`).join('')}</div>
+      <button class="pill on" data-a="edit">완료</button></div>
+    <div class="ovl f2">${['전체', '관광', '맛집'].map(c => `<button class="chip ${mf === c ? 'on' : ''}" data-a="mf" data-v="${c}">${c === '전체' ? '전체' : ico(c, 14) + ' ' + c}</button>`).join('')}${OM.ok ? `<button class="chip ${S.op !== false ? 'on' : ''}" data-a="optog">지도 인기 장소</button><button class="chip" data-a="opop" ${OP.busy ? 'disabled' : ''}>${OP.busy ? '찾는 중…' : '이 지역 다시 찾기'}</button>` : ''}</div>
+    ${OM.ok && OP.msg ? `<p class="gerr">${esc(OP.msg)}</p>` : ''}
+    <div class="legend ${OM.ok ? 'gm' : ''}" style="bottom:${ph + 8}px"><span><i class="lg n"></i>내 동선</span>${S.rprev ? '<span><i class="lg p"></i>추천 순서</span>' : ''}<span><i class="lg t"></i>관광</span><span><i class="lg f"></i>맛집</span>${OM.ok ? '<span><i class="lg o"></i>지도 인기 장소</span>' : `<span><i class="lg r"></i>역·노선(대략)</span><span id="scl" data-s="${P.s}">${nice < 1 ? nice * 1000 + 'm' : nice + 'km'} <i class="sc" style="width:${(nice / 111.32 * P.s).toFixed(0)}px"></i></span>`}</div>
+    <div class="epanel ${mode}" style="height:${ph}px">${mode === 'day' ? dayList(p, r, d) : nearPanel(p, r, d, sel, mode, where)}</div>
+  </div>`;
+}
+function placeActs(id, r, d, where){
+  const w = where[id];
+  return w ? `<span class="tag">${w[0] + 1}일차 ${w[1] + 1}번째</span><button class="mini" data-a="mv" data-v="${w[0]}:${w[1]}:-1" ${w[1] === 0 ? 'disabled' : ''} aria-label="앞으로">↑</button><button class="mini" data-a="mv" data-v="${w[0]}:${w[1]}:1" ${w[1] === r[w[0]].length - 1 ? 'disabled' : ''} aria-label="뒤로">↓</button>${r.length > 1 ? `<select class="mini" data-a="today" data-v="${w[0]}:${w[1]}" aria-label="다른 날로 옮기기">${r.map((_, k) => `<option value="${k}" ${k === w[0] ? 'selected' : ''}>${k + 1}일차</option>`).join('')}</select>` : ''}<button class="mini del" data-a="del" data-v="${w[0]}:${w[1]}">빼기</button>`
+    : `<button class="mini add" data-a="add" data-v="${id}">+ ${d + 1}일차에 넣기</button>`;
+}
+function nearPanel(p, r, d, sel, mode, where){
+  const mf = S.mf || '전체', o = sel ? PL[sel] : null;
+  let ids = cityPlaces(p.city).filter(id => (mf === '전체' || PL[id].cat === mf || id === sel) && !(PL[id].o && S.op === false && id !== sel));
+  if (o) ids.sort((a, b) => (a === sel ? -1 : b === sel ? 1 : km(o, PL[a]) - km(o, PL[b])));
+  else ids.sort((a, b) => rate(b).n - rate(a).n || (where[b] ? 1 : 0) - (where[a] ? 1 : 0));
+  const x_ = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
+  if (mode === 'list') return `<div class="row"><h3 class="grow">${esc(p.city)} 장소 ${ids.length}곳 <span class="xs sub">${o ? esc(o.k) + '에서 가까운 순' : '리뷰 많은 순'}</span></h3><button class="ib" data-a="pl" data-v="" aria-label="목록 닫기">${x_}</button></div>
+    <div class="plist">${ids.map(id => { const x = PL[id];
+      return `<article class="pl ${id === sel ? 'on' : ''}">${photoStrip(id, 3)}<div class="pcb">
+        <button class="pname" data-a="pick" data-v="${id}"><span class="tag ${x.cat === '맛집' ? 'food' : ''}">${x.cat}</span> <b>${esc(x.n)}</b></button>
+        <span>${rateT(id)} <span class="xs sub">· ${esc(x.feeT)}${o && id !== sel ? ' · 직선 ' + kmT(km(o, x)) : ''}</span></span>
+        <div class="rcards">${x.pts.slice(0, 2).map(t => `<div class="rcard"><span class="xs sub">블로그 후기 요약</span><p>${esc(t)}</p></div>`).join('')}</div>
+        <div class="pact">${placeActs(id, r, d, where)}<button class="mini" data-a="place" data-v="${id}">리뷰·사진 ›</button></div></div></article>`; }).join('')}</div>`;
+  return `${S.chg ? `<button class="chgbar" data-a="showreco">동선이 바뀌었어요 · ${d + 1}일차 추천 경로 보기 ›</button>` : ''}<div class="row"><h3 class="grow">주변 장소 ${ids.length}곳 <span class="xs sub">옆으로 넘겨 보세요</span></h3><button class="pill" data-a="pl" data-v="list">목록 보기</button><button class="ib" data-a="sel" data-v="" aria-label="닫기">${x_}</button></div>
+   <div class="pcar">${ids.map(id => { const x = PL[id];
+     return `<article class="pc ${id === sel ? 'on' : ''}" data-a="sel" data-v="${id}">${photoStrip(id, 3)}<div class="pcb">
+       <span><span class="tag ${x.cat === '맛집' ? 'food' : ''}">${x.cat}</span> ${rateT(id)}</span>
+       <b class="pn">${esc(x.n)}</b>
+       <span class="xs sub">${esc(x.feeT)} · ${esc(x.when)}${o && id !== sel ? ' · 직선 ' + kmT(km(o, x)) : ''}</span>
+       <p class="xs clamp">${esc(x.pts[0])}</p>
+       <div class="pact">${placeActs(id, r, d, where)}<button class="mini" data-a="place" data-v="${id}">리뷰·사진 ›</button></div></div></article>`; }).join('')}</div>`;
+}
+function dayList(p, r, d){
+  const ids = r[d] || [];
+  return `<div class="row"><h3>${d + 1}일차 동선 · ${ids.length}곳</h3>${edited(p) ? '<button class="pill" data-a="reset">원래 동선으로</button>' : ''}</div>
+   <p class="xs sub">지도의 깃발(관광)·수저(맛집) 아이콘을 누르면 주변 장소 카드가 떠요. 사진·리뷰를 보고 바로 동선에 넣을 수 있어요.</p>
+   ${recoBox(p, r, d)}
+   ${ids.length ? ids.map((id, i) => `<button class="lrow" data-a="sel" data-v="${id}"><b class="num" style="background:${COLORS[d % 5]}">${i + 1}</b><span class="grow"><b style="font-size:.92em">${esc(PL[id].n)}</b><span class="xs sub">${PL[id].cat} · ${esc(PL[id].feeT)}${ids[i + 1] ? ' · 다음까지 직선 ' + kmT(km(PL[id], PL[ids[i + 1]])) : ''}</span></span><span class="xs" style="color:var(--pri)">›</span></button>`).join('')
+     : '<p class="sub">이 날은 정해진 장소가 없어요. 지도에서 + 핀을 눌러 추가해 보세요.</p>'}
+   <div class="row" style="flex-wrap:wrap">${ids.length ? `<a class="glink" href="${gdir(ids)}" target="_blank" rel="noopener">구글 지도에서 ${d + 1}일차 경로 열기</a>` : ''}<button class="pill" data-a="pl" data-v="list">${esc(p.city)} 장소 목록 보기</button></div>`;
+}
+function selCard(id, r, d){
+  const x = PL[id]; let w = null; r.forEach((ids, k) => { const i = ids.indexOf(id); if (i >= 0) w = [k, i]; });
+  const cnt = (REV[id] || []).length;
+  const acts = w ? `<div class="ed"><span class="tag">${w[0] + 1}일차 ${w[1] + 1}번째</span><button data-a="mv" data-v="${w[0]}:${w[1]}:-1" ${w[1] === 0 ? 'disabled' : ''}>↑ 앞으로</button><button data-a="mv" data-v="${w[0]}:${w[1]}:1" ${w[1] === r[w[0]].length - 1 ? 'disabled' : ''}>↓ 뒤로</button>
+      <select data-a="today" data-v="${w[0]}:${w[1]}" aria-label="다른 날로 옮기기">${r.map((_, k) => `<option value="${k}" ${k === w[0] ? 'selected' : ''}>${k + 1}일차로</option>`).join('')}</select><button class="del" data-a="del" data-v="${w[0]}:${w[1]}">빼기</button></div>`
+    : `<button class="btn" style="flex:none;min-height:48px" data-a="add" data-v="${id}">+ ${d + 1}일차 동선에 넣기${r[d].length ? ` (마지막 장소에서 직선 ${kmT(km(PL[r[d][r[d].length - 1]], x))})` : ''}</button>`;
+  return `<div class="row" style="align-items:flex-start"><div class="grow"><span><span class="tag ${x.cat === '맛집' ? 'food' : ''}">${w ? '내 동선' : '추천 ' + x.cat}</span> <span class="xs sub">${esc(x.feeT)} · ${esc(x.when)}</span></span><h3>${esc(x.n)}</h3></div>
+     <button class="ib" data-a="sel" data-v="" aria-label="닫기"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+   ${acts}
+   <div class="rcards">${x.pts.slice(0, 3).map(t => `<div class="rcard"><span class="xs sub">블로그 후기 요약</span><p>${esc(t)}</p></div>`).join('')}</div>
+   <p class="xs sub">출처: ${x.src.map(s => `<a href="${s[1]}" target="_blank" rel="noopener">${esc(s[0])}</a>`).join(' · ')}</p>
+   <button class="linkbtn" data-a="place" data-v="${id}">자세히 보기 · 여행자 리뷰 ${cnt}개 ›</button>`;
+}
+
+function stopRow(id, d, i, list, editMode, nDays){
+  const x = PL[id], next = list[i + 1], cnt = (REV[id] || []).length;
+  const opts = Array.from({ length:nDays }, (_, k) => `<option value="${k}" ${k === d ? 'selected' : ''}>${k + 1}일차</option>`).join('');
+  return `<div class="st"><div class="rail"><div class="dot" style="background:${COLORS[d % 5]}">${i + 1}</div>${i < list.length - 1 ? '<div class="bar"></div>' : ''}</div>
+   <div class="sb"><button class="stop" data-a="place" data-v="${id}"><span><span class="tag ${x.cat === '맛집' ? 'food' : ''}">${x.cat}</span> <span class="xs sub">${esc(x.when)} · ${esc(x.feeT)}</span></span><b>${esc(x.n)}</b>
+     <span class="xs sub">${esc(x.pts[0])}</span><span class="xs" style="color:var(--pri);font-weight:700">후기 요약 ${x.pts.length}개 · 여행자 리뷰 ${cnt}개 보기 ›</span></button>
+     ${editMode ? `<div class="ed"><button data-a="mv" data-v="${d}:${i}:-1" ${i === 0 ? 'disabled' : ''} aria-label="위로">↑ 위로</button><button data-a="mv" data-v="${d}:${i}:1" ${i === list.length - 1 ? 'disabled' : ''} aria-label="아래로">↓ 아래로</button>
+       <select data-a="today" data-v="${d}:${i}" aria-label="다른 날로 옮기기">${opts}</select><button class="del" data-a="del" data-v="${d}:${i}">빼기</button></div>` : ''}
+     ${next ? `<span class="move">↓ 다음 장소까지 직선 약 ${kmT(km(x, PL[next]))}</span>` : ''}</div></div>`;
+}
+
+function detail(){
+  if (S.edit) return editStage();
+  const p = pack(), r = route(p), all = S.day === -1, d = all ? 0 : Math.min(S.day, r.length - 1);
+  const groups = all ? r.map((ids, k) => ({ ids, color:COLORS[k % 5], label:k + 1 })).filter(g => g.ids.length) : [{ ids:r[d], color:COLORS[d % 5] }];
+  return `<div><h2>${esc(p.title)}</h2><p class="sub" style="margin-top:6px">${esc(p.sub)}</p>
+    <p style="margin-top:8px"><span class="badge">예약 인증</span> <span class="xs sub">예약 내역과 함께 올라온 동선이라는 설정의 샘플 · ${p.who}</span></p></div>
+  <div class="tabs" role="tablist"><button role="tab" class="${all ? 'on' : ''}" data-a="day" data-v="-1">전체</button>${r.map((x, i) => `<button role="tab" class="${!all && i === d ? 'on' : ''}" data-a="day" data-v="${i}">${i + 1}일차</button>`).join('')}</div>
+  ${mapHTML(groups)}
+  <div class="maplinks">${all ? '' : (r[d].length ? `<a href="${gdir(r[d])}" target="_blank" rel="noopener">구글 지도에서 ${d + 1}일차 경로 열기</a>` : '')}<button class="pill" data-a="edit">지도에서 동선 바꾸기</button>${edited(p) ? `<button class="pill" data-a="reset">원래 동선으로</button>` : ''}</div>
+  ${(all ? r.map((ids, k) => ({ ids, k })) : [{ ids:r[d], k:d }]).map(g => `<h3>${g.k + 1}일차 ${g.ids.length ? '' : '· 귀국·자유 일정'}</h3>${g.ids.length ? `<div class="tl">${g.ids.map((id, i) => stopRow(id, g.k, i, g.ids, S.edit, r.length)).join('')}</div>` : `<p class="sub">정해진 장소가 없어요.${S.edit ? ' 아래에서 추가할 수 있어요.' : ''}</p>`}`).join('')}
+  `;
+}
+
+function recList(p, r, d){
+  const used = new Set(r.flat()), f = S.rf;
+  const ids = cityPlaces(p.city).filter(id => f === '전체' || PL[id].cat === f).sort((a, b) => used.has(a) - used.has(b));
+  return `<div class="card list"><h3>${p.city} 추천 장소·맛집</h3><p class="xs sub">블로그·가이드에 실제로 나온 평을 짧게 요약했어요. 눌러서 ${d + 1}일차에 넣을 수 있어요.</p>
+   <div class="chips">${['전체','관광','맛집'].map(x => `<button class="chip ${f === x ? 'on' : ''}" data-a="rf" data-v="${x}">${x}</button>`).join('')}</div>
+   ${ids.map(id => { const x = PL[id], inR = used.has(id), cnt = (REV[id] || []).length;
+     return `<div class="rec"><div class="row" style="align-items:center"><span class="grow"><span><span class="tag ${x.cat === '맛집' ? 'food' : ''}">${x.cat}</span> <span class="xs sub">${esc(x.feeT)}</span></span><b>${esc(x.n)}</b></span>
+       ${inR ? '<span class="tag">동선에 있음</span>' : `<button class="pill" data-a="add" data-v="${id}">+ ${d + 1}일차에</button>`}</div>
+       <div class="rcards">${x.pts.slice(0, 3).map(t => `<div class="rcard"><span class="xs sub">블로그 후기 요약</span><p>${esc(t)}</p></div>`).join('')}</div>
+       <p class="xs sub">출처: ${x.src.map(s => `<a href="${s[1]}" target="_blank" rel="noopener">${esc(s[0])}</a>`).join(' · ')}</p>
+       <button class="linkbtn" data-a="place" data-v="${id}">지도·여행자 리뷰 ${cnt}개 보기 ›</button></div>`; }).join('')}</div>`;
+}
+
+function book(){
+  const p = pack(), list = items(p);
+  return `<p class="sub">지금 동선에 맞춰 숙소·교통·입장권을 모았어요. 필요 없는 건 빼세요.</p>
+  ${p.hotel ? '<h3>숙소 고르기</h3>' : '<p class="sub">당일치기라 숙소가 없어요.</p>'}${(p.hotel ? [[false, p.hotel], [true, p.up]] : []).map(([u, h]) => `<button class="opt ${S.up === u ? 'on' : ''}" aria-pressed="${S.up === u}" data-a="up" data-v="${u}"><span class="grow"><b>${esc(h.name)}</b><span class="xs sub">2인 1실 · 예시 요금 · ${won(h.krw)}</span></span></button>`).join('')}
+  <h3>함께 예약할 것</h3>${list.filter(i => i.id !== 'hotel').map(i => { const on = !S.off[i.id];
+    return `<button class="opt ${on ? 'on' : ''}" aria-pressed="${on}" data-a="tog" data-v="${i.id}"><span class="box">${on ? check('#fff', 16) : ''}</span><span class="grow"><b style="font-size:.92em">${esc(i.name)}</b><span class="xs sub">${i.kind} · ${esc(i.detail)}</span></span><span class="price" style="font-size:.9em">${won(i.krw)}</span></button>`; }).join('') || '<p class="sub">입장권이 필요한 장소가 없어요.</p>'}
+  <p class="xs sub">엔화는 100엔≈850원으로 어림했어요. 항공권은 따로예요.</p>`;
+}
+const check = (c, n) => `<svg width="${n}" height="${n}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>`;
+const chosen = () => items(pack()).filter(i => !S.off[i.id]);
+
+function paid(){
+  const c = chosen();
+  return `<div class="ok"><i>${check('#fff', 32)}</i><h2>한 번에 예약됐어요</h2><p class="sub">${esc(pack().title)}</p></div>
+  <div class="card list">${c.map(i => `<div class="row"><span style="font-size:.9em">${esc(i.name)}</span><span class="price" style="font-size:.9em">${won(i.krw)}</span></div>`).join('')}
+  <div style="height:1px;background:var(--line)"></div><div class="row"><b>결제 금액 (2인)</b><b style="font-size:1.2em;color:var(--pri)">${won(sum(c))}</b></div></div>
+  <button class="btn ghost" style="flex:none" data-a="share">가족에게 일정 보내기</button>
+  ${S.shared ? `<p class="done" style="text-align:center">가족에게 일정 링크를 보냈다는 샘플 화면이에요. 실제로 보내지는 않아요.</p>` : ''}
+  <p class="note">샘플 앱이라 실제 결제는 되지 않아요.</p>`;
+}
+
+function trip(){
+  const base = ['castle','kuromon','sky'], a = S.alt;
+  const stops = a === 'swap' ? ['kuromon','sky','castle'] : a === 'ebisu' ? ['ebisu','kuromon','sky'] : base;
+  return `<div><span class="xs sub">오사카 2박 3일 · 2일차 오늘 (샘플 상황)</span><h2>오사카성과 시장, 야경</h2></div>
+  ${a ? `<div class="done"><b>동선을 바꿨어요</b><span class="sub">${a === 'swap' ? '천수각은 내일 아침으로 미루고 시장부터 가요.' : '천수각 대신 도톤보리 관람차를 넣었어요. 천수각 입장권은 환불 신청했어요.'}</span><button class="pill" style="align-self:flex-start" data-a="alt" data-v="">원래 동선 보기</button></div>`
+   : `<div class="warn"><b>오사카성 천수각이 오늘 임시 휴관한다는 알림이 왔어요 (샘플)</b>
+     <p style="font-size:.9em">어떻게 바꿀지 골라 보세요. 이동 거리는 실제 위치로 계산해요.</p>
+     <div class="alt"><b>순서 바꾸기: 시장 → 전망대, 천수각은 다음 날 아침</b><span class="sub">구로몬시장까지 직선 약 ${kmT(km(PL.castle, PL.kuromon))}</span><button class="btn" style="flex:none;min-height:46px" data-a="alt" data-v="swap">이렇게 바꾸기</button></div>
+     <div class="alt"><b>대체 장소: ${esc(PL.ebisu.n)}</b><span class="sub">${esc(PL.ebisu.pts[0])}</span><button class="btn" style="flex:none;min-height:46px" data-a="alt" data-v="ebisu">이렇게 바꾸기</button></div></div>`}
+  ${mapHTML([{ ids:stops, color:COLORS[1] }])}
+  <div class="tl">${stops.map((id, i) => stopRow(id, 1, i, stops, false, 3)).join('')}</div>`;
+}
+
+function make(){
+  const m = [['castle','입장권'],['sky','입장권'],['kushi','식당 영수증']];
+  return `<div><h2>다녀온 여행을<br>동선팩으로 만들어요</h2><p class="sub" style="margin-top:6px">예약 내역을 불러오면 방문 순서가 자동으로 채워져요. 인기 동선팩이 되면 트립코인을 받아요.</p></div>
+  ${!S.loaded ? `<button class="btn" style="flex:none" data-a="load">내 예약 내역 불러오기 (샘플)</button>` : `
+  <p class="sub">지난 여행: 오사카 (샘플 예약 내역)</p>
+  ${mapHTML([{ ids:m.map(x => x[0]), color:COLORS[0] }])}
+  ${m.map((x, i) => `<div class="card" style="display:flex;gap:12px;align-items:center;padding:12px 14px"><div class="dot">${i + 1}</div><span class="grow"><b style="font-size:.92em">${esc(PL[x[0]].n)}</b><span class="xs sub">${x[1]} · 예약 확인됨</span></span></div>`).join('')}
+  <label for="mtip" style="font-weight:700">처음 가는 사람에게 남길 팁</label>
+  <textarea id="mtip" rows="3" placeholder="예: 천수각은 엘리베이터로 올라가면 편해요"></textarea>
+  ${S.made ? `<div class="done" style="background:#fff8d6;border-color:#e5c43a;color:#3a2c00"><b>등록 완료! 예약 인증 배지를 받았어요 (샘플)</b><span style="font-size:.9em">다른 여행자가 이 동선으로 예약하면 트립코인이 쌓여요.</span></div>`
+   : `<button class="btn dark" style="flex:none" data-a="made">동선팩 등록하기</button>`}`}`;
+}
+
+function src(){
+  const all = []; Object.values(PL).forEach(x => x.src.forEach(s => { if (!all.some(a => a[1] === s[1])) all.push(s); }));
+  return `<p class="sub">동선과 장소별 후기 요약은 아래 자료를 바탕으로 정리했어요. 원문을 그대로 옮기지 않고 요약했어요.</p>
+  <div class="card list">${all.map(s => `<a href="${s[1]}" target="_blank" rel="noopener">${esc(s[0])}</a>`).join('')}
+  <a href="https://www.sidae.com/article/2026101309030924568?outlink=2&type=1" target="_blank" rel="noopener">원·엔 환율 (2026년 10월)</a></div>`;
+}
+
+function footer(){
+  if (S.scr === 'detail' && S.edit) return '';
+  if (S.scr === 'detail'){ const l = items(pack());
+    return `<div class="foot"><div class="row"><span class="sub">숙소·교통·입장권 ${l.length}건 · 2인</span><b style="font-size:1.2em">${won(sum(l))}</b></div>
+    <div class="btns"><button class="btn" data-a="go" data-v="book">이 동선대로 예약하기</button></div></div>`; }
+  if (S.scr === 'book'){ const c = chosen(); return `<div class="foot"><div class="row"><span class="sub">예약 ${c.length}건 · 2인</span><b style="font-size:1.2em">${won(sum(c))}</b></div><button class="btn" data-a="pay">한 번에 결제 (샘플)</button></div>`; }
+  if (S.scr === 'paid') return `<div class="foot"><button class="btn" data-a="go" data-v="trip">여행 중 화면 미리 보기</button></div>`;
+  if (['home','trip','make'].includes(S.scr)){
+    const t = [['home','동선 찾기','M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM21 21l-5-5'],['trip','여행 중','M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11zM12 8v4'],['make','동선 만들기','M12 5v14M5 12h14']];
+    return `<nav>${t.map(x => `<button class="${S.scr === x[0] ? 'on' : ''}" data-a="go" data-v="${x[0]}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${x[2]}"/></svg>${x[1]}</button>`).join('')}</nav>`;
+  }
+  return '';
+}
+
+/* ---------- place sheet + reviews ---------- */
+let DB = null, ASSETS = null, REV = {}, revState = 'loading', LOCAL = false;
+const LREV = 'dongseon-local-reviews';
+function setupLocal(){
+  LOCAL = true; let all = []; try { all = JSON.parse(localStorage.getItem(LREV) || '[]'); } catch (e) { all = []; }
+  const rebuild = () => { const m = {}; all.forEach(v => { if (v && PL[v.place]) (m[v.place] = m[v.place] || []).push(v); }); Object.values(m).forEach(a => a.sort((x, y) => (y.at || 0) - (x.at || 0))); REV = m; };
+  rebuild(); revState = 'ok';
+  DB = { collection:() => ({ add:async doc => { all.push(doc); try { localStorage.setItem(LREV, JSON.stringify(all)); } catch (e) { all.pop(); throw { code:'quota_exceeded' }; } rebuild(); } }) };
+  ASSETS = { upload:async b => { const sm = await shrink(b, 900, 0.72); return { id:await new Promise((ok, no) => { const fr = new FileReader(); fr.onload = () => ok(fr.result); fr.onerror = no; fr.readAsDataURL(sm); }) }; } };
+  render();
+}
+function revList(id){
+  const l = REV[id] || [];
+  if (revState === 'loading') return '<p class="sub">리뷰를 불러오는 중이에요…</p>';
+  if (revState === 'off') return '<p class="msg">이 화면에서는 리뷰를 저장하거나 불러올 수 없어요. Claude에 로그인한 상태에서 이 앱 링크를 열면 리뷰가 저장되고, 함께 보는 사람들에게도 보여요.</p>';
+  const slow = revState === 'slow' ? '<p class="msg">리뷰 서버 응답이 늦어요. 잠시 뒤 다시 확인해 주세요.</p>' : '';
+  const loc = LOCAL ? '<p class="xs sub">이 파일 버전에서는 리뷰와 사진이 지금 쓰는 브라우저에만 저장돼요.</p>' : '';
+  if (!l.length) return loc + slow + '<p class="sub">아직 리뷰가 없어요. 첫 리뷰를 남겨 주세요.</p>';
+  const avg = l.reduce((a, r) => a + (+r.stars || 0), 0) / l.length;
+  return loc + slow + `<p><b>평균 ${avg.toFixed(1)}점</b> <span class="sub">· 리뷰 ${l.length}개</span></p>` + l.map(r => `<div class="rev"><span><span class="s">${'★'.repeat(+r.stars || 0)}${'☆'.repeat(5 - (+r.stars || 0))}</span> <b style="font-size:.9em">${esc(r.name || '익명')}</b> <span class="xs sub">${r.at ? new Date(r.at).toLocaleDateString('ko-KR') : ''}</span></span><p style="font-size:.92em;white-space:pre-wrap">${esc(r.text)}</p>${Array.isArray(r.photos) && r.photos.length ? `<div class="rph">${r.photos.filter(okPh).slice(0, 3).map(p => `<img src="${psrc(p)}" alt="리뷰 사진" loading="lazy">`).join('')}</div>` : ''}</div>`).join('');
+}
+function sheet(){
+  const id = S.place; if (!id) return '';
+  const x = PL[id];
+  return `<div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(x.n)}">
+   <header><button class="ib" aria-label="닫기" data-a="close"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><h1>${esc(x.n)}</h1></header>
+   <main>
+    <div><span class="tag ${x.cat === '맛집' ? 'food' : ''}">${x.cat}</span> <span class="sub">${esc(x.c)} · ${esc(x.feeT)} · 추천 시간 ${esc(x.when)}</span></div>
+    <div class="gal">${photoStrip(id, 6)}</div>
+    <p class="xs sub">사진은 동선팩 여행자가 리뷰와 함께 올린 거예요.</p>
+    ${mapHTML([{ ids:[id], color:COLORS[0] }])}
+    <div class="maplinks"><a href="${gmap(id)}" target="_blank" rel="noopener">구글 지도에서 위치 보기</a></div>
+    <div class="card list"><h3>여행자 후기 요약</h3><ul class="pts">${x.pts.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+     <div class="srcs"><span class="sub">${x.o ? '출처 (지도 데이터)' : '출처 (블로그·가이드 내용을 요약했어요)'}</span>${x.src.map(s => `<a href="${s[1]}" target="_blank" rel="noopener">${esc(s[0])}</a>`).join('')}</div></div>
+    <div class="card list"><h3>동선팩 여행자 리뷰</h3><div id="revlist">${revList(id)}</div></div>
+    <form class="card list" id="revform"><h3>리뷰 쓰기</h3>
+     <div class="stars" role="radiogroup" aria-label="별점">${[1,2,3,4,5].map(n => `<button type="button" role="radio" aria-checked="${R.stars === n}" class="${R.stars >= n ? 'on' : ''}" data-a="star" data-v="${n}" aria-label="${n}점">${R.stars >= n ? '★' : '☆'}</button>`).join('')}</div>
+     <label for="rname" class="xs sub">닉네임 (선택)</label><input type="text" id="rname" maxlength="20" value="${esc(R.name)}" placeholder="익명">
+     <label for="rtext" class="xs sub">리뷰</label><textarea id="rtext" rows="4" maxlength="500" placeholder="다녀온 느낌, 팁, 아쉬운 점을 적어 주세요">${esc(R.text)}</textarea>
+     <span class="xs sub">사진 (최대 3장)</span>
+     ${ASSETS ? `<div class="phin">${R.files.map((f, i) => `<span class="thumb"><img src="${f.url}" alt="올릴 사진 ${i + 1}"><button type="button" data-a="rmph" data-v="${i}" aria-label="사진 ${i + 1} 빼기">×</button></span>`).join('')}${R.files.length < 3 ? `<label class="addph"><input type="file" id="rphoto" accept="image/*" multiple>+ 사진</label>` : ''}</div>`
+       : `<p class="xs sub">${revState === 'loading' ? '사진 올리기를 준비하는 중이에요…' : '이 화면에서는 사진을 올릴 수 없어요. 앱을 공유받을 때 참여자(Contributor) 이상 권한이 있어야 해요.'}</p>`}
+     ${R.msg ? `<p class="msg" id="rmsg">${esc(R.msg)}</p>` : '<p id="rmsg" hidden></p>'}
+     <button class="btn" type="submit" ${R.busy || revState === 'off' ? 'disabled' : ''}>${R.busy ? '저장 중…' : '리뷰 올리기'}</button></form>
+   </main></div>`;
+}
+
+
+/* ---------- 무료 실제 지도 (Leaflet + OpenStreetMap) ---------- */
+const OM = { ok:!!window.L, map:null, el:null, layer:null, fitKey:'' };
+const OP = { done:{}, busy:false, msg:'' }, OKEY = 'dongseon-osm-places';
+try { const c = JSON.parse(localStorage.getItem(OKEY) || '{}'); Object.entries(c).forEach(([id, v]) => { if (!PL[id] && v && v.n) PL[id] = v; }); } catch (e) {}
+function saveO(){ try { const o = {}; Object.keys(PL).forEach(k => { if (PL[k].o) o[k] = PL[k]; }); localStorage.setItem(OKEY, JSON.stringify(o)); } catch (e) {} }
+function omPin(id, w, d){
+  const x = PL[id], t = rate(id), sel = S.sel === id;
+  const cls = 'epin gp ' + (x.o ? 'gpop ' : '') + (w ? (w[0] === d ? '' : 'dim') : 'rec ' + (x.cat === '맛집' ? 'food' : '')) + (sel ? ' sel' : '');
+  const inner = w ? `<b style="background:${COLORS[w[0] % 5]}">${w[0] === d ? w[1] + 1 : (w[0] + 1) + '-' + (w[1] + 1)}</b><span>${esc(x.k)}</span>`
+    : `<b>${ico(x.cat, 15)}</b><span>${esc(x.k)}${t.n ? ` <em>★${t.avg.toFixed(1)}</em>` : ''}</span>`;
+  return `<div class="${cls}" role="button" aria-label="${esc(x.n)}">${inner}</div>`;
+}
+function syncOM(){
+  const slot = document.querySelector('.gslot'); if (!slot || !OM.ok) return;
+  if (!OM.el){ OM.el = document.createElement('div'); OM.el.id = 'gmap'; }
+  const moved = OM.el.parentNode !== slot; if (moved) slot.appendChild(OM.el);
+  try {
+    if (!OM.map){
+      OM.map = L.map(OM.el, { zoomControl:false, attributionControl:true }).setView([35.68, 139.76], 13);
+      L.control.zoom({ position:'topright' }).addTo(OM.map);
+      const esri = (n, a) => L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/' + n + '/MapServer/tile/{z}/{y}/{x}', { maxZoom:19, attribution:'Tiles &copy; Esri' + (a || '') });
+      const base = { '기본 지도':esri('World_Street_Map', ' &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors'), 'OpenStreetMap':L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'&copy; OpenStreetMap contributors' }), '위성':esri('World_Imagery', ' &mdash; Esri, Maxar, Earthstar Geographics') };
+      let pick = '기본 지도'; try { const v = localStorage.getItem('dongseon-basemap'); if (base[v]) pick = v; } catch (e) {}
+      base[pick].addTo(OM.map); L.control.layers(base, null, { position:'topright', collapsed:true }).addTo(OM.map);
+      OM.map.on('baselayerchange', e => { try { localStorage.setItem('dongseon-basemap', e.name); } catch (err) {} });
+      OM.layer = L.layerGroup().addTo(OM.map);
+    } else if (moved) setTimeout(() => OM.map.invalidateSize(), 0);
+    const p = pack(), r = route(p), d = Math.max(0, Math.min(S.day, r.length - 1)), mf = S.mf || '전체';
+    const where = {}; r.forEach((ids, k) => ids.forEach((id, i) => where[id] = [k, i]));
+    OM.layer.clearLayers();
+    r.forEach((ids, k) => { if (ids.length < 2) return; const cur = k === d;
+      L.polyline(ids.map(id => [PL[id].la, PL[id].lo]), { color:COLORS[k % 5], weight:cur ? 5 : 3, opacity:cur ? .9 : .35, dashArray:cur ? '10 8' : '4 8', lineCap:'round' }).addTo(OM.layer); });
+    if (S.rprev){ const bo = bestOrder(r[d] || []); if (bo.length > 1) L.polyline(bo.map(id => [PL[id].la, PL[id].lo]), { color:'#141b2b', weight:3, opacity:.8, dashArray:'2 8', lineCap:'round' }).addTo(OM.layer); }
+    cityPlaces(p.city).forEach(id => { const x = PL[id], w = where[id];
+      if (!w && mf !== '전체' && x.cat !== mf && S.sel !== id) return;
+      if (x.o && !w && S.op === false && S.sel !== id) return;
+      const m = L.marker([x.la, x.lo], { icon:L.divIcon({ className:'omk', html:omPin(id, w, d), iconSize:null }), zIndexOffset:S.sel === id ? 1000 : w ? (w[0] === d ? 600 : 300) : x.o ? 0 : 100, keyboard:true, title:x.n });
+      m.on('click', () => A.sel(id)); m.addTo(OM.layer); });
+    if (!OP.done[p.city]) fetchPop(p.city);
+    if (OM.fitKey !== p.id){ OM.fitKey = p.id; const pts = cityPlaces(p.city).filter(id => !PL[id].o).map(id => [PL[id].la, PL[id].lo]);
+      const pan = document.querySelector('.epanel'); setTimeout(() => { OM.map.invalidateSize(); OM.map.fitBounds(pts, { paddingTopLeft:[30, 112], paddingBottomRight:[30, (pan ? pan.offsetHeight : 240) + 24] }); }, 0); }
+  } catch (err) { OM.ok = false; OM.map = null; OM.el = null; setTimeout(render, 0); }
+}
+async function fetchPop(city, center, radius){
+  if (OP.busy) return; OP.busy = true; OP.msg = ''; OP.done[city] = true;
+  const c = center || { lat:CITY[city].la, lng:CITY[city].lo }, R = Math.round(Math.min(15000, Math.max(1500, radius || 4500))), at = `(around:${R},${c.lat.toFixed(5)},${c.lng.toFixed(5)})`;
+  const q = `[out:json][timeout:25];(nwr["tourism"~"^(attraction|museum|viewpoint|zoo|aquarium|theme_park|gallery)$"]["wikidata"]${at};nwr["historic"~"^(castle|monument|memorial)$"]["wikidata"]${at};nwr["amenity"="place_of_worship"]["wikidata"]["wikipedia"]${at};nwr["amenity"~"^(restaurant|cafe|fast_food)$"][~"^(name:ko|wikidata)$"~"."]${at};);out center 150;`;
+  try {
+    const res = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', body:'data=' + encodeURIComponent(q), headers:{ 'Content-Type':'application/x-www-form-urlencoded' } });
+    if (!res.ok) throw new Error('http ' + res.status);
+    const js = await res.json(), els = (js.elements || []).filter(e => e.tags && (e.tags['name:ko'] || e.tags.name));
+    const isFood = t => /^(restaurant|cafe|fast_food)$/.test(t.amenity || '');
+    const dist = e => km({ la:e.lat ?? e.center.lat, lo:e.lon ?? e.center.lon }, { la:c.lat, lo:c.lng });
+    const rank = e => (e.tags.wikipedia ? 0 : 5) + (e.tags['wikipedia'] && /^ko:/.test(e.tags.wikipedia) ? -3 : 0) + dist(e) / 2;
+    const sights = els.filter(e => !isFood(e.tags)).sort((a, b) => rank(a) - rank(b)).slice(0, 15), foods = els.filter(e => isFood(e.tags)).sort((a, b) => rank(a) - rank(b)).slice(0, 10);
+    let added = 0;
+    sights.concat(foods).forEach(e => {
+      const id = 'o:' + e.type[0] + e.id, la = e.lat ?? (e.center && e.center.lat), lo = e.lon ?? (e.center && e.center.lon); if (la == null || PL[id]) return;
+      if (Object.keys(PL).some(k => PL[k].c === city && km(PL[k], { la, lo }) < 0.15)) return;
+      const t = e.tags, name = t['name:ko'] || t.name, food = isFood(t);
+      const kind = food ? ({ restaurant:'음식점', cafe:'카페', fast_food:'간편식 가게' }[t.amenity] || '음식점') : t.tourism === 'museum' ? '박물관' : t.tourism === 'viewpoint' ? '전망 명소' : t.historic === 'castle' ? '성' : t.amenity === 'place_of_worship' ? '절·신사' : '관광 명소';
+      const wp = t.wikipedia && /^[a-z]{2,3}:.+/.test(t.wikipedia) ? t.wikipedia.split(':') : null;
+      const src = [['OpenStreetMap', `https://www.openstreetmap.org/${e.type}/${e.id}`]]; if (wp) src.push([`위키백과 (${wp[0]})`, `https://${wp[0]}.wikipedia.org/wiki/${encodeURIComponent(wp.slice(1).join(':'))}`]);
+      const pts = [`지도 데이터(OpenStreetMap)에 등록된 ${kind}이에요.${t.name && t['name:ko'] && t.name !== t['name:ko'] ? ` 현지 이름은 ‘${t.name}’이에요.` : ''}`];
+      if (wp) pts.push('위키백과에 문서가 있는 잘 알려진 곳이에요. 출처의 위키백과 링크에서 자세히 볼 수 있어요.');
+      if (t.opening_hours) pts.push('영업시간(지도 데이터 기준): ' + t.opening_hours);
+      PL[id] = { n:name, k:name.length > 9 ? name.slice(0, 8) + '…' : name, c:city, la, lo, cat:food ? '맛집' : '관광', fee:null, feeT:'요금 현장 확인', when:'', pts, src, o:true }; added++;
+    });
+    saveO(); if (!added && !center) OP.msg = '이 주변에서 더 찾은 인기 장소가 없어요.';
+  } catch (e) { OP.msg = '지도 인기 장소를 불러오지 못했어요. 인터넷 연결을 확인하거나 잠시 뒤 “이 지역 다시 찾기”를 눌러 주세요.'; OP.done[city] = false; }
+  OP.busy = false; render();
+}
+
+/* ---------- 지도 이동·확대 ---------- */
+const VIEW = {};
+const curPan = () => document.querySelector('.pan');
+const viewOf = el => VIEW[el.dataset.key] || (VIEW[el.dataset.key] = { k:1, x:0, y:0 });
+function applyView(){
+  const el = curPan(); if (!el) return; const v = viewOf(el);
+  const g = el.querySelector('g.world'); if (g) g.setAttribute('transform', `translate(${v.x.toFixed(1)},${v.y.toFixed(1)}) scale(${v.k.toFixed(3)})`);
+  el.querySelectorAll('[data-bx]').forEach(p => { p.style.left = (v.x + +p.dataset.bx * v.k).toFixed(1) + 'px'; p.style.top = (v.y + +p.dataset.by * v.k).toFixed(1) + 'px'; });
+  const sc = document.getElementById('scl'); if (sc){ const s = +sc.dataset.s * v.k, per = 80 / s * 111.32, nice = [0.05,0.1,0.2,0.5,1,2,5,10,20,50].find(n => n >= per * 0.6) || 50; sc.innerHTML = `${nice < 1 ? Math.round(nice * 1000) + 'm' : nice + 'km'} <i class="sc" style="width:${(nice / 111.32 * s).toFixed(0)}px"></i>`; }
+}
+function zoomAt(v, f, cx, cy){ const k = Math.min(10, Math.max(0.5, v.k * f)); v.x = cx - (cx - v.x) * (k / v.k); v.y = cy - (cy - v.y) * (k / v.k); v.k = k; }
+const PT = new Map(); let drag = null, suppress = false;
+document.addEventListener('pointerdown', e => { const el = e.target.closest('.pan'); if (!el) return; PT.set(e.pointerId, { x:e.clientX, y:e.clientY }); drag = { el, moved:0 }; });
+document.addEventListener('pointermove', e => {
+  if (!drag || !PT.has(e.pointerId)) return; const v = viewOf(drag.el), prev = PT.get(e.pointerId), r = drag.el.getBoundingClientRect();
+  if (PT.size === 1){ const dx = e.clientX - prev.x, dy = e.clientY - prev.y; v.x += dx; v.y += dy; drag.moved += Math.abs(dx) + Math.abs(dy); }
+  else if (PT.size === 2){ const [a, b] = [...PT.entries()].map(([id, p]) => id === e.pointerId ? { x:e.clientX, y:e.clientY } : p), [a0, b0] = [...PT.values()];
+    const d1 = Math.hypot(a0.x - b0.x, a0.y - b0.y), d2 = Math.hypot(a.x - b.x, a.y - b.y); if (d1 > 0) zoomAt(v, d2 / d1, (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top); drag.moved += 10; }
+  PT.set(e.pointerId, { x:e.clientX, y:e.clientY }); applyView();
+});
+const endPt = e => { PT.delete(e.pointerId); if (!PT.size && drag){ if (drag.moved > 6) suppress = true; drag = null; } };
+document.addEventListener('pointerup', endPt); document.addEventListener('pointercancel', endPt);
+document.addEventListener('wheel', e => { const el = e.target.closest('.pan'); if (!el) return; e.preventDefault(); const r = el.getBoundingClientRect(); zoomAt(viewOf(el), Math.exp(-e.deltaY * 0.0015), e.clientX - r.left, e.clientY - r.top); applyView(); }, { passive:false });
+function zoomBtn(f){ const el = curPan(); if (!el) return; const v = viewOf(el); zoomAt(v, f, el.clientWidth / 2, el.clientHeight / 2); applyView(); }
+
+/* ---------- render & events ---------- */
+function render(){
+  document.body.classList.toggle('big', S.big);
+  $('hd').innerHTML = header();
+  const full = S.scr === 'home' || (S.scr === 'detail' && S.edit);
+  $('ft').innerHTML = footer();
+  $('mn').className = full ? 'full' : '';
+  $('mn').innerHTML = ({ home, detail, book, paid, trip, make, src })[S.scr]();
+  $('ft').innerHTML = footer();
+  $('sh').innerHTML = sheet();
+  applyView();
+  if (S.scr === 'detail' && S.edit) syncOM();
+  if (S.scr === 'detail' && S.edit && S.sel){ centerOn(S.sel); const car = document.querySelector('.pcar'), on = car && car.querySelector('.pc.on'); if (on){ progUntil = Date.now() + 400; car.scrollLeft = on.offsetLeft - (car.clientWidth - on.offsetWidth) / 2; } }
+}
+let progUntil = 0, scT = 0;
+function markSel(){ document.querySelectorAll('.epin').forEach(el => el.classList.toggle('sel', el.dataset.v === S.sel)); document.querySelectorAll('.pc').forEach(el => el.classList.toggle('on', el.dataset.v === S.sel)); }
+function centerOn(id){
+  if (OM.ok && OM.map && PL[id]){ const pan = document.querySelector('.epanel'), ph = pan ? pan.offsetHeight : 0; OM.map.panTo([PL[id].la, PL[id].lo], { animate:false }); OM.map.panBy([0, Math.round(ph / 2 - 50)], { animate:true }); return; }
+  const el = curPan(), pin = el && el.querySelector(`.epin[data-v="${id}"]`); if (!pin) return;
+  const v = viewOf(el), bx = +pin.dataset.bx, by = +pin.dataset.by, pan = document.querySelector('.epanel'), ph = pan ? pan.offsetHeight : 0, W = el.clientWidth, H = el.clientHeight, sx = v.x + bx * v.k, sy = v.y + by * v.k;
+  if (sx > 40 && sx < W - 40 && sy > 110 && sy < H - ph - 30) return;
+  v.x = W / 2 - bx * v.k; v.y = (110 + H - ph) / 2 - by * v.k; applyView();
+}
+document.addEventListener('scroll', e => { const c = e.target; if (!c || !c.classList || !c.classList.contains('pcar') || Date.now() < progUntil) return; clearTimeout(scT);
+  scT = setTimeout(() => { const mid = c.scrollLeft + c.clientWidth / 2; let best = null, bd = 1e9; c.querySelectorAll('.pc').forEach(el => { const m = el.offsetLeft + el.offsetWidth / 2, dd = Math.abs(m - mid); if (dd < bd){ bd = dd; best = el; } });
+    if (!best || best.dataset.v === S.sel) return; S.sel = best.dataset.v; markSel(); centerOn(S.sel); }, 140); }, true);
+function go(patch){ Object.assign(S, patch); render(); $('mn').scrollTop = 0; }
+const A = {
+  go:v => go({ scr:v, ...(v === 'trip' ? {} : {}) }),
+  big:() => go({ big:!S.big }),
+  city:v => { S.city = v; S.cityOpen = true; S.cs = 'peek'; render();
+    const el = curPan(); if (el && HP){ const c = CITY[v], [bx, by] = HP(c.lo, c.la), vv = viewOf(el), k = Math.max(vv.k, v === '삿포로' ? 1.6 : 1.8), H = el.clientHeight;
+      vv.k = k; vv.x = el.clientWidth / 2 - bx * k; vv.y = Math.max(120, (H - 274) / 2 + 40) - by * k; applyView(); } },
+  zin:() => zoomBtn(1.5), zout:() => zoomBtn(1 / 1.5),
+  zreset:() => { const el = curPan(); if (el){ VIEW[el.dataset.key] = { k:1, x:0, y:0 }; applyView(); } },
+  cs:() => { S.cs = S.cs === 'full' ? 'peek' : 'full'; render(); },
+  cclose:() => { S.cityOpen = false; render(); },
+  sel:v => { S.sel = v || null; render(); },
+  reorder:v => { const d = +v, r = route(pack()).map(x => x.slice()); r[d] = bestOrder(r[d]); setRoute(r); S.rprev = false; S.chg = false; render(); },
+  rprev:() => { S.rprev = !S.rprev; render(); },
+  showreco:() => { S.sel = null; S.pl = ''; render(); },
+  ins:v => { const [id, d, pos] = v.split(':'), r = route(pack()).map(x => x.slice()); r[+d].splice(+pos, 0, id); setRoute(r); S.chg = true; S.rprev = false; render(); },
+  optog:() => { S.op = S.op === false ? true : false; render(); },
+  opop:() => { if (!OM.map) return; const c = OM.map.getCenter(), ne = OM.map.getBounds().getNorthEast(); fetchPop(pack().city, { lat:c.lat, lng:c.lng }, km({ la:c.lat, lo:c.lng }, { la:ne.lat, lo:ne.lng }) * 800); render(); },
+  pick:v => { S.sel = v; S.pl = ''; render(); },
+  pl:v => { S.pl = v; render(); },
+  mf:v => { S.mf = v; render(); },
+  rmph:v => { const f = R.files.splice(+v, 1)[0]; if (f) try { URL.revokeObjectURL(f.url); } catch (e) {} $('sh').innerHTML = sheet(); },
+  rf:v => { S.rf = v; render(); },
+  open:v => { S.up = false; S.off = {}; const p = PACKS.find(x => x.id === v); go({ scr:'detail', pid:v, city:p.city, day:-1, edit:false }); },
+  day:v => { S.day = +v; S.rprev = false; render(); },
+  edit:() => { S.edit = !S.edit; S.sel = null; S.pl = ''; S.chg = false; S.rprev = false; if (S.edit && S.day < 0) S.day = 0; render(); $('mn').scrollTop = 0; },
+  reset:() => { delete S.routes[S.pid]; try { localStorage.setItem(SAVE_KEY, JSON.stringify(S.routes)); } catch (e) {} render(); },
+  mv:v => { const [d, i, k] = v.split(':').map(Number), r = route(pack()).map(x => x.slice()), j = i + k; if (j < 0 || j >= r[d].length) return; [r[d][i], r[d][j]] = [r[d][j], r[d][i]]; setRoute(r); S.chg = true; S.rprev = false; render(); },
+  del:v => { const [d, i] = v.split(':').map(Number), r = route(pack()).map(x => x.slice()); r[d].splice(i, 1); setRoute(r); S.chg = true; S.rprev = false; if (!S.edit) S.sel = null; render(); },
+  add:v => { const r = route(pack()).map(x => x.slice()), d = S.day === -1 ? 0 : S.day; r[d].push(v); setRoute(r); S.chg = true; S.rprev = false; if (S.edit) S.sel = v; render(); },
+  up:v => { S.up = v === 'true'; render(); },
+  tog:v => { S.off = { ...S.off, [v]:!S.off[v] }; render(); },
+  pay:() => go({ scr:'paid', shared:false }),
+  share:() => { S.shared = true; render(); },
+  alt:v => { S.alt = v || null; render(); },
+  load:() => { S.loaded = true; render(); },
+  made:() => { S.made = true; render(); },
+  place:v => { R.msg = ''; S.place = v; render(); },
+  close:() => { S.place = null; render(); },
+  star:v => { R.stars = +v; $('sh').innerHTML = sheet(); }
+};
+document.addEventListener('click', e => { if (suppress){ suppress = false; if (e.target.closest('.pan')){ e.preventDefault(); return; } } const b = e.target.closest('[data-a]'); if (!b || b.tagName === 'SELECT') return; e.preventDefault(); const f = A[b.dataset.a]; if (f) f(b.dataset.v, b); });
+document.addEventListener('change', e => { const t = e.target; if (t.dataset && t.dataset.a === 'today'){ const [d, i] = t.dataset.v.split(':').map(Number), to = +t.value; if (to === d) return; const r = route(pack()).map(x => x.slice()); const [id] = r[d].splice(i, 1); r[to].push(id); setRoute(r); S.chg = true; render(); } });
+async function shrink(f, max = 1600, q = 0.82){
+  const bmp = await createImageBitmap(f), k = Math.min(1, max / Math.max(bmp.width, bmp.height)), c = document.createElement('canvas');
+  c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k); c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+  return new Promise((ok, no) => c.toBlob(b => b ? ok(b) : no(new Error('blob')), 'image/jpeg', q));
+}
+document.addEventListener('change', async e => { if (e.target.id !== 'rphoto') return;
+  const fs = [...e.target.files].filter(f => /^image\//.test(f.type)).slice(0, 3 - R.files.length);
+  for (const f of fs){ try { const b = await shrink(f); R.files.push({ blob:b, url:URL.createObjectURL(b) }); } catch (err) { R.msg = '사진 하나를 읽지 못했어요.'; } }
+  $('sh').innerHTML = sheet(); });
+document.addEventListener('input', e => { if (e.target.id === 'rname') R.name = e.target.value; if (e.target.id === 'rtext') R.text = e.target.value; });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.place){ S.place = null; render(); } });
+document.addEventListener('submit', async e => {
+  if (e.target.id !== 'revform') return; e.preventDefault();
+  const text = R.text.trim(), name = R.name.trim().slice(0, 20) || '익명';
+  const say = m => { R.msg = m; const el = $('rmsg'); if (el){ el.hidden = false; el.className = 'msg'; el.textContent = m; } };
+  if (!R.stars) return say('별점을 골라 주세요.');
+  if (text.length < 2) return say('리뷰 내용을 두 글자 이상 적어 주세요.');
+  if (!DB) return say('지금은 리뷰를 저장할 수 없어요.');
+  R.busy = true; $('sh').innerHTML = sheet();
+  try { const photos = [];
+    if (R.files.length){ if (!ASSETS) throw { code:'no_assets' }; for (const f of R.files){ const up = await ASSETS.upload(f.blob); photos.push(up.id); } }
+    await DB.collection('reviews').add({ place:S.place, stars:R.stars, name, text:text.slice(0, 500), photos, at:Date.now() });
+    R.files.forEach(f => { try { URL.revokeObjectURL(f.url); } catch (e) {} }); R.files = []; R.text = ''; R.stars = 0; R.msg = '리뷰를 올렸어요. 고마워요!'; if (LOCAL && S.scr === 'detail' && S.edit) render(); }
+  catch (err) { R.msg = err && err.code === 'invalid_argument' ? '리뷰를 쓸 권한이 없어요. 이 앱을 공유받을 때 참여자(Contributor) 이상 권한이 있어야 리뷰를 쓸 수 있어요.' : err && err.code === 'no_assets' ? '사진을 올릴 권한이 없어요. 사진을 빼고 다시 올려 주세요.' : err && err.code === 'quota_exceeded' ? '저장 공간이 가득 찼어요.' : '리뷰를 저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.'; }
+  R.busy = false; $('sh').innerHTML = sheet();
+});
+
+let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (S.scr === 'home' || S.edit) render(); }, 150); });
+render();
+
+(async () => {
+  if (!(window.claude && window.claude.use)){ setupLocal(); return; }
+  try { DB = window.claude && window.claude.use ? await window.claude.use('db') : null; } catch (e) { DB = null; }
+  try { ASSETS = window.claude && window.claude.use ? await window.claude.use('assets') : null; } catch (e) { ASSETS = null; }
+  if (!DB){ revState = 'off'; if (S.place) $('sh').innerHTML = sheet(); return; }
+  const t = setTimeout(() => { if (revState === 'loading'){ revState = 'slow'; const el = $('revlist'); if (el && S.place) el.innerHTML = revList(S.place); } }, 10000);
+  DB.collection('reviews').limit(1000).onSnapshot(snap => {
+    if (!snap.metadata.fromCache) clearTimeout(t);
+    const m = {}; snap.docs.forEach(d => { const v = d.data(); if (!v || typeof v.place !== 'string' || !PL[v.place]) return; (m[v.place] = m[v.place] || []).push(v); });
+    Object.values(m).forEach(a => a.sort((x, y) => (y.at || 0) - (x.at || 0))); REV = m;
+    if (!snap.metadata.fromCache || revState === 'loading') revState = 'ok';
+    const el = $('revlist'); if (el && S.place) el.innerHTML = revList(S.place);
+    if (S.scr === 'detail' && S.edit && !S.place) render();
+  }, () => { clearTimeout(t); revState = 'off'; if (S.place) $('sh').innerHTML = sheet(); });
+})();
+}
+</script>
+</body>
+</html>
