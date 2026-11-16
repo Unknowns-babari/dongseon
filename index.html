@@ -488,7 +488,7 @@ function fit(pts, W, H, pad, top, bottom){
   f.s = s; return f;
 }
 const pct = (v, T) => (v / T * 100).toFixed(2) + '%';
-const priceMan = n => Math.round(n / 10000) + '만';
+const priceMan = n => n < 10000 ? (Math.round(n / 1000) || 1) + '천' : Math.round(n / 10000) + '만';
 let HP = null;
 function home(){
   const W = mw(), H = mh(), open = !!S.cityOpen, full = S.cs === 'full';
