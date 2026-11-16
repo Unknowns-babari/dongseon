@@ -829,7 +829,7 @@ function koLayer(){
   if (!(window.L && L.maplibreGL && window.maplibregl)) return null;
   const l = L.maplibreGL({ style:'https://tiles.openfreemap.org/styles/liberty', attribution:'&copy; OpenFreeMap &copy; OpenMapTiles &copy; OpenStreetMap contributors', localIdeographFontFamily:"'Noto Sans KR','Malgun Gothic','Apple SD Gothic Neo',sans-serif" });
   const fix = m => { try { (m.getStyle().layers || []).forEach(ly => { if (ly.type === 'symbol' && ly.layout && ly.layout['text-field']) m.setLayoutProperty(ly.id, 'text-field', ['coalesce', ['get', 'name:ko'], ['get', 'name']]); }); } catch (e) {} };
-  const kick = () => { try { const m = l.getMaplibreMap(); if (m){ m.resize(); } if (l._update) l._update(); } catch (e) {} };
+  const kick = () => { try { const m = l.getMaplibreMap(); if (m){ m.resize(); } if (l._update) l._update(); const lm = l._map; if (lm){ lm.panBy([1, 0], { animate:false }); lm.panBy([-1, 0], { animate:false }); } } catch (e) {} };
   l.on('add', () => setTimeout(() => { const m = l.getMaplibreMap && l.getMaplibreMap(); if (!m) return; if (m.isStyleLoaded()) fix(m); m.on('style.load', () => fix(m)); m.once('load', () => { fix(m); kick(); }); m.once('idle', () => { fix(m); kick(); }); kick(); }, 0));
   l._kick = kick; KO.push(l);
   return l;
