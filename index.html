@@ -235,8 +235,7 @@ main.full>*{animation:none}
 .pcar .ph.none span{display:none}
 .pcar .pcb{gap:2px;padding:8px 12px 10px}
 .pcar .pact{margin-top:6px}
-.pcar{flex:1;min-height:0;align-items:stretch}
-.pc{overflow:hidden}
+.pcar{align-items:stretch;flex-shrink:0}
 .gslot{position:absolute;inset:0}
 .hslot{position:absolute;inset:0}
 #hmap{position:absolute;inset:0;background:var(--sea)}
@@ -682,7 +681,7 @@ function editStage(){
     <div class="ovl f2">${['전체', '관광', '맛집'].map(c => `<button class="chip ${mf === c ? 'on' : ''}" data-a="mf" data-v="${c}">${c === '전체' ? '전체' : ico(c, 14) + ' ' + c}</button>`).join('')}${OM.ok ? `<button class="chip ${S.op !== false ? 'on' : ''}" data-a="optog">지도 인기 장소</button><button class="chip" data-a="opop" ${OP.busy ? 'disabled' : ''}>${OP.busy ? '찾는 중…' : '이 지역 다시 찾기'}</button>` : ''}</div>
     ${OM.ok && OP.msg ? `<p class="gerr">${esc(OP.msg)}</p>` : ''}
     <div class="legend ${OM.ok ? 'gm' : ''}" style="bottom:${ph + 8}px"><span><i class="lg n"></i>내 동선</span>${S.rprev ? '<span><i class="lg p"></i>추천 순서</span>' : ''}<button class="lgb ${mf === '관광' ? 'on' : ''}" data-a="mf" data-v="${mf === '관광' ? '전체' : '관광'}" aria-pressed="${mf === '관광'}"><i class="lg t"></i>관광만</button><button class="lgb ${mf === '맛집' ? 'on' : ''}" data-a="mf" data-v="${mf === '맛집' ? '전체' : '맛집'}" aria-pressed="${mf === '맛집'}"><i class="lg f"></i>맛집만</button>${OM.ok ? `<button class="lgb ${S.op !== false ? 'on' : ''}" data-a="optog" aria-pressed="${S.op !== false}"><i class="lg o"></i>지도 인기 장소</button>` : `<span><i class="lg r"></i>역·노선(대략)</span><span id="scl" data-s="${P.s}">${nice < 1 ? nice * 1000 + 'm' : nice + 'km'} <i class="sc" style="width:${(nice / 111.32 * P.s).toFixed(0)}px"></i></span>`}</div>
-    <div class="epanel ${mode}" style="height:${ph}px">${mode === 'day' ? dayList(p, r, d) : nearPanel(p, r, d, sel, mode, where)}</div>
+    <div class="epanel ${mode}" style="${mode === 'card' ? `max-height:${Math.round(H * 0.66)}px` : `height:${ph}px`}">${mode === 'day' ? dayList(p, r, d) : nearPanel(p, r, d, sel, mode, where)}</div>
   </div>`;
 }
 function placeActs(id, r, d, where){
@@ -1049,6 +1048,7 @@ function render(){
   applyView();
   if (S.scr === 'detail' && S.edit) syncOM();
   if (S.scr === 'home') syncHome();
+  { const pn = document.querySelector('.epanel.card'); if (pn){ const h = pn.offsetHeight; document.querySelectorAll('.legend').forEach(l => l.style.bottom = (h + 8) + 'px'); const z = document.querySelector('.stage.edit .zoom'); if (z) z.style.bottom = (h + 40) + 'px'; } }
   { const sl = document.querySelector('.sline'), on = sl && (sl.querySelector('.sst.on') || sl.querySelector('.sday.on')); if (on) sl.scrollLeft = Math.max(0, on.offsetLeft - (sl.clientWidth - on.offsetWidth) / 2); }
   if (S.scr === 'detail' && S.edit && S.sel){ centerOn(S.sel); const car = document.querySelector('.pcar'), on = car && car.querySelector('.pc.on'); if (on){ progUntil = Date.now() + 400; car.scrollLeft = on.offsetLeft - (car.clientWidth - on.offsetWidth) / 2; } }
 }
