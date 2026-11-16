@@ -247,6 +247,7 @@ main.full>*{animation:none}
 .lleg .lline{position:absolute;left:25px;top:-4px;bottom:-4px;border-left:2px dashed var(--c);opacity:.5}
 .lleg svg{position:relative;background:var(--card);margin-left:-8px;color:var(--c)}
 .lleg a{font-weight:700;white-space:nowrap}
+.repbar{display:flex;align-items:center;gap:8px;background:var(--warn);color:var(--warnInk);border-radius:10px;padding:6px 6px 6px 12px;font-size:.85em}
 .gslot{position:absolute;inset:0}
 .hslot{position:absolute;inset:0}
 #hmap{position:absolute;inset:0;background:var(--sea)}
@@ -441,7 +442,7 @@ const cityPlaces = c => Object.keys(PL).filter(id => PL[id].c === c);
 
 const SAVE_KEY = 'dongseon-routes-v3';
 let saved = {}; try { saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}') || {}; } catch (e) { saved = {}; }
-const S = { scr:'home', cityOpen:false, cs:'peek', sel:null, city:'도쿄', rf:'전체', pid:'tk1', day:0, edit:false, routes:saved, up:false, off:{}, place:null, mf:'전체', pl:'', chg:false, rprev:false, filter:'전체', big:false, alt:null, loaded:false, made:false, shared:false };
+const S = { scr:'home', cityOpen:false, cs:'peek', sel:null, city:'도쿄', rf:'전체', pid:'tk1', day:0, edit:false, routes:saved, up:false, off:{}, place:null, mf:'전체', pl:'', chg:false, rprev:false, rep:null, filter:'전체', big:false, alt:null, loaded:false, made:false, shared:false };
 const R = { name:'', text:'', stars:0, msg:'', busy:false, files:[] };
 const $ = id => document.getElementById(id);
 const pack = () => PACKS.find(p => p.id === S.pid);
@@ -671,7 +672,7 @@ function sline(r, d){
   const total = r.reduce((n, x) => n + x.length, 0); let g = 0;
   return r.map((ids, k) => `<div class="sday ${k === d ? 'on' : ''}" style="--c:${COLORS[k % 5]}" role="listitem"><button class="sdl" data-a="day" data-v="${k}" aria-pressed="${k === d}">${k + 1}일차</button>
     ${ids.map((id, i) => { const on = S.sel === id, first = g === 0, last = g === total - 1; g++;
-      return `${i ? `<span class="sleg">${minT(legInfo(ids[i - 1], id).m)}</span>` : ''}<span class="sst ${on ? 'on' : ''}">${on ? `<button class="sx" data-a="shift" data-v="${k}:${i}:-1" ${first ? 'disabled' : ''} aria-label="앞으로 옮기기">◀</button>` : ''}<button class="sn" data-a="sel" data-v="${on ? '' : id}" aria-label="${k + 1}일차 ${i + 1}번 ${esc(PL[id].n)}${on ? ', 선택됨' : ''}"><b>${i + 1}</b>${esc(PL[id].k)}</button>${on ? `<button class="sx" data-a="shift" data-v="${k}:${i}:1" ${last ? 'disabled' : ''} aria-label="뒤로 옮기기">▶</button><button class="sx del" data-a="del" data-v="${k}:${i}" aria-label="빼기">✕</button>` : ''}</span>`; }).join('')}
+      return `${i ? `<span class="sleg">${minT(legInfo(ids[i - 1], id).m)}</span>` : ''}<span class="sst ${on ? 'on' : ''}">${on ? `<button class="sx" data-a="shift" data-v="${k}:${i}:-1" ${first ? 'disabled' : ''} aria-label="앞으로 옮기기">◀</button>` : ''}<button class="sn" data-a="sel" data-v="${on ? '' : id}" aria-label="${k + 1}일차 ${i + 1}번 ${esc(PL[id].n)}${on ? ', 선택됨' : ''}"><b>${i + 1}</b>${esc(PL[id].k)}</button>${on ? `<button class="sx" data-a="shift" data-v="${k}:${i}:1" ${last ? 'disabled' : ''} aria-label="뒤로 옮기기">▶</button><button class="sx" data-a="repstart" data-v="${id}" aria-label="다른 장소로 교체">⇄</button><button class="sx del" data-a="del" data-v="${k}:${i}" aria-label="빼기">✕</button>` : ''}</span>`; }).join('')}
     <button class="sadd" data-a="addto" data-v="${k}" aria-label="${k + 1}일차에 장소 추가">+</button></div>`).join('');
 }
 
@@ -712,8 +713,9 @@ function editStage(){
 }
 function placeActs(id, r, d, where){
   const w = where[id];
-  return w ? `<span class="tag">${w[0] + 1}일차 ${w[1] + 1}번째</span><button class="mini" data-a="mv" data-v="${w[0]}:${w[1]}:-1" ${w[1] === 0 ? 'disabled' : ''} aria-label="앞으로">↑</button><button class="mini" data-a="mv" data-v="${w[0]}:${w[1]}:1" ${w[1] === r[w[0]].length - 1 ? 'disabled' : ''} aria-label="뒤로">↓</button>${r.length > 1 ? `<select class="mini" data-a="today" data-v="${w[0]}:${w[1]}" aria-label="다른 날로 옮기기">${r.map((_, k) => `<option value="${k}" ${k === w[0] ? 'selected' : ''}>${k + 1}일차</option>`).join('')}</select>` : ''}<button class="mini del" data-a="del" data-v="${w[0]}:${w[1]}">빼기</button>`
-    : `<button class="mini add" data-a="add" data-v="${id}">+ ${d + 1}일차에 넣기</button>`;
+  return w ? `<span class="tag">${w[0] + 1}일차 ${w[1] + 1}번째</span><button class="mini" data-a="mv" data-v="${w[0]}:${w[1]}:-1" ${w[1] === 0 ? 'disabled' : ''} aria-label="앞으로">↑</button><button class="mini" data-a="mv" data-v="${w[0]}:${w[1]}:1" ${w[1] === r[w[0]].length - 1 ? 'disabled' : ''} aria-label="뒤로">↓</button>${r.length > 1 ? `<select class="mini" data-a="today" data-v="${w[0]}:${w[1]}" aria-label="다른 날로 옮기기">${r.map((_, k) => `<option value="${k}" ${k === w[0] ? 'selected' : ''}>${k + 1}일차</option>`).join('')}</select>` : ''}<button class="mini del" data-a="del" data-v="${w[0]}:${w[1]}">빼기</button><button class="mini" data-a="repstart" data-v="${id}">⇄ 교체</button>`
+    : S.rep && where[S.rep] ? `<button class="mini add" data-a="repdo" data-v="${id}">${esc(PL[S.rep].k)} 대신 넣기</button>`
+    : `<button class="mini add" data-a="add" data-v="${id}">+ ${d + 1}일차에 넣기</button>${(r[d] || []).length ? `<select class="mini" data-a="repwith" data-v="${id}" aria-label="동선의 장소와 교체"><option value="">⇄ 교체…</option>${r[d].map(x => `<option value="${x}">${esc(PL[x].k)} 대신</option>`).join('')}</select>` : ''}`;
 }
 function nearPanel(p, r, d, sel, mode, where){
   const mf = S.mf || '전체', o = sel ? PL[sel] : null;
@@ -721,14 +723,15 @@ function nearPanel(p, r, d, sel, mode, where){
   if (o) ids.sort((a, b) => (a === sel ? -1 : b === sel ? 1 : km(o, PL[a]) - km(o, PL[b])));
   else ids.sort((a, b) => rate(b).n - rate(a).n || (where[b] ? 1 : 0) - (where[a] ? 1 : 0));
   const x_ = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
-  if (mode === 'list') return `<div class="row"><h3 class="grow">${esc(p.city)} 장소 ${ids.length}곳 <span class="xs sub">${o ? esc(o.k) + '에서 가까운 순' : '리뷰 많은 순'}</span></h3><button class="ib" data-a="pl" data-v="" aria-label="목록 닫기">${x_}</button></div>
+  const repBar = S.rep && PL[S.rep] ? `<div class="repbar"><span class="grow"><b>${esc(PL[S.rep].n)}</b> 대신 넣을 곳을 골라 주세요</span><button class="mini" data-a="repcancel">취소</button></div>` : '';
+  if (mode === 'list') return `${repBar}<div class="row"><h3 class="grow">${esc(p.city)} 장소 ${ids.length}곳 <span class="xs sub">${o ? esc(o.k) + '에서 가까운 순' : '리뷰 많은 순'}</span></h3><button class="ib" data-a="pl" data-v="" aria-label="목록 닫기">${x_}</button></div>
     <div class="plist">${ids.map(id => { const x = PL[id];
       return `<article class="pl ${id === sel ? 'on' : ''}">${photoStrip(id, 3)}<div class="pcb">
         <button class="pname" data-a="pick" data-v="${id}"><span class="tag ${x.cat === '맛집' ? 'food' : ''}">${x.cat}</span> <b>${esc(x.n)}</b></button>
         <span>${rateT(id)} <span class="xs sub">· ${esc(x.feeT)}${o && id !== sel ? ' · 직선 ' + kmT(km(o, x)) : ''}</span></span>
         <div class="rcards">${x.pts.slice(0, 2).map(t => `<div class="rcard"><span class="xs sub">블로그 후기 요약</span><p>${esc(t)}</p></div>`).join('')}</div>
         <div class="pact">${placeActs(id, r, d, where)}<button class="mini" data-a="place" data-v="${id}">리뷰·사진 ›</button></div></div></article>`; }).join('')}</div>`;
-  return `${S.chg ? `<button class="chgbar" data-a="showreco">동선이 바뀌었어요 · ${d + 1}일차 추천 경로 보기 ›</button>` : ''}<div class="row"><h3 class="grow" style="font-size:1em">주변 장소 ${ids.length}곳 <span class="xs sub" style="font-weight:500">· 옆으로 넘기기</span></h3><button class="pill" data-a="pl" data-v="list">목록 보기</button><button class="ib" data-a="sel" data-v="" aria-label="닫기">${x_}</button></div>
+  return `${repBar}${S.chg && !S.rep ? `<button class="chgbar" data-a="showreco">동선이 바뀌었어요 · ${d + 1}일차 추천 경로 보기 ›</button>` : ''}<div class="row"><h3 class="grow" style="font-size:1em">주변 장소 ${ids.length}곳 <span class="xs sub" style="font-weight:500">· 옆으로 넘기기</span></h3><button class="pill" data-a="pl" data-v="list">목록 보기</button><button class="ib" data-a="sel" data-v="" aria-label="닫기">${x_}</button></div>
    <div class="pcar">${ids.map(id => { const x = PL[id];
      return `<article class="pc ${id === sel ? 'on' : ''}" data-a="sel" data-v="${id}">${photoStrip(id, 3)}<div class="pcb">
        <span><span class="tag ${x.cat === '맛집' ? 'food' : ''}">${x.cat}</span> ${rateT(id)}</span>
@@ -1118,16 +1121,19 @@ const A = {
     else return;
     setRoute(r); S.sel = id; S.chg = true; S.rprev = false; render(); },
   addto:v => { S.day = +v; S.sel = null; S.pl = 'list'; render(); },
+  repstart:v => { S.rep = v; S.sel = v; S.pl = 'list'; render(); },
+  repcancel:() => { S.rep = null; render(); },
+  repdo:v => { replaceStop(S.rep, v); },
   optog:() => { S.op = S.op === false ? true : false; render(); },
   opop:() => { if (!OM.map) return; const c = OM.map.getCenter(), ne = OM.map.getBounds().getNorthEast(); fetchPop(pack().city, { lat:c.lat, lng:c.lng }, km({ la:c.lat, lo:c.lng }, { la:ne.lat, lo:ne.lng }) * 800); render(); },
   pick:v => { S.sel = v; S.pl = ''; render(); },
-  pl:v => { S.pl = v; render(); },
+  pl:v => { S.pl = v; if (!v) S.rep = null; render(); },
   mf:v => { S.mf = v; render(); },
   rmph:v => { const f = R.files.splice(+v, 1)[0]; if (f) try { URL.revokeObjectURL(f.url); } catch (e) {} $('sh').innerHTML = sheet(); },
   rf:v => { S.rf = v; render(); },
   open:v => { S.up = false; S.off = {}; const p = PACKS.find(x => x.id === v); go({ scr:'detail', pid:v, city:p.city, day:-1, edit:false }); },
   day:v => { S.day = +v; S.rprev = false; render(); },
-  edit:() => { S.edit = !S.edit; S.sel = null; S.pl = ''; S.chg = false; S.rprev = false; if (S.edit && S.day < 0) S.day = 0; render(); $('mn').scrollTop = 0; },
+  edit:() => { S.edit = !S.edit; S.sel = null; S.pl = ''; S.rep = null; S.chg = false; S.rprev = false; if (S.edit && S.day < 0) S.day = 0; render(); $('mn').scrollTop = 0; },
   reset:() => { delete S.routes[S.pid]; try { localStorage.setItem(SAVE_KEY, JSON.stringify(S.routes)); } catch (e) {} render(); },
   mv:v => { const [d, i, k] = v.split(':').map(Number), r = route(pack()).map(x => x.slice()), j = i + k; if (j < 0 || j >= r[d].length) return; [r[d][i], r[d][j]] = [r[d][j], r[d][i]]; setRoute(r); S.chg = true; S.rprev = false; render(); },
   del:v => { const [d, i] = v.split(':').map(Number), r = route(pack()).map(x => x.slice()); r[d].splice(i, 1); setRoute(r); S.chg = true; S.rprev = false; if (!S.edit) S.sel = null; render(); },
@@ -1144,7 +1150,13 @@ const A = {
   star:v => { R.stars = +v; $('sh').innerHTML = sheet(); }
 };
 document.addEventListener('click', e => { if (suppress){ suppress = false; if (e.target.closest('.pan')){ e.preventDefault(); return; } } const b = e.target.closest('[data-a]'); if (!b || b.tagName === 'SELECT') return; e.preventDefault(); const f = A[b.dataset.a]; if (f) f(b.dataset.v, b); });
-document.addEventListener('change', e => { const t = e.target; if (t.dataset && t.dataset.a === 'today'){ const [d, i] = t.dataset.v.split(':').map(Number), to = +t.value; if (to === d) return; const r = route(pack()).map(x => x.slice()); const [id] = r[d].splice(i, 1); r[to].push(id); setRoute(r); S.chg = true; render(); } });
+function replaceStop(oldId, newId){
+  const r = route(pack()).map(x => x.slice()); let done = false;
+  r.forEach((ids, k) => { const i = ids.indexOf(oldId); if (i >= 0 && !done){ const j = ids.indexOf(newId); if (j >= 0){ ids[j] = oldId; } ids[i] = newId; S.day = k; done = true; } });
+  if (!done) return; r.forEach((ids, k) => { if (k !== S.day){ const j = ids.indexOf(newId); if (j >= 0) ids[j] = oldId; } });
+  setRoute(r); S.rep = null; S.sel = newId; S.pl = ''; S.chg = true; S.rprev = ''; render();
+}
+document.addEventListener('change', e => { const t = e.target; if (t.dataset && t.dataset.a === 'repwith'){ if (t.value) replaceStop(t.value, t.dataset.v); return; } if (t.dataset && t.dataset.a === 'today'){ const [d, i] = t.dataset.v.split(':').map(Number), to = +t.value; if (to === d) return; const r = route(pack()).map(x => x.slice()); const [id] = r[d].splice(i, 1); r[to].push(id); setRoute(r); S.chg = true; render(); } });
 async function shrink(f, max = 1600, q = 0.82){
   const bmp = await createImageBitmap(f), k = Math.min(1, max / Math.max(bmp.width, bmp.height)), c = document.createElement('canvas');
   c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k); c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
