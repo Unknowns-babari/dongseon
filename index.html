@@ -6,6 +6,9 @@
 <title>동선팩 (무료 지도)</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
@@ -215,6 +218,7 @@ main.full>*{animation:none}
 .stage .bsheet,.stage .zoom{z-index:600}
 #gmap{position:absolute;inset:0;background:var(--map)}
 .omk{background:none;border:0}
+.leaflet-gl-layer{z-index:1}
 .epin.gp{position:relative;transform:translate(-50%,-50%);width:max-content;cursor:pointer}
 .epin.gpop b{border-color:#5f6368;color:#3c4043}
 .legend.gm{left:10px;right:auto;z-index:500}
@@ -819,6 +823,17 @@ function sheet(){
 }
 
 
+
+/* 한국어 지명 지도 (OpenFreeMap 벡터 지도, 한국어 이름이 있으면 한국어로) */
+function koLayer(){
+  if (!(window.L && L.maplibreGL && window.maplibregl)) return null;
+  const l = L.maplibreGL({ style:'https://tiles.openfreemap.org/styles/liberty', attribution:'&copy; OpenFreeMap &copy; OpenMapTiles &copy; OpenStreetMap contributors', localIdeographFontFamily:"'Noto Sans KR','Malgun Gothic','Apple SD Gothic Neo',sans-serif" });
+  const fix = m => { try { (m.getStyle().layers || []).forEach(ly => { if (ly.type === 'symbol' && ly.layout && ly.layout['text-field']) m.setLayoutProperty(ly.id, 'text-field', ['coalesce', ['get', 'name:ko'], ['get', 'name']]); }); } catch (e) {} };
+  l.on('add', () => setTimeout(() => { const m = l.getMaplibreMap && l.getMaplibreMap(); if (!m) return; if (m.isStyleLoaded()) fix(m); m.on('style.load', () => fix(m)); m.once('idle', () => fix(m)); }, 0));
+  return l;
+}
+function withKo(base){ const k = koLayer(); return k ? Object.assign({ '한국어 지도':k }, base) : base; }
+
 /* ---------- 무료 실제 지도 (Leaflet + OpenStreetMap) ---------- */
 const OM = { ok:!!window.L, map:null, el:null, layer:null, fitKey:'' };
 const OP = { done:{}, busy:false, msg:'' }, OKEY = 'dongseon-osm-places';
@@ -840,10 +855,10 @@ function syncOM(){
       OM.map = L.map(OM.el, { zoomControl:false, attributionControl:true }).setView([35.68, 139.76], 13);
       L.control.zoom({ position:'topright' }).addTo(OM.map);
       const esri = (n, a) => L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/' + n + '/MapServer/tile/{z}/{y}/{x}', { maxZoom:19, attribution:'Tiles &copy; Esri' + (a || '') });
-      const base = { '기본 지도':esri('World_Street_Map', ' &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors'), 'OpenStreetMap':L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'&copy; OpenStreetMap contributors' }), '위성':esri('World_Imagery', ' &mdash; Esri, Maxar, Earthstar Geographics') };
-      let pick = '기본 지도'; try { const v = localStorage.getItem('dongseon-basemap'); if (base[v]) pick = v; } catch (e) {}
+      const base = withKo({ '기본 지도':esri('World_Street_Map', ' &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors'), 'OpenStreetMap':L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'&copy; OpenStreetMap contributors' }), '위성':esri('World_Imagery', ' &mdash; Esri, Maxar, Earthstar Geographics') });
+      let pick = base['한국어 지도'] ? '한국어 지도' : '기본 지도'; try { const v = localStorage.getItem('dongseon-basemap2'); if (base[v]) pick = v; } catch (e) {}
       base[pick].addTo(OM.map); L.control.layers(base, null, { position:'topright', collapsed:true }).addTo(OM.map);
-      OM.map.on('baselayerchange', e => { try { localStorage.setItem('dongseon-basemap', e.name); } catch (err) {} });
+      OM.map.on('baselayerchange', e => { try { localStorage.setItem('dongseon-basemap2', e.name); } catch (err) {} });
       OM.layer = L.layerGroup().addTo(OM.map);
     } else if (moved) setTimeout(() => OM.map.invalidateSize(), 0);
     const p = pack(), r = route(p), d = Math.max(0, Math.min(S.day, r.length - 1)), mf = S.mf || '전체';
@@ -898,10 +913,10 @@ const JP_BOUNDS = [[30.6, 129.2], [45.6, 145.9]];
 const HM = { map:null, el:null, layer:null };
 function baseLayer(map){
   const esri = n => L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/' + n + '/MapServer/tile/{z}/{y}/{x}', { maxZoom:19, attribution:'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors' });
-  const base = { '기본 지도':esri('World_Street_Map'), 'OpenStreetMap':L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'&copy; OpenStreetMap contributors' }), '위성':esri('World_Imagery') };
-  let pick = '기본 지도'; try { const v = localStorage.getItem('dongseon-basemap'); if (base[v]) pick = v; } catch (e) {}
+  const base = withKo({ '기본 지도':esri('World_Street_Map'), 'OpenStreetMap':L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'&copy; OpenStreetMap contributors' }), '위성':esri('World_Imagery') });
+  let pick = base['한국어 지도'] ? '한국어 지도' : '기본 지도'; try { const v = localStorage.getItem('dongseon-basemap2'); if (base[v]) pick = v; } catch (e) {}
   base[pick].addTo(map); L.control.layers(base, null, { position:'topright' }).addTo(map);
-  map.on('baselayerchange', e => { try { localStorage.setItem('dongseon-basemap', e.name); } catch (err) {} });
+  map.on('baselayerchange', e => { try { localStorage.setItem('dongseon-basemap2', e.name); } catch (err) {} });
 }
 function sheetH(){ const b = document.querySelector('.bsheet'); return b ? b.offsetHeight : 0; }
 function fitJapan(animate){ if (!HM.map) return; HM.map.invalidateSize(); HM.map.fitBounds(JP_BOUNDS, { paddingTopLeft:[16, 110], paddingBottomRight:[16, sheetH() + 16], maxZoom:7, animate:!!animate }); }
