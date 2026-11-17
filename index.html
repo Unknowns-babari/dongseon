@@ -155,6 +155,13 @@ a{color:var(--pri)}
 .svbar{display:grid;grid-template-columns:44px 1fr 64px;gap:8px;align-items:center;font-size:.85em}
 .svbar i{display:block;height:10px;border-radius:5px;background:var(--pri)}
 .svbar span:nth-child(2){background:var(--soft);border-radius:5px;overflow:hidden}
+.svtab{width:100%;border-collapse:collapse;font-size:.9em;margin-top:4px}
+.svtab th,.svtab td{border:1px solid var(--line);padding:7px 8px;text-align:center}
+.svtab th{background:var(--soft);font-weight:700}
+.svtab td:first-child,.svtab th:first-child{text-align:left}
+.svtab tr.tot td{font-weight:700;background:var(--bg)}
+.svbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.svbtns button{min-height:44px;flex:1 1 140px;border-radius:10px;border:1px solid var(--pri);background:var(--card);color:var(--pri);font-weight:700}
 .msg{font-size:.85em;padding:10px 12px;border-radius:10px;background:var(--soft)}
 .jmap{position:relative;aspect-ratio:4/3;border-radius:18px;overflow:hidden;background:var(--sea);border:1px solid var(--line)}
 .jmap svg{position:absolute;inset:0;width:100%;height:100%}
@@ -2005,6 +2012,8 @@ $('fbk').addEventListener('click', e => {
   if (k === 'close') fkClose();
   else if (k === 'star'){ FK.stars = FK.stars === +v ? 0 : +v; fkRender(); }
   else if (k === 'sort'){ FK.sort = v; fkList(); }
+  else if (k === 'svcsv') svSaveFile();
+  else if (k === 'svcopy') svCopy();
   else if (k === 'rep'){ if (FK.rep !== v){ FK.rtext = ''; FK.rmsg = ''; } FK.rep = v; if (b.dataset.to) FK.rtext = '@' + b.dataset.to + ' '; FK.pend = false; $('fklist').innerHTML = fkListHTML(); const t = $('fkrtext'); if (t){ t.focus(); t.setSelectionRange(t.value.length, t.value.length); } }
   else if (k === 'rcancel'){ FK.rep = null; FK.rtext = ''; FK.rmsg = ''; $('fklist').innerHTML = fkListHTML(); }
 });
@@ -2068,11 +2077,38 @@ $('srv').addEventListener('click', e => {
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && SV.step){ e.stopImmediatePropagation(); SV.done = true; SV.step = 0; svRender(); } }, true);
 function svResHTML(){
   const l = SV.list; if (!l.length) return '';
-  const yes = l.filter(v => v.use === 'yes'), pct = n => Math.round(n / l.length * 100);
+  const yes = l.filter(v => v.use === 'yes'), pct = n => Math.round(n / l.length * 100), t = svTable();
   const bar = (lab, n, tot) => `<div class="svbar"><b>${lab}</b><span><i style="width:${tot ? Math.round(n / tot * 100) : 0}%"></i></span><span class="sub">${n}명 · ${tot ? Math.round(n / tot * 100) : 0}%</span></div>`;
-  return `<div class="svres"><b>출시되면 쓰겠다는 응답</b><p style="margin:0"><b style="font-size:1.4em;color:var(--pri)">${pct(yes.length)}%</b> <span class="sub">· 응답 ${l.length}명 중 ${yes.length}명</span></p>
-    ${yes.length ? '<p class="xs sub" style="margin:4px 0 0">"예"라고 답한 사람의 연령대</p>' + AGES.map(a => bar(a, yes.filter(v => v.age === a).length, yes.length)).join('') : ''}</div>`;
+  const tab = (rows, cap) => `<table class="svtab"><caption class="xs sub" style="text-align:left;padding:6px 0 2px">${cap}</caption><thead><tr>${rows[0].map(c => `<th scope="col">${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows.slice(1).map((r, i, a) => `<tr class="${i === a.length - 1 ? 'tot' : ''}">${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  return `<div class="svres"><b>출시 의향 설문 결과</b><p style="margin:0"><b style="font-size:1.4em;color:var(--pri)">${pct(yes.length)}%</b> <span class="sub">· 응답 ${l.length}명 중 "예" ${yes.length}명</span></p>
+    ${yes.length ? '<p class="xs sub" style="margin:4px 0 0">"예"라고 답한 사람의 연령대</p>' + AGES.map(a => bar(a, yes.filter(v => v.age === a).length, yes.length)).join('') : ''}
+    ${tab(t.sum, '표 1. 출시되면 사용하겠는가')}${tab(t.age, '표 2. "예" 응답자의 연령대 분포')}
+    <div class="svbtns"><button data-fk="svcsv">표 파일로 저장 (엑셀)</button><button data-fk="svcopy">표 복사</button></div><p id="svnote" class="msg" role="status" hidden></p></div>`;
 }
+
+function svTable(){
+  const l = SV.list, yes = l.filter(v => v.use === 'yes'), no = l.length - yes.length, p = (n, t) => t ? (Math.round(n / t * 1000) / 10) + '%' : '0%';
+  return { sum:[['응답', '인원(명)', '비율'], ['예', yes.length, p(yes.length, l.length)], ['아니오', no, p(no, l.length)], ['합계', l.length, l.length ? '100%' : '0%']],
+    age:[['연령대 ("예" 응답자)', '인원(명)', '비율'], ...AGES.map(a => { const n = yes.filter(v => v.age === a).length; return [a, n, p(n, yes.length)]; }), ['합계', yes.length, yes.length ? '100%' : '0%']] };
+}
+function svCSV(){
+  const t = svTable(), d = new Date(), stamp = d.toLocaleString('ko-KR');
+  const q = v => { v = String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+  const rows = [['동선팩 출시 의향 설문 결과'], ['저장 시각', stamp], ['질문', '만약 이 기능이 출시된다면 사용하시겠습니까?'], [], ...t.sum, [], ...t.age];
+  return '﻿' + rows.map(r => r.map(q).join(',')).join('\r\n');
+}
+function svSaveFile(){
+  const name = 'dongseon_survey_' + new Date().toISOString().slice(0, 10) + '.csv';
+  try { const url = URL.createObjectURL(new Blob([svCSV()], { type:'text/csv;charset=utf-8' })), a = document.createElement('a');
+    a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); svNote('엑셀에서 열 수 있는 표 파일(CSV)을 저장했어요.'); }
+  catch (e) { svNote('이 화면에서는 파일 저장이 막혀 있어요. 「표 복사」를 눌러 엑셀에 붙여넣어 주세요.'); }
+}
+async function svCopy(){
+  const t = svTable(), tsv = [...t.sum, [], ...t.age].map(r => r.join('\t')).join('\n');
+  try { await navigator.clipboard.writeText(tsv); svNote('표를 복사했어요. 엑셀이나 한글 표에 붙여넣으면 돼요.'); }
+  catch (e) { const ta = document.createElement('textarea'); ta.value = tsv; document.body.appendChild(ta); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (er) {} ta.remove(); svNote(ok ? '표를 복사했어요. 엑셀이나 한글 표에 붙여넣으면 돼요.' : '복사가 막혀 있어요. 아래 표를 화면 캡처해 주세요.'); }
+}
+function svNote(m){ const el = $('svnote'); if (el){ el.hidden = false; el.textContent = m; } }
 
 let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (S.scr === 'home' || S.scr === 'detail') render(); }, 150); });
 render();
