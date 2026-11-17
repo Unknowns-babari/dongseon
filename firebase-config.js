@@ -1,4 +1,10 @@
-/* 동선팩 공유 저장소 설정
-   Firebase 콘솔 > 프로젝트 설정 > 내 앱(웹) 에 나오는 firebaseConfig 값을 아래에 붙여 넣으면
-   리뷰·사진·동선팩이 모든 방문자에게 공유돼요. null이면 각자 브라우저에만 저장돼요. */
-window.FB_CONFIG = null;
+// Firebase 웹 설정 (공개용 값이에요 — 접근 제한은 firestore.rules가 담당)
+window.FB_CONFIG = {
+  apiKey: "AIzaSyCg8VQACVPf91ekoT1OWyTnTcqSAjMEy84",
+  authDomain: "dongseon-da195.firebaseapp.com",
+  projectId: "dongseon-da195",
+  storageBucket: "dongseon-da195.firebasestorage.app",
+  messagingSenderId: "750770781571",
+  appId: "1:750770781571:web:cd5cc1a4e5a8b467968ab6",
+  measurementId: "G-JRDLFH6WBC"
+};
