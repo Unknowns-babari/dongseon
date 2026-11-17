@@ -384,6 +384,11 @@ main.full>*{animation:none}
 .cwarn ul{margin:0;padding-left:18px;font-size:.9em}
 .cwarn .btn{min-height:44px;flex:none;align-self:flex-start;padding:0 16px}
 .tabs button small{display:block;font-size:.7em;font-weight:600;opacity:.8}
+.wmg{display:flex;gap:4px;overflow-x:auto;scroll-snap-type:x mandatory;flex-shrink:0;scrollbar-width:thin}
+.wmg figure{margin:0;flex:0 0 78%;max-width:320px;scroll-snap-align:start;display:flex;flex-direction:column;gap:2px}
+.wmg img{width:100%;height:170px;object-fit:cover;border-radius:12px;background:var(--soft)}
+.wmg figcaption{font-size:.68em;color:var(--sub);line-height:1.35;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.wmg figcaption a{color:inherit}
 .likebar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 16px 8px;padding:10px 14px;border-radius:12px;border:1px dashed var(--pri);background:transparent;color:var(--pri);font-weight:700;text-align:left;min-height:44px;flex-shrink:0}
 .likebar.set{border-style:solid;background:rgba(31,79,191,.07)}
 .likebar .lb2{font-size:.8em;font-weight:600;white-space:nowrap}
@@ -1086,6 +1091,35 @@ function photoStrip(id, n){
   if (!ph.length) return `<div class="ph none ${x.cat === '맛집' ? 'food' : ''}">${ico(gic(x), 26)}<span>아직 여행자 사진이 없어요</span></div>`;
   return `<div class="ph">${ph.slice(0, n).map(p => `<img src="${psrc(p)}" alt="${esc(x.n)} 여행자 사진" loading="lazy">`).join('')}${ph.length > n ? `<span class="more">+${ph.length - n}</span>` : ''}</div>`;
 }
+
+/* ---------- 장소 사진: 위키미디어 공용(자유 이용 라이선스)에서 불러와 출처·라이선스와 함께 표시 ---------- */
+const JA = {"senso": "浅草寺", "culture": "浅草文化観光センター", "skytree": "東京スカイツリー", "meiji": "明治神宮", "takeshita": "竹下通り", "shibuya": "SHIBUYA SKY 渋谷スクランブルスクエア", "omoide": "思い出横丁 新宿", "dotonbori": "道頓堀 グリコ", "ebisu": "えびすタワー 観覧車 道頓堀", "castle": "大阪城天守閣", "sky": "梅田スカイビル", "kiyomizu": "清水寺", "kinkaku": "金閣寺 鹿苑寺", "bamboo": "嵐山 竹林の小径", "togetsu": "渡月橋", "fushimi": "伏見稲荷大社 千本鳥居", "ncastle": "名古屋城", "osu": "大須観音", "canal": "キャナルシティ博多", "ncruise": "中洲 那珂川", "dazaifu": "太宰府天満宮", "fktower": "福岡タワー", "ameyoko": "アメヤ横丁", "tokyotower": "東京タワー", "harukas": "あべのハルカス", "usj": "ユニバーサル・スタジオ・ジャパン", "hanami": "花見小路", "ginkaku": "銀閣寺 慈照寺", "tetsu": "哲学の道", "toyota": "トヨタ産業技術記念館", "kcastle": "熊本城", "josaien": "桜の馬場 城彩苑", "suizenji": "水前寺成趣園", "dogo": "道後温泉本館", "mcastle": "松山城", "bocchan": "坊っちゃん列車", "tvtower": "さっぽろテレビ塔 大通公園", "otaru": "小樽運河", "peace": "原爆ドーム", "miyajima": "厳島神社 大鳥居", "tsutenkaku": "通天閣", "nijo": "二条城", "atsuta": "熱田神宮", "oasis21": "オアシス21", "ohori": "大濠公園", "maizuru": "福岡城", "momochi": "シーサイドももち海浜公園", "kumamon": "くまモンスクエア", "sakuramachi": "サクラマチクマモト", "shimotori": "下通 熊本", "haikara": "道後ハイカラ通り", "ishiteji": "石手寺", "bansuiso": "萬翠荘", "dogopark": "道後公園 湯築城", "clock": "札幌市時計台", "moiwa": "藻岩山", "shukkeien": "縮景園", "hcastle": "広島城", "uenopark": "上野恩賜公園", "gyoen": "新宿御苑", "tocho": "東京都庁", "kaiyukan": "海遊館", "shinsaibashi": "心斎橋筋商店街", "nakanoshima": "中之島公園", "sumiyoshi": "住吉大社", "heian": "平安神宮", "toji": "東寺 五重塔", "kyototower": "京都タワー", "byodoin": "平等院鳳凰堂", "noritake": "ノリタケの森", "shirotori": "白鳥庭園", "mirai": "中部電力MIRAI TOWER", "kushida": "櫛田神社 博多", "noko": "能古島アイランドパーク", "chikagai": "天神地下街", "aso": "阿蘇山 中岳火口", "jingu": "北海道神宮", "shiroi": "白い恋人パーク", "orizuru": "おりづるタワー", "yamato": "大和ミュージアム", "kokura": "小倉城", "kteien": "小倉城庭園", "sarakura": "皿倉山", "mojiko": "門司港レトロ", "tetsudo": "九州鉄道記念館", "mekari": "めかり公園", "inochi": "いのちのたび博物館", "kawachi": "河内藤園", "teamlab": "チームラボプラネッツ", "uzumasa": "東映太秦映画村", "sample": "かっぱ橋道具街", "takao": "高尾山", "cupnoodle": "カップヌードルミュージアム 大阪池田", "maglev": "リニア・鉄道館", "hakuhaku": "博多の食と文化の博物館", "asojinja": "阿蘇神社", "kurokawa": "黒川温泉", "yukobo": "小樽 オルゴール堂", "dentosangyo": "宮島伝統産業会館", "asuka": "道後温泉別館 飛鳥乃湯泉", "sakanoue": "坂の上の雲ミュージアム", "daihoan": "宇治市 対鳳庵", "tenjinbashi": "天神橋筋商店街", "nakazaki": "中崎町", "janjan": "ジャンジャン横丁", "nagoyaaq": "名古屋港水族館", "wakuwakuza": "熊本城ミュージアム わくわく座", "tokugawa": "徳川園", "scimuseum": "名古屋市科学館", "higashiyama": "東山動植物園", "bosseezo": "BOSS E・ZO FUKUOKA", "uminonakamichi": "海の中道海浜公園", "marineworld": "マリンワールド海の中道", "kyuhaku": "九州国立博物館", "kamado": "宝満宮竈門神社", "tochoji": "東長寺 福岡", "futamigaura": "桜井二見ヶ浦 夫婦岩", "daikanbo": "大観峰", "kusasenri": "草千里ヶ浜", "shirakawa": "白川水源", "yokamon": "肥後よかモン市場", "isaniwa": "伊佐爾波神社", "karakuri": "坊っちゃんカラクリ時計", "hiraodai": "平尾台", "senbutsu": "千仏鍾乳洞", "manga": "北九州市漫画ミュージアム", "bluewing": "ブルーウィングもじ", "chachatown": "チャチャタウン小倉", "t38": "JRタワー 札幌", "akarenga": "北海道庁旧本庁舎", "hokudai": "北海道大学 イチョウ並木", "tanuki": "狸小路商店街", "aoao": "AOAO SAPPORO", "moerenuma": "モエレ沼公園", "hitsujigaoka": "羊ヶ丘展望台", "artpark": "札幌芸術の森", "kaitaku": "北海道開拓の村", "kenbi": "広島県立美術館", "saijo": "西条 酒蔵通り", "senkoji": "千光寺 尾道", "takehara": "竹原 町並み保存地区", "moca": "広島市現代美術館", "tobezoo": "とべ動物園", "tobeyaki": "砥部焼"};
+const WM = {};
+const WM_OK = /^(cc0|cc[ -]by(-sa)?( \d(\.\d)?)?|public domain|pd\b|attribution)/i;
+const stripH = h => { const d = document.createElement('div'); d.innerHTML = h || ''; return (d.textContent || '').replace(/\s+/g, ' ').trim(); };
+async function wmLoad(id){
+  if (WM[id] || !JA[id]) return; WM[id] = { st:'loading', l:[] };
+  try { const c = JSON.parse(sessionStorage.getItem('wm-' + id) || 'null'); if (c){ WM[id] = c; return wmFill(id); } } catch (e) {}
+  const q = encodeURIComponent(JA[id] + ' filetype:bitmap');
+  const url = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=8&gsrsearch=' + q + '&prop=imageinfo&iiprop=url|extmetadata|mime&iiurlwidth=640';
+  try {
+    const ctl = typeof AbortController === 'function' ? new AbortController() : null, tm = setTimeout(() => ctl && ctl.abort(), 8000);
+    const r = await fetch(url, ctl ? { signal:ctl.signal } : {}); clearTimeout(tm);
+    const j = await r.json(), pages = Object.values((j.query || {}).pages || {}).sort((a, b) => (a.index || 0) - (b.index || 0));
+    const l = pages.map(p => { const ii = (p.imageinfo || [])[0] || {}, m = ii.extmetadata || {}, lic = ((m.LicenseShortName || {}).value || '').trim();
+      return { src:ii.thumburl || ii.url, page:ii.descriptionurl, lic, by:stripH((m.Artist || {}).value).slice(0, 60) || '작자 미상', mime:ii.mime }; })
+      .filter(x => x.src && /image\/(jpeg|png|webp)/.test(x.mime || '') && WM_OK.test(x.lic)).slice(0, 4);
+    WM[id] = { st:l.length ? 'ok' : 'none', l };
+    try { sessionStorage.setItem('wm-' + id, JSON.stringify(WM[id])); } catch (e) {}
+  } catch (e) { WM[id] = { st:'off', l:[] }; }
+  wmFill(id);
+}
+function wmHTML(id){
+  const w = WM[id]; if (!w || w.st !== 'ok') return '';
+  return `<div class="wmg" role="list" aria-label="${esc(PL[id].n)} 사진">${w.l.map(x => `<figure role="listitem"><img src="${esc(x.src)}" alt="${esc(PL[id].n)} 사진" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('figure').remove()"><figcaption>사진: ${esc(x.by)} · ${esc(x.lic)} · <a href="${esc(x.page)}" target="_blank" rel="noopener">위키미디어 공용</a></figcaption></figure>`).join('')}</div>`;
+}
+function wmFill(id){ const el = document.getElementById('wm-' + id); if (!el) return; const h = wmHTML(id); if (h){ el.innerHTML = h; el.hidden = false; const n = document.getElementById('wmnote'); if (n) n.hidden = false; } }
+
 const rateT = id => { const t = rate(id); return t.n ? `<span class="rt">★ ${t.avg.toFixed(1)}</span> <span class="xs sub">리뷰 ${t.n}</span>` : '<span class="xs sub">아직 리뷰 없음</span>'; };
 
 
@@ -1853,8 +1887,10 @@ function sheet(){
    <main>
     <div><span class="tag ${x.cat === '맛집' ? 'food' : ''}">${x.cat}</span> <span class="sub">${esc(x.c)} · ${esc(x.feeT)} · 추천 시간 ${esc(x.when)}</span></div>
     ${intChips(id)}
+    <div id="wm-${id}" ${WM[id] && WM[id].st === 'ok' ? '' : 'hidden'}>${wmHTML(id)}</div>${(setTimeout(() => wmLoad(id), 0), '')}
+    <p class="xs sub" id="wmnote" ${WM[id] && WM[id].st === 'ok' ? '' : 'hidden'} style="margin:0">위 사진은 위키미디어 공용에서 자유 이용 라이선스 사진을 장소 이름으로 찾아 보여 준 거예요. 사진마다 촬영자와 라이선스를 적었어요.</p>
     <div class="gal">${photoStrip(id, 6)}</div>
-    <p class="xs sub">사진은 동선팩 여행자가 리뷰와 함께 올린 거예요.</p>
+    <p class="xs sub">아래 사진은 동선팩 여행자가 리뷰와 함께 올린 거예요.</p>
     ${mapHTML([{ ids:[id], color:COLORS[0] }])}
     <div class="maplinks"><a href="${gmap(id)}" target="_blank" rel="noopener">구글 지도에서 위치 보기</a></div>
     <div class="card list"><h3>${menuTitle(id)}</h3>${menuBox(id, false, true)}</div>
