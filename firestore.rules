@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /reviews/{id} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['place', 'stars', 'name', 'text', 'photos', 'at'])
+        && request.resource.data.place is string && request.resource.data.place.size() <= 40
+        && request.resource.data.stars is int && request.resource.data.stars >= 1 && request.resource.data.stars <= 5
+        && request.resource.data.text is string && request.resource.data.text.size() <= 500
+        && request.resource.data.photos is list && request.resource.data.photos.size() <= 3;
+      allow update, delete: if false;
+    }
+    match /packs/{id} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['id', 'city', 'title', 'sub', 'who', 'tags', 'days', 'at', 'by'])
+        && request.resource.data.title is string && request.resource.data.title.size() <= 40
+        && request.resource.data.days is list && request.resource.data.days.size() <= 7;
+      allow update, delete: if false;
+    }
+  }
+}
