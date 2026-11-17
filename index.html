@@ -341,6 +341,20 @@ main.full>*{animation:none}
 .dmap .epin span{font-size:10px}
 .dsel{background:var(--card);border:1px solid var(--pri);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
 .dsel .row{gap:8px}
+.likefab.age{background:var(--card);color:var(--pri);border:1.5px solid var(--pri)}
+.fabs{display:flex;gap:6px;flex-wrap:wrap;align-self:flex-start}
+.mbadge.ag{background:#e9e3ff;color:#4c2fa8}
+.agrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.agrid button{min-height:56px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font-weight:800;font-size:1.05em}
+.agrid button.on{border-color:var(--pri);background:var(--soft);color:var(--pri)}
+.agrid button small{display:block;font-size:.62em;font-weight:600;color:var(--sub)}
+.afacts{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.afacts li{background:var(--bg);border-radius:10px;padding:8px 10px;font-size:.9em;line-height:1.45}
+.afacts li sup{color:var(--pri);font-weight:800;margin-left:2px}
+.anote{font-size:.78em;color:var(--sub);margin:6px 0 0}
+.aest{display:inline-block;font-size:.72em;font-weight:800;padding:2px 8px;border-radius:10px;background:var(--warn);color:var(--warnInk);margin-left:6px;vertical-align:middle}
+.hcard .hb{display:inline-block;font-size:.72em;font-weight:800;padding:2px 8px;border-radius:10px;background:#dcfce7;color:#166534;margin-left:4px}
+.chlist{display:flex;flex-direction:column;gap:8px;padding:0 16px 16px;overflow:auto}
 .likebar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 16px 8px;padding:10px 14px;border-radius:12px;border:1px dashed var(--pri);background:transparent;color:var(--pri);font-weight:700;text-align:left;min-height:44px;flex-shrink:0}
 .likebar.set{border-style:solid;background:rgba(31,79,191,.07)}
 .likebar .lb2{font-size:.8em;font-weight:600;white-space:nowrap}
@@ -986,24 +1000,24 @@ function home(){
   const land = JP.map(poly => `<polygon points="${poly.map(([lo, la]) => P(lo, la).map(v => v.toFixed(1)).join(',')).join(' ')}" fill="var(--land)" stroke="var(--coast)" stroke-width="1.2" vector-effect="non-scaling-stroke"/>`).join('');
   const pins = Object.entries(CITY).map(([name, c]) => { const [x, y] = P(c.lo, c.la), on = open && S.city === name, l = PACKS.filter(p => p.city === name), min = Math.min(...l.map(p => sum(items(p))));
     return `<span class="cdot" data-bx="${x.toFixed(1)}" data-by="${y.toFixed(1)}"></span><button class="tagpin ${on ? 'on' : ''} ${c.dy > 0 ? 'down' : ''}" data-a="city" data-v="${name}" data-bx="${x.toFixed(1)}" data-by="${y.toFixed(1)}" style="--dx:${c.dx < 0 ? -30 : c.dx > 0 ? 30 : 0}%" aria-pressed="${on}" aria-label="${name} 동선팩 ${l.length}개, ${priceMan(min)}원부터"><b>${name}</b><span>${l.length}개 · ₩${priceMan(min)}~</span></button>`; }).join('');
-  const allList = PACKS.filter(p => p.city === S.city), tags = [...new Set(allList.flatMap(p => p.tags))], tf = tags.includes(S.tf) ? S.tf : '전체';
-  const list0 = tf === '전체' ? allList : allList.filter(p => p.tags.includes(tf)), list = S.likes.length ? list0.slice().sort(byMatch) : list0;
-  const tagRow = `<div class="tagrow">${['전체'].concat(tags).map(t => `<button class="chip ${tf === t ? 'on' : ''}" data-a="tf" data-v="${t}">${t}${t === '전체' ? ` ${allList.length}` : ''}</button>`).join('')}</div>`;
+  const allList = PACKS.filter(p => p.city === S.city), tags = [...new Set(allList.flatMap(p => p.tags))], tf = tags.includes(S.tf) || S.tf === '숙소' ? S.tf : '전체', showH = tf === '숙소', nH = (HT[S.city] || []).length;
+  const list0 = tf === '전체' ? allList : allList.filter(p => p.tags.includes(tf)), list = S.likes.length ? list0.slice().sort(byMatch) : S.age ? list0.slice().sort(byAge) : list0;
+  const tagRow = `<div class="tagrow">${['전체'].concat(tags).map(t => `<button class="chip ${tf === t ? 'on' : ''}" data-a="tf" data-v="${t}">${t}${t === '전체' ? ` ${allList.length}` : ''}</button>${t === '전체' && nH ? `<button class="chip ${showH ? 'on' : ''}" data-a="tf" data-v="숙소">🏨 숙소 ${nH}</button>` : ''}`).join('')}</div>`;
   return `<div class="stage">
     ${OM.ok ? '<div class="hslot"></div>' : `<div class="pan" data-key="home"><svg aria-hidden="true"><g class="world">${land}</g></svg>${pins}</div>`}
     <div class="ovl col"><div class="daychips">${Object.keys(CITY).map(x => `<button class="chip ${open && S.city === x ? 'on' : ''}" data-a="city" data-v="${x}">${x}</button>`).join('')}</div>
-      <span class="hint">지도를 끌어서 움직이고, 두 손가락·휠로 확대해 보세요</span>${open || S.onb ? '' : `<button class="likefab" data-a="likes">${S.likes.length ? `🏷 내 카테고리 ${S.likes.length}개 · 바꾸기` : '🏷 카테고리 고르기'}</button>`}</div>
+      <span class="hint">지도를 끌어서 움직이고, 두 손가락·휠로 확대해 보세요</span>${open || S.onb || S.ageOpen ? '' : `<span class="fabs"><button class="likefab" data-a="likes">${S.likes.length ? `🏷 내 카테고리 ${S.likes.length}개 · 바꾸기` : '🏷 카테고리 고르기'}</button><button class="likefab age" data-a="ages">${S.age ? `👥 ${S.age} 추천 · 바꾸기` : '👥 연령대별 추천'}</button></span>`}</div>
     <div class="zoom" style="bottom:${open ? (full ? H * 0.78 + 12 : 274) : 16}px">${OM.ok ? '' : '<button data-a="zin" aria-label="확대">+</button><button data-a="zout" aria-label="축소">−</button>'}<button data-a="${OM.ok ? 'hjp' : 'zreset'}" aria-label="일본 전체 보기">⟲</button></div>
     ${open ? `<div class="bsheet ${full ? 'full' : ''}" role="region" aria-label="${S.city} 동선팩 목록">
       <button class="grab" data-a="cs" aria-label="${full ? '목록 접기' : '목록 펼치기'}"><i></i></button>
-      <div class="bhead"><div class="grow"><h3>${S.city} 동선팩 ${allList.length}개</h3><span class="xs sub">2인 · 항공 제외 · 관광지·맛집 ${cityPlaces(S.city).length}곳 수록</span></div>
+      <div class="bhead"><div class="grow"><h3>${S.city} 동선팩 ${allList.length}개</h3><span class="xs sub">2인 · 항공 제외 · 관광지·맛집 ${cityPlaces(S.city).length}곳 · 숙소 ${nH}곳 수록</span></div>
         <button class="pill" data-a="cs">${full ? '지도 보기' : '목록 보기'}</button><button class="ib" data-a="cclose" aria-label="닫기"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
       ${likeBar()}
       ${tagRow}
-      ${full ? `<div class="blist">${list.map(packCard).join('')}<p class="note">동선과 후기 요약은 여행 블로그·가이드를 참고한 샘플이에요. 작성자와 숙소 요금은 예시예요. <a href="#" data-a="go" data-v="src">참고한 자료 보기</a></p></div>`
+      ${showH ? cityHotels(S.city) : full ? `<div class="blist">${list.map(packCard).join('')}<p class="note">동선과 후기 요약은 여행 블로그·가이드를 참고한 샘플이에요. 작성자와 숙소 요금은 예시예요. <a href="#" data-a="go" data-v="src">참고한 자료 보기</a></p></div>`
         : `<div class="carousel">${list.map(p => { const r = route(p).flat(); return `<button class="ccard" data-a="open" data-v="${p.id}"><span class="cstrip" style="background:${p.color}">${p.nights}</span>${mBadge(p)}<b>${esc(p.title)}</b><span class="xs sub">${esc(p.who)} · ${r.length}곳 · ${r.slice(0, 3).map(id => esc(PL[id].k)).join(' → ')}${r.length > 3 ? ' …' : ''}</span><span class="price">${won(sum(items(p)))}~</span></button>`; }).join('')}</div>`}
     </div>` : ''}
-    ${onbView()}
+    ${onbView()}${ageView()}
   </div>`;
 }
 
@@ -1074,11 +1088,113 @@ const onbSeen = () => { try { return !!localStorage.getItem(ONB_KEY); } catch (e
 const onbSet = () => { try { localStorage.setItem(ONB_KEY, '1'); } catch (e) {} };
 if (!onbSeen()) S.onb = 1;
 const byMatch = (a, b) => { const x = matchOf(a), y = matchOf(b); return (y.pct - x.pct) || (y.places - x.places); };
-const mBadge = p => { const m = matchOf(p); return m ? `<span class="mbadge ${m.pct >= 75 ? 'hi' : m.pct >= 40 ? 'mid' : ''}">맞춤 ${m.pct}%</span>` : ''; };
+const mBadge = p => { const m = matchOf(p); return (m ? `<span class="mbadge ${m.pct >= 75 ? 'hi' : m.pct >= 40 ? 'mid' : ''}">맞춤 ${m.pct}%</span>` : '') + (typeof aBadge === 'function' && !p.user ? aBadge(p) : ''); };
 function intChips(id){
   const t = tagsOf(id); if (!t.length) return '';
   return `<div class="ichips">${t.map(k => `<span class="ichip ${S.likes.includes(k) ? 'on' : ''}">#${INAME[k]}</span>`).join('')}</div>`;
 }
+
+/* ---------- 연령대별 추천: 조사 자료 기반 트렌드 → 동선팩 점수 ---------- */
+const AGESRC = [
+ ['오픈서베이 「해외여행 트렌드 리포트 2025」 (2025.3, 전국 만 20~69세 2,000명 · 해외여행 경험/계획자 500명)', 'https://blog.opensurvey.co.kr/trendreport/overseas-travel-2025/'],
+ ['観光庁 「インバウンド消費動向調査 2025年 年次報告書」 (국적별 연령 구성 · 한국 p.28)', 'https://www.mlit.go.jp/kankocho/content/002003329.pdf']
+];
+/* tags: 장소 관심사(ITAG) 가중치 · pt: 동선팩 태그 가점 · who: 잘 맞는 동행 · dens: 하루 장소 수 선호 · bud: 숙소 1박 예산(엔, 조사 평균 ÷ 환율) */
+const AGEP = {
+ '10대':{ est:true, share:'2.3%', krw:238000, bud:Math.round(238000 / YEN), dens:'mid',
+   tags:{ exp:3, kids:3, shop:2, sweet:2, photo:2, sea:1, view:1, night:1 }, pt:{ '아이와 함께':3, '첫 해외여행':2, '쇼핑':2, '체험':2, '사진 명소':1 }, who:['가족 3인', '가족 2인'],
+   facts:[['한국인 방일객 가운데 15~19세는 2.3%예요. 대부분 가족과 함께 가는 나이라서, 자녀를 둔 40대의 테마(체험·물놀이)와 20대의 테마(맛집·사진)를 섞어 추정했어요.', 2], ['조사(만 20~69세)에 10대가 없어 아래 추천은 인접 연령 결과를 바탕으로 한 추정이에요.', 1]],
+   sum:'테마파크·체험관·쇼핑처럼 직접 해 보는 곳, 사진 찍기 좋은 곳 위주' },
+ '20대':{ share:'35.1%', krw:165400, bud:Math.round(165400 / YEN), dens:'high',
+   tags:{ local:3, noodle:2, sweet:2, photo:3, night:2, shop:2, drink:2, seafood:1, view:1 }, pt:{ '맛집':3, '혼자':2, '사진 명소':2, '야경':2, '첫 해외여행':1, '쇼핑':1 }, who:['친구와 2인', '혼자', '연인과 2인'],
+   facts:[['한국인 방일객 중 20대가 35.1%로 가장 많아요.', 2], ['해외여행 계획지로 일본을 고른 20대가 63.3%예요.', 1], ['숙소 1박 평균 지출 16만 5,400원 — 다섯 연령대 중 가장 적어요.', 1], ['한 도시에 오래 머무는 편(67.7%)이고, 미식·맛집 탐방 테마가 특히 많아요.', 1]],
+   sum:'맛집·야경·포토스팟을 촘촘히, 숙소는 가성비' },
+ '30대':{ share:'32.8%', krw:213500, bud:Math.round(213500 / YEN), dens:'mid',
+   tags:{ local:3, seafood:2, sweet:2, night:2, view:2, onsen:2, garden:1, drink:1, photo:1 }, pt:{ '맛집':3, '야경':2, '자연·힐링':2, '혼자':1, '걷기 좋아함':1 }, who:['연인과 2인', '친구와 2인', '혼자'],
+   facts:[['한국인 방일객의 32.8%가 30대예요.', 2], ['한 도시에 오래 머무는 비율 68.6%, 휴식 위주 53.7%예요.', 1], ['맛집 탐방과 힐링·휴식 테마가 두드러져요. 숙소 1박 평균 21만 3,500원이에요.', 1], ['액티비티는 네이버 다음으로 마이리얼트립(18.4%)에서 많이 찾아요.', 1]],
+   sum:'한 도시에서 맛집과 휴식을 균형 있게' },
+ '40대':{ share:'17.8%', krw:238000, bud:Math.round(238000 / YEN), dens:'mid',
+   tags:{ kids:3, exp:3, sea:2, garden:2, onsen:2, view:2, local:1, museum:1 }, pt:{ '아이와 함께':3, '자연·힐링':2, '부모님과':1, '체험':2, '야경':1 }, who:['가족 3인', '가족 2인', '부모님과 2인'],
+   facts:[['숙소 1박 평균 지출 23만 8,000원 — 다섯 연령대 중 가장 많아요.', 1], ['휴식 위주 여행 55.4%, 힐링·휴식과 물놀이 테마가 두드러져요.', 1], ['한국인 방일객의 17.8%가 40대예요.', 2]],
+   sum:'아이와 함께하는 체험·수족관·정원, 숙소는 넉넉하게' },
+ '50대':{ share:'7.7%', krw:211400, bud:Math.round(211400 / YEN), dens:'low',
+   tags:{ onsen:3, garden:3, mountain:2, flower:2, shrine:2, view:2, castle:1, local:1 }, pt:{ '자연·힐링':3, '부모님과':2, '역사·문화':2, '걷기 좋아함':1 }, who:['부모님과 2인', '연인과 2인', '가족 2인'],
+   facts:[['휴식 위주 여행이 57.6%로 다섯 연령대 중 가장 높아요.', 1], ['여러 도시를 짧게 도는 비율이 39.4%로 20~40대보다 높아요.', 1], ['자연·경치, 온천처럼 지역 특색이 있는 테마가 많아요.', 1], ['액티비티를 하나투어(21.6%)에서 찾는 비율이 높아요.', 1]],
+   sum:'온천·정원·자연 풍경, 하루 두세 곳 느긋하게' },
+ '60대':{ share:'3.3%', krw:194400, bud:Math.round(194400 / YEN), dens:'mid',
+   tags:{ castle:3, shrine:3, museum:2, oldtown:2, onsen:2, garden:2, flower:1, view:1 }, pt:{ '역사·문화':3, '부모님과':3, '자연·힐링':1 }, who:['부모님과 2인', '가족 2인'],
+   facts:[['관광 위주 여행 54.8%, 여러 도시를 짧게 도는 비율 51.1%로 다른 연령대와 반대예요.', 1], ['일정을 미리 계획하는 비율이 74.9%로 가장 높고, 평균 여행 기간도 6.7일로 가장 길어요.', 1], ['역사·유적지 탐방과 온천 테마가 많아요. 숙소 1박 평균 19만 4,400원이에요.', 1], ['액티비티를 하나투어(33.7%)에서 가장 많이 찾아요.', 1]],
+   sum:'성·신사·옛 거리 같은 역사 명소를 미리 짠 일정으로' },
+ '70대':{ est:true, share:'1.1%', krw:194400, bud:Math.round(194400 / YEN), dens:'low',
+   tags:{ onsen:3, garden:3, shrine:2, castle:2, oldtown:2, flower:2, local:1 }, pt:{ '부모님과':3, '역사·문화':2, '자연·힐링':2 }, who:['부모님과 2인', '가족 2인'],
+   facts:[['한국인 방일객 가운데 70대 이상은 1.1%예요.', 2], ['조사(만 20~69세)에 70대가 없어 60대 결과(관광 위주·미리 계획·역사·온천)를 바탕으로, 걷는 양을 줄이는 쪽으로 추정했어요.', 1]],
+   sum:'걷기 적은 동선, 하루 한두 곳, 온천·정원·역사' }
+};
+const AGES7 = Object.keys(AGEP);
+const AGE_KEY = 'dongseon-age-v1';
+S.age = (() => { try { const v = localStorage.getItem(AGE_KEY); return AGEP[v] ? v : ''; } catch (e) { return ''; } })();
+S.ageOpen = 0;
+const AREASON = { high:'하루 3곳 이상 촘촘히', mid:'하루 2~3곳', low:'하루 1~2곳 느긋하게' };
+function densOf(p){ const d = route(p).filter(x => x.length); return d.length ? d.reduce((a, x) => a + x.length, 0) / d.length : 0; }
+function ageRaw(p, a){
+  const A0 = AGEP[a], t = packTags(p), tw = Object.values(A0.tags).reduce((x, y) => x + y, 0);
+  const tg = Object.entries(A0.tags).reduce((x, [k, w]) => x + (t.has(k) ? w : 0), 0) / tw;
+  const pt = Math.min(1, p.tags.reduce((x, k) => x + (A0.pt[k] || 0), 0) / 3);
+  const wh = A0.who.indexOf(p.who) === 0 ? 1 : A0.who.includes(p.who) ? 0.7 : 0;
+  const d = densOf(p), ds = A0.dens === 'high' ? (d >= 3 ? 1 : d >= 2.5 ? 0.6 : 0.2) : A0.dens === 'low' ? (d <= 2 ? 1 : d <= 2.5 ? 0.6 : 0.1) : (d >= 2 && d <= 3.2 ? 1 : 0.5);
+  return 0.45 * tg + 0.25 * pt + 0.15 * wh + 0.15 * ds;
+}
+const AMAX = {};
+function ageOf(p, a){
+  a = a || S.age; if (!a || !AGEP[a]) return null;
+  if (AMAX[a] === undefined) AMAX[a] = Math.max(...PACKS.filter(x => !x.user).map(x => ageRaw(x, a)));
+  const A0 = AGEP[a], t = packTags(p), hit = Object.keys(A0.tags).filter(k => t.has(k)).sort((x, y) => A0.tags[y] - A0.tags[x]);
+  return { pct:Math.max(5, Math.min(99, Math.round(99 * ageRaw(p, a) / AMAX[a]))), hit, who:A0.who.includes(p.who), dens:densOf(p) };
+}
+const byAge = (x, y) => ageOf(y).pct - ageOf(x).pct;
+const aBadge = p => { const m = ageOf(p); return m ? `<span class="mbadge ag">${S.age} ${m.pct}%</span>` : ''; };
+function hotelsByAge(city, a){
+  const l = (HT[city] || []).slice(), b = a && AGEP[a] ? AGEP[a].bud : 0;
+  return b ? l.sort((x, y) => Math.abs(hRoom(x) - b) - Math.abs(hRoom(y) - b)) : l.sort((x, y) => hRoom(x) - hRoom(y));
+}
+const fitBud = (h, a) => a && AGEP[a] && Math.abs(hRoom(h) - AGEP[a].bud) <= AGEP[a].bud * 0.3;
+function cityHotelCard(h, city){
+  return `<div class="hcard"><span><b>${esc(h.n)}</b>${fitBud(h, S.age) ? `<span class="hb">${S.age} 1박 예산대</span>` : ''}</span><span class="xs sub">${esc(h.area)}</span>
+   <span class="hp">${esc(h.pt)}</span><span class="xs sub">2인 1실 1박 어림값 약 ${won(hRoom(h) * YEN)}${h.per ? ' (1인 요금 × 2)' : ''}</span>
+   <ul>${h.pts.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+   <span class="xs sub">요금 출처: <a href="${h.s[1]}" target="_blank" rel="noopener">${esc(h.s[0])}</a> · <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(h.n + ' ' + city)}" target="_blank" rel="noopener">구글 지도</a></span></div>`;
+}
+function cityHotels(city){
+  const l = hotelsByAge(city, S.age), b = S.age ? AGEP[S.age].bud : 0;
+  return `<div class="chlist"><p class="xs sub" style="margin:0">${S.age ? `${S.age} 숙소 1박 평균 지출(${won(AGEP[S.age].krw)}${AGEP[S.age].est ? ', 추정' : ''})에 가까운 순이에요.` : '요금이 낮은 순이에요. 연령대를 고르면 그 나이대 1박 예산에 가까운 순으로 바뀌어요.'} 요금은 가이드북 기준 요금이라 날짜·시즌마다 달라요.</p>
+    ${l.map(h => cityHotelCard(h, city)).join('')}</div>`;
+}
+function ageView(){
+  if (!S.ageOpen) return '';
+  const X = '';
+  if (S.ageOpen === 1 || !S.age) return `<div class="lmodal full" role="dialog" aria-modal="true" aria-label="연령대 고르기"><div class="lbox">
+    <header><span class="step">연령대별 추천</span><h3>여행하는 분의 나이대를 골라 주세요</h3><span class="xs sub">한국인 해외여행자 조사 결과에서 그 나이대가 많이 하는 여행 방식을 뽑아, 거기에 맞는 동선팩과 숙소를 추천해요.</span></header>
+    <div class="lgroups"><div class="agrid" role="group" aria-label="연령대">${AGES7.map(a => `<button class="${S.age === a ? 'on' : ''}" data-a="agepick" data-v="${a}" aria-pressed="${S.age === a}">${a}<small>방일객 ${AGEP[a].share}</small></button>`).join('')}</div>
+    <p class="anote">'방일객' 비율: 2025년 일본을 찾은 한국인(15세 이상)의 연령 구성 — 観光庁 인바운드 소비동향조사</p></div>
+    <footer>${S.age ? '<button class="pill" data-a="ageoff">연령대 추천 끄기</button>' : ''}<button class="pill" data-a="ageclose">닫기</button></footer>
+  </div></div>`;
+  const a = S.age, A0 = AGEP[a], top = PACKS.filter(p => !p.user).sort(byAge).slice(0, 6);
+  const cs = Object.keys(CITY).map(c => { const l = PACKS.filter(p => p.city === c && !p.user).sort(byAge).slice(0, 3); return [c, Math.round(l.reduce((x, p) => x + ageOf(p).pct, 0) / (l.length || 1))]; }).sort((x, y) => y[1] - x[1]).slice(0, 4);
+  const hc = cs[0][0], hs = hotelsByAge(hc, a).slice(0, 2);
+  return `<div class="lmodal full" role="dialog" aria-modal="true" aria-label="${a} 추천"><div class="lbox">
+    <header><span class="step">연령대별 추천</span><h3>${a} 여행 트렌드${A0.est ? '<span class="aest">추정</span>' : ''}</h3><span class="xs sub">${esc(A0.sum)}</span></header>
+    <div class="lgroups"><h4>조사에서 보이는 ${a}의 여행</h4>
+      <ul class="afacts">${A0.facts.map(([t, n]) => `<li>${esc(t)}<sup>[${n}]</sup></li>`).join('')}</ul>
+      <h4>그래서 이렇게 골랐어요</h4>
+      <div class="ichips">${Object.entries(A0.tags).sort((x, y) => y[1] - x[1]).slice(0, 5).map(([k]) => `<span class="ichip on">#${INAME[k]}</span>`).join('')}<span class="ichip">${AREASON[A0.dens]}</span><span class="ichip">${A0.who.slice(0, 2).join(' · ')}</span></div>
+      <h4>잘 맞는 도시</h4><div class="chips">${cs.map(([c, v]) => `<button class="chip" data-a="agecity" data-v="${c}">${c} <b class="mbadge ag">${v}%</b></button>`).join('')}</div>
+      <h4>${a} 추천 동선팩</h4>${top.map(p => { const m = ageOf(p); return `<button class="ltp" data-a="ageopen" data-v="${p.id}"><span class="row"><b class="grow">${esc(p.title)}</b>${aBadge(p)}</span><span class="xs sub">${p.city} · ${p.nights} · ${esc(p.who)} · 하루 평균 ${m.dens.toFixed(1)}곳</span><span class="ichips">${m.hit.slice(0, 4).map(k => `<span class="ichip on">#${INAME[k]}</span>`).join('')}${m.who ? `<span class="ichip on">${esc(p.who)}</span>` : ''}</span></button>`; }).join('')}
+      <h4>${hc} 숙소 · ${a} 1박 평균 지출(${won(A0.krw)}${A0.est ? ', 추정' : ''})에 맞는 곳</h4><div class="hlist">${hs.map(h => cityHotelCard(h, hc)).join('')}</div>
+      <p class="anote">[1] ${esc(AGESRC[0][0])} — 연령대별 여행 스타일(p.12), 테마(p.13), 여행지(p.14), 숙소 1박 지출·탐색 채널(p.18~19)<br>[2] ${esc(AGESRC[1][0])}<br>추천 점수는 위 결과를 동선팩의 장소 테마·동행·하루 장소 수에 대입해 계산한 값이에요.</p></div>
+    <footer><button class="pill" data-a="agechange">연령대 바꾸기</button><button class="btn" data-a="ageclose">지도에서 둘러보기</button></footer>
+  </div></div>`;
+}
+
 function likeBar(){
   const L = S.likes;
   return `<button class="likebar ${L.length ? 'set' : ''}" data-a="likes"><span class="lb1">${L.length ? `내 카테고리 · ${L.slice(0, 2).map(k => INAME[k]).join(', ')}${L.length > 2 ? ` 외 ${L.length - 2}` : ''}` : '카테고리 고르고 동선팩 추천받기'}</span><span class="lb2">${L.length ? '맞춤순 · 바꾸기 ›' : '›'}</span></button>`;
@@ -1492,7 +1608,8 @@ function src(){
   const all = []; Object.values(PL).forEach(x => x.src.forEach(s => { if (!all.some(a => a[1] === s[1])) all.push(s); }));
   return `<p class="sub">동선과 장소별 후기 요약은 아래 자료를 바탕으로 정리했어요. 원문을 그대로 옮기지 않고 요약했어요.</p>
   <div class="card list">${all.map(s => `<a href="${s[1]}" target="_blank" rel="noopener">${esc(s[0])}</a>`).join('')}
-  <a href="https://www.sidae.com/article/2026101309030924568?outlink=2&type=1" target="_blank" rel="noopener">원·엔 환율 (2026년 10월)</a></div>`;
+  <a href="https://www.sidae.com/article/2026101309030924568?outlink=2&type=1" target="_blank" rel="noopener">원·엔 환율 (2026년 10월)</a></div>
+  <h3 style="margin:16px 0 6px">연령대별 추천에 쓴 조사 자료</h3><div class="card list">${AGESRC.map(x => `<a href="${x[1]}" target="_blank" rel="noopener">${esc(x[0])}</a>`).join('')}</div>`;
 }
 
 function footer(){
@@ -1865,6 +1982,13 @@ const A = {
   legpick:v => { const i = v.lastIndexOf('|'), key = v.slice(0, i), k = v.slice(i + 1); S.legs[key] = k; try { localStorage.setItem(LEG_KEY, JSON.stringify(S.legs)); } catch (e) {} S.legOpen = null; render(); },
   lt:v => { S.lt = v; render(); },
   likes:() => { S.onb = 1; render(); },
+  ages:() => { S.ageOpen = S.age ? 2 : 1; render(); },
+  agepick:v => { if (!AGEP[v]) return; S.age = v; try { localStorage.setItem(AGE_KEY, v); } catch (e) {} S.ageOpen = 2; render(); },
+  agechange:() => { S.ageOpen = 1; render(); },
+  ageoff:() => { S.age = ''; try { localStorage.removeItem(AGE_KEY); } catch (e) {} S.ageOpen = 0; render(); },
+  ageclose:() => { S.ageOpen = 0; render(); },
+  agecity:v => { S.ageOpen = 0; A.city(v); },
+  ageopen:v => { S.ageOpen = 0; A.open(v); },
   liket:v => { const L = S.likes; S.likes = L.includes(v) ? L.filter(k => k !== v) : L.concat(v); try { localStorage.setItem(LIKE_KEY, JSON.stringify(S.likes)); } catch (e) {} render(); },
   likeclr:() => { S.likes = []; try { localStorage.setItem(LIKE_KEY, '[]'); } catch (e) {} render(); },
   onbnext:() => { if (!S.likes.length) return; S.onb = 2; render(); },
