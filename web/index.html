@@ -3,8 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>동선팩 웹</title>
-<script>window.FORCE_WEB = true;</script>
+<title>동선팩 (무료 지도)</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
@@ -1239,7 +1238,7 @@ document.addEventListener('wheel', e => { const el = e.target.closest('.pan'); i
 function zoomBtn(f){ const el = curPan(); if (!el) return; const v = viewOf(el); zoomAt(v, f, el.clientWidth / 2, el.clientHeight / 2); applyView(); }
 
 /* ---------- render & events ---------- */
-const isWeb = () => !!window.FORCE_WEB || (window.innerWidth || 0) >= 1024;
+const isWeb = () => false; /* 웹에서도 앱과 같은 화면 */
 const SIDE = 420;
 function render(){
   try { document.documentElement.classList.toggle('web', isWeb()); } catch (e) {}
