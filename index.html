@@ -1202,8 +1202,8 @@ function ageView(){
   const X = '';
   if (S.ageOpen === 1 || !S.age) return `<div class="lmodal full" role="dialog" aria-modal="true" aria-label="연령대 고르기"><div class="lbox">
     <header><span class="step">연령대별 추천</span><h3>여행하는 분의 나이대를 골라 주세요</h3><span class="xs sub">한국인 해외여행자 조사 결과에서 그 나이대가 많이 하는 여행 방식을 뽑아, 거기에 맞는 동선팩과 숙소를 추천해요.</span></header>
-    <div class="lgroups"><div class="agrid" role="group" aria-label="연령대">${AGES7.map(a => `<button class="${S.age === a ? 'on' : ''}" data-a="agepick" data-v="${a}" aria-pressed="${S.age === a}">${a}<small>방일객 ${AGEP[a].share}</small></button>`).join('')}</div>
-    <p class="anote">'방일객' 비율: 2025년 일본을 찾은 한국인(15세 이상)의 연령 구성 — 観光庁 인바운드 소비동향조사</p></div>
+    <div class="lgroups"><div class="agrid" role="group" aria-label="연령대">${AGES7.map(a => `<button class="${S.age === a ? 'on' : ''}" data-a="agepick" data-v="${a}" aria-pressed="${S.age === a}">${a}</button>`).join('')}</div>
+    </div>
     <footer>${S.age ? '<button class="pill" data-a="ageoff">연령대 추천 끄기</button>' : ''}<button class="pill" data-a="ageclose">닫기</button></footer>
   </div></div>`;
   const a = S.age, A0 = AGEP[a], top = PACKS.filter(p => !p.user).sort(byAge).slice(0, 6);
@@ -2284,7 +2284,7 @@ $('srv').addEventListener('click', e => {
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && SV.step){ e.stopImmediatePropagation(); SV.done = true; SV.step = 0; svRender(); } }, true);
 function svResHTML(){
   if (!SV.open) return svLockHTML();
-  const l = SV.list; if (!l.length) return '';
+  const l = SV.list; if (!l.length) return '<div class="svres"><span style="display:flex;justify-content:space-between;align-items:center"><b>출시 의향 설문 결과</b><button class="lnk" data-fk="svlockup">🔒 다시 잠그기</button></span><p class="sub" style="margin:0">아직 응답이 없어요. 장소 리뷰나 피드백을 올리면 설문 창이 떠요.</p></div>';
   const yes = l.filter(v => v.use === 'yes'), pct = n => Math.round(n / l.length * 100), t = svTable();
   const bar = (lab, n, tot) => `<div class="svbar"><b>${lab}</b><span><i style="width:${tot ? Math.round(n / tot * 100) : 0}%"></i></span><span class="sub">${n}명 · ${tot ? Math.round(n / tot * 100) : 0}%</span></div>`;
   const tab = (rows, cap) => `<table class="svtab"><caption class="xs sub" style="text-align:left;padding:6px 0 2px">${cap}</caption><thead><tr>${rows[0].map(c => `<th scope="col">${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows.slice(1).map((r, i, a) => `<tr class="${i === a.length - 1 ? 'tot' : ''}">${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
@@ -2328,7 +2328,6 @@ async function svHash(t){
   return null;
 }
 function svLockHTML(){
-  if (!SV.list.length && !SV.ask) return '';
   return SV.ask ? `<form class="svlock" data-fk-form="svpw"><b style="flex:1 1 100%">설문 결과 보기</b><input id="svpw" type="password" inputmode="numeric" autocomplete="off" maxlength="20" placeholder="비밀번호" aria-label="설문 결과 비밀번호"><button class="btn">확인</button><button type="button" class="btn ghost" data-fk="svhide">취소</button>${SV.pmsg ? `<p class="msg" role="alert" style="flex:1 1 100%;margin:0">${esc(SV.pmsg)}</p>` : ''}</form>`
     : `<button class="lnk" data-fk="svask">🔒 설문 결과 보기 (비밀번호 필요)</button>`;
 }
