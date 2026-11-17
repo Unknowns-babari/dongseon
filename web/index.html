@@ -375,6 +375,15 @@ main.full>*{animation:none}
 .tag.st{background:light-dark(#e0f2fe,#0c2f3d);color:light-dark(#075985,#8fd3ef)}
 .tag.exp{background:light-dark(#efe7ff,#2b1f4a)}
 .hmb{flex-shrink:0}
+.dbad{display:inline-block;font-size:.72em;font-weight:800;padding:2px 8px;border-radius:10px;margin:0 4px;vertical-align:middle}
+.dbad.ok{background:#dcfce7;color:#166534}.dbad.ng{background:#fee2e2;color:#991b1b}.dbad.mb{background:#fff3d6;color:#8a5a00}
+.datebox{display:flex;flex-direction:column;gap:8px;background:var(--soft);border-radius:14px;padding:12px;margin-bottom:12px}
+.datebox input{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-height:44px}
+.cwarn{display:flex;flex-direction:column;gap:6px;border:1.5px solid var(--warnLine);background:var(--warn);color:var(--warnInk);border-radius:14px;padding:12px;margin:10px 0}
+.cwarn.ok{border-color:#16a34a;background:light-dark(#f0fdf4,#12301d);color:light-dark(#14532d,#bbf7d0)}
+.cwarn ul{margin:0;padding-left:18px;font-size:.9em}
+.cwarn .btn{min-height:44px;flex:none;align-self:flex-start;padding:0 16px}
+.tabs button small{display:block;font-size:.7em;font-weight:600;opacity:.8}
 .likebar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 16px 8px;padding:10px 14px;border-radius:12px;border:1px dashed var(--pri);background:transparent;color:var(--pri);font-weight:700;text-align:left;min-height:44px;flex-shrink:0}
 .likebar.set{border-style:solid;background:rgba(31,79,191,.07)}
 .likebar .lb2{font-size:.8em;font-weight:600;white-space:nowrap}
@@ -1021,12 +1030,12 @@ function home(){
   const pins = Object.entries(CITY).map(([name, c]) => { const [x, y] = P(c.lo, c.la), on = open && S.city === name, l = PACKS.filter(p => p.city === name), min = Math.min(...l.map(p => sum(items(p))));
     return `<span class="cdot" data-bx="${x.toFixed(1)}" data-by="${y.toFixed(1)}"></span><button class="tagpin ${on ? 'on' : ''} ${c.dy > 0 ? 'down' : ''}" data-a="city" data-v="${name}" data-bx="${x.toFixed(1)}" data-by="${y.toFixed(1)}" style="--dx:${c.dx < 0 ? -30 : c.dx > 0 ? 30 : 0}%" aria-pressed="${on}" aria-label="${name} 동선팩 ${l.length}개, ${priceMan(min)}원부터"><b>${name}</b><span>${l.length}개 · ₩${priceMan(min)}~</span></button>`; }).join('');
   const allList = PACKS.filter(p => p.city === S.city), tags = [...new Set(allList.flatMap(p => p.tags))], tf = tags.includes(S.tf) || S.tf === '숙소' ? S.tf : '전체', showH = tf === '숙소', nH = (HT[S.city] || []).length;
-  const list0 = tf === '전체' ? allList : allList.filter(p => p.tags.includes(tf)), list = S.likes.length ? list0.slice().sort(byMatch) : S.age ? list0.slice().sort(byAge) : list0;
+  const list0 = tf === '전체' ? allList : allList.filter(p => p.tags.includes(tf)), list = dsort(S.likes.length ? list0.slice().sort(byMatch) : S.age ? list0.slice().sort(byAge) : list0);
   const tagRow = `<div class="tagrow">${['전체'].concat(tags).map(t => `<button class="chip ${tf === t ? 'on' : ''}" data-a="tf" data-v="${t}">${t}${t === '전체' ? ` ${allList.length}` : ''}</button>${t === '전체' && nH ? `<button class="chip ${showH ? 'on' : ''}" data-a="tf" data-v="숙소">🏨 숙소 ${nH}</button>` : ''}`).join('')}</div>`;
   return `<div class="stage">
     ${OM.ok ? '<div class="hslot"></div>' : `<div class="pan" data-key="home"><svg aria-hidden="true"><g class="world">${land}</g></svg>${pins}</div>`}
     <div class="ovl col"><div class="daychips">${Object.keys(CITY).map(x => `<button class="chip ${open && S.city === x ? 'on' : ''}" data-a="city" data-v="${x}">${x}</button>`).join('')}</div>
-      <span class="hint">지도를 끌어서 움직이고, 두 손가락·휠로 확대해 보세요</span>${open || S.onb || S.ageOpen ? '' : `<span class="fabs"><button class="likefab" data-a="likes">${S.likes.length ? `🏷 내 카테고리 ${S.likes.length}개 · 바꾸기` : '🏷 카테고리 고르기'}</button><button class="likefab age" data-a="ages">${S.age ? `👥 ${S.age} 추천 · 바꾸기` : '👥 연령대별 추천'}</button></span>`}</div>
+      <span class="hint">지도를 끌어서 움직이고, 두 손가락·휠로 확대해 보세요</span>${open || S.onb || S.ageOpen || S.dateOpen ? '' : `<span class="fabs"><button class="likefab" data-a="likes">${S.likes.length ? `🏷 내 카테고리 ${S.likes.length}개 · 바꾸기` : '🏷 카테고리 고르기'}</button><button class="likefab age" data-a="ages">${S.age ? `👥 ${S.age} 추천 · 바꾸기` : '👥 연령대별 추천'}</button><button class="likefab age" data-a="dateopen">${S.tdate ? `📅 ${dLab(pDate(S.tdate))} 출발` : '📅 여행 날짜'}</button></span>`}</div>
     <div class="zoom" style="bottom:${open ? (full ? H * 0.78 + 12 : 274) : 16}px">${OM.ok ? '' : '<button data-a="zin" aria-label="확대">+</button><button data-a="zout" aria-label="축소">−</button>'}<button data-a="${OM.ok ? 'hjp' : 'zreset'}" aria-label="일본 전체 보기">⟲</button></div>
     ${open ? `<div class="bsheet ${full ? 'full' : ''}" role="region" aria-label="${S.city} 동선팩 목록">
       <button class="grab" data-a="cs" aria-label="${full ? '목록 접기' : '목록 펼치기'}"><i></i></button>
@@ -1037,7 +1046,7 @@ function home(){
       ${showH ? cityHotels(S.city) : full ? `<div class="blist">${list.map(packCard).join('')}<p class="note">동선과 후기 요약은 여행 블로그·가이드를 참고한 샘플이에요. 작성자와 숙소 요금은 예시예요. <a href="#" data-a="go" data-v="src">참고한 자료 보기</a></p></div>`
         : `<div class="carousel">${list.map(p => { const r = route(p).flat(); return `<button class="ccard" data-a="open" data-v="${p.id}"><span class="cstrip" style="background:${p.color}">${p.nights}</span>${mBadge(p)}<b>${esc(p.title)}</b><span class="xs sub">${esc(p.who)} · ${r.length}곳 · ${r.slice(0, 3).map(id => esc(PL[id].k)).join(' → ')}${r.length > 3 ? ' …' : ''}</span><span class="price">${won(sum(items(p)))}~</span></button>`; }).join('')}</div>`}
     </div>` : ''}
-    ${onbView()}${ageView()}
+    ${onbView()}${ageView()}${dateView()}
   </div>`;
 }
 
@@ -1116,7 +1125,7 @@ const onbSeen = () => { try { return !!localStorage.getItem(ONB_KEY); } catch (e
 const onbSet = () => { try { localStorage.setItem(ONB_KEY, '1'); } catch (e) {} };
 if (!onbSeen()) S.onb = 1;
 const byMatch = (a, b) => { const x = matchOf(a), y = matchOf(b); return (y.pct - x.pct) || (y.places - x.places); };
-const mBadge = p => { const m = matchOf(p); return (m ? `<span class="mbadge ${m.pct >= 75 ? 'hi' : m.pct >= 40 ? 'mid' : ''}">맞춤 ${m.pct}%</span>` : '') + (typeof aBadge === 'function' && !p.user ? aBadge(p) : ''); };
+const mBadge = p => { const m = matchOf(p); return (m ? `<span class="mbadge ${m.pct >= 75 ? 'hi' : m.pct >= 40 ? 'mid' : ''}">맞춤 ${m.pct}%</span>` : '') + (typeof aBadge === 'function' && !p.user ? aBadge(p) : '') + (typeof dBadge === 'function' ? dBadge(p) : ''); };
 function intChips(id){
   const t = tagsOf(id); if (!t.length) return '';
   return `<div class="ichips">${t.map(k => `<span class="ichip ${S.likes.includes(k) ? 'on' : ''}">#${INAME[k]}</span>`).join('')}</div>`;
@@ -1206,7 +1215,7 @@ function ageView(){
     </div>
     <footer>${S.age ? '<button class="pill" data-a="ageoff">연령대 추천 끄기</button>' : ''}<button class="pill" data-a="ageclose">닫기</button></footer>
   </div></div>`;
-  const a = S.age, A0 = AGEP[a], top = PACKS.filter(p => !p.user).sort(byAge).slice(0, 6);
+  const a = S.age, A0 = AGEP[a], top = dsort(PACKS.filter(p => !p.user).sort(byAge)).slice(0, 6);
   const cs = Object.keys(CITY).map(c => { const l = PACKS.filter(p => p.city === c && !p.user).sort(byAge).slice(0, 3); return [c, Math.round(l.reduce((x, p) => x + ageOf(p).pct, 0) / (l.length || 1))]; }).sort((x, y) => y[1] - x[1]).slice(0, 4);
   const hc = cs[0][0], hs = hotelsByAge(hc, a).slice(0, 2);
   return `<div class="lmodal full" role="dialog" aria-modal="true" aria-label="${a} 추천"><div class="lbox">
@@ -1223,6 +1232,100 @@ function ageView(){
   </div></div>`;
 }
 
+
+/* ---------- 여행 날짜와 휴무일 ---------- */
+/* w: 정기 휴무 요일(0=일) · nth: [요일, 몇째 주] · hol: 공휴일이면 다음 날 쉼 · ye: 연말연시 휴무 [[월,일],[월,일]] · noM: 휴무 규칙이 없는 달 · irr: 부정기 휴무 · t: 원문 · s: 출처 */
+const MP = id => ['まっぷるウェブ', 'https://www.mapple.net/spot/' + id + '/'];
+const CL = {
+ castle:{ ye:[[12,28],[1,1]], t:'무휴 (12/28~1/1 휴관)', s:MP(27001511) },
+ kaiyukan:{ irr:true, t:'부정기 휴관', s:MP(27001801) },
+ ajinoya:{ w:[1], t:'월요일 휴무', s:MP(27000355) },
+ horai551:{ nth:[[2,1],[2,3]], yeU:true, t:'첫째·셋째 화요일 휴무 (오봉·연말연시 휴무)', s:MP(27011195) },
+ kcastle:{ ye:[[12,29],[12,31]], t:'무휴 (12/29~31 휴관)', s:MP(43000422) },
+ ishin:{ w:[2], hol:true, ye:[[12,31],[1,1]], t:'화요일 휴무, 공휴일이면 다음 날 (12/31~1/1 휴무)', s:MP(40000566) },
+ ncastle:{ ye:[[12,31],[1,1]], t:'무휴 (12/31~1/1 휴관)', s:MP(23001388) },
+ horai:{ w:[3], nth:[[4,2],[4,4]], yeU:true, t:'수요일, 둘째·넷째 목요일 휴무 (연말연시 휴무)', s:MP(23001536) },
+ nagoyaaq:{ w:[1], hol:true, noM:[7,8,9], t:'월요일 휴관, 공휴일이면 다음 날 (7~9월·골든위크·연말연시·봄방학은 무휴)', s:MP(23000919) },
+ yabaton:{ irr:true, ye:[[12,31],[1,1]], t:'부정기 휴무 (12/31~1/1 휴무)', s:MP(23000446) },
+ higashiyama:{ w:[1], hol:true, ye:[[12,29],[1,1]], t:'월요일 휴원, 공휴일이면 다음 날 (12/29~1/1 휴원)', s:MP(23001383) },
+ scimuseum:{ w:[1], nth:[[5,3]], hol:true, ye:[[12,29],[1,3]], t:'월요일·셋째 금요일 휴관 (12/29~1/3 휴관)', s:MP(23001382) },
+ noritake:{ w:[1], hol:true, yeU:true, t:'월요일 휴관, 공휴일이면 다음 날 (연말연시 휴관)', s:MP(23000886) },
+ hayashi:{ w:[3], t:'수요일 휴무 (공휴일이면 전날이나 다음 날)', s:MP(34000722) },
+ hassho:{ w:[1], nth:[[2,1],[2,3]], t:'월요일, 첫째·셋째 화요일 휴무', s:MP(34000334) },
+ ikkousha:{ yeU:true, t:'무휴 (연말연시 휴무)', s:MP(40012002) },
+ hanamaru:{ irr:true, t:'부정기 휴무 (스텔라 플레이스 휴관일)', s:MP(1012355) },
+ tanga:{ yeU:true, t:'가게마다 다름 (오봉·연말연시 휴무)', s:MP(40001939) },
+ dogo:{ irr:true, t:'무휴 (12월 중 하루 임시 휴관)', s:MP(38000452) },
+ toyota:{ w:[1], t:'월요일 휴관' }, taimeshi:{ w:[3], t:'수요일 휴무' }, cupnoodle:{ w:[2], t:'화요일 휴관' },
+ hakuhaku:{ w:[2, 3], t:'화·수요일 휴관' }, matsuba:{ w:[3, 4], t:'수·목요일 휴무' }, kyuhaku:{ w:[1], t:'월요일 휴관' },
+ yamanaka:{ w:[2], t:'화요일 휴무' }, tetsunabe:{ w:[0], holC:true, t:'일요일·공휴일 휴무' }, manga:{ w:[2], t:'화요일 휴관' },
+ ichiryuan:{ w:[2], t:'화요일 휴무 (월요일 저녁도 쉼)' }, tobezoo:{ w:[1], t:'월요일 휴원' }, sarakura:{ w:[2], t:'화요일 케이블카 운휴' }
+};
+/* 일본 공휴일 (내각부 고시 기준, 2026~2027) */
+const JPH = new Set(['2026-01-01','2026-01-12','2026-02-11','2026-02-23','2026-03-20','2026-04-29','2026-05-03','2026-05-04','2026-05-05','2026-05-06','2026-07-20','2026-08-11','2026-09-21','2026-09-22','2026-09-23','2026-10-12','2026-11-03','2026-11-23',
+ '2027-01-01','2027-01-11','2027-02-11','2027-02-23','2027-03-21','2027-03-22','2027-04-29','2027-05-03','2027-05-04','2027-05-05','2027-07-19','2027-08-11','2027-09-20','2027-09-23','2027-10-11','2027-11-03','2027-11-23']);
+const WD = ['일', '월', '화', '수', '목', '금', '토'];
+const ymd = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const addD = (d, n) => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); return x; };
+const pDate = v => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || ''); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null; };
+const dLab = d => (d.getMonth() + 1) + '/' + d.getDate() + '(' + WD[d.getDay()] + ')';
+const TD_KEY = 'dongseon-tripdate-v1';
+S.tdate = (() => { try { const v = localStorage.getItem(TD_KEY) || ''; return pDate(v) ? v : ''; } catch (e) { return ''; } })();
+S.dateOpen = 0;
+const isHol = d => JPH.has(ymd(d));
+function inYE(r, d){ const m = d.getMonth() + 1, x = d.getDate(), a = r[0], b = r[1], v = m * 100 + x, va = a[0] * 100 + a[1], vb = b[0] * 100 + b[1]; return va <= vb ? v >= va && v <= vb : v >= va || v <= vb; }
+/* 'closed' | 'maybe' | '' */
+function closedOn(id, d){
+  const c = CL[id]; if (!c) return '';
+  if (c.ye && inYE(c.ye, d)) return 'closed';
+  if (c.yeU && inYE([[12, 29], [1, 3]], d)) return 'maybe';
+  if (c.holC && isHol(d)) return 'closed';
+  const ruleOn = dd => !(c.noM && c.noM.includes(dd.getMonth() + 1)) && ((c.w || []).includes(dd.getDay()) || (c.nth || []).some(([w, n]) => dd.getDay() === w && Math.ceil(dd.getDate() / 7) === n));
+  if (ruleOn(d)) return c.hol && isHol(d) ? 'maybe' : 'closed';
+  if (c.hol){ const y = addD(d, -1); if (ruleOn(y) && isHol(y)) return 'closed'; }
+  if (c.irr) return 'maybe';
+  return '';
+}
+function packIssues(p, order){
+  const st = pDate(S.tdate); if (!st) return null;
+  const r = route(p), ord = order || r.map((_, i) => i), out = [];
+  ord.forEach((src, i) => { const d = addD(st, i); (r[src] || []).forEach(id => { const k = closedOn(id, d); if (k) out.push({ day:i, id, d, k }); }); });
+  return { closed:out.filter(x => x.k === 'closed'), maybe:out.filter(x => x.k === 'maybe') };
+}
+const issScore = p => { const q = packIssues(p); return q ? q.closed.length * 10 + q.maybe.length : 0; };
+const dsort = l => S.tdate ? l.map((p, i) => [p, i, issScore(p)]).sort((a, b) => a[2] - b[2] || a[1] - b[1]).map(x => x[0]) : l;
+const dBadge = p => { const q = packIssues(p); if (!q) return ''; return q.closed.length ? `<span class="dbad ng">휴무 ${q.closed.length}곳</span>` : q.maybe.length ? `<span class="dbad mb">확인 ${q.maybe.length}곳</span>` : '<span class="dbad ok">날짜 OK</span>'; };
+function bestOrderDays(p){
+  const r = route(p), n = r.length; if (n < 2 || n > 6) return null;
+  const perms = a => a.length <= 1 ? [a] : a.flatMap((x, i) => perms(a.slice(0, i).concat(a.slice(i + 1))).map(t => [x].concat(t)));
+  let best = null, bs = Infinity;
+  perms(r.map((_, i) => i)).forEach(o => { const q = packIssues(p, o), sc = q.closed.length * 10 + q.maybe.length + o.reduce((a, v, i) => a + (v !== i ? 0.01 : 0), 0); if (sc < bs){ bs = sc; best = o; } });
+  const cur = packIssues(p), b = packIssues(p, best);
+  return b.closed.length < cur.closed.length || (b.closed.length === cur.closed.length && b.maybe.length < cur.maybe.length) ? { order:best, q:b } : null;
+}
+function dateWarn(p){
+  const q = packIssues(p), st = pDate(S.tdate);
+  if (!q) return `<div class="cwarn ok" style="background:var(--soft);border-color:var(--line);color:var(--ink)"><b>여행 날짜를 넣으면 휴무일을 확인해 드려요</b><button class="btn" data-a="dateopen">📅 여행 날짜 넣기</button></div>`;
+  const r = route(p), lab = i => `${i + 1}일차 ${dLab(addD(st, i))}`;
+  if (!q.closed.length && !q.maybe.length) return `<div class="cwarn ok"><b>✅ ${dLab(st)} 출발이면 휴무인 곳이 없어요</b><span class="xs">정기 휴무가 확인된 곳 기준이에요. 식당은 임시 휴무가 있을 수 있어요.</span><button class="pill" style="align-self:flex-start" data-a="dateopen">날짜 바꾸기</button></div>`;
+  const fix = bestOrderDays(p);
+  return `<div class="cwarn"><b>⚠ ${dLab(st)} 출발이면 쉬는 곳이 있어요</b><ul>${q.closed.map(x => `<li><b>${lab(x.day)}</b> ${esc(PL[x.id].n)} — ${esc(CL[x.id].t)}${CL[x.id].s ? ` <a href="${CL[x.id].s[1]}" target="_blank" rel="noopener">출처</a>` : ''}</li>`).join('')}${q.maybe.map(x => `<li>${lab(x.day)} ${esc(PL[x.id].n)} — ${esc(CL[x.id].t)} <span class="xs">(확인 필요)</span></li>`).join('')}</ul>
+    ${fix ? `<span class="xs">날짜 순서를 ${fix.order.map(i => i + 1).join(' → ')}일차 동선 순으로 바꾸면 휴무 ${fix.q.closed.length}곳${fix.q.maybe.length ? `, 확인 필요 ${fix.q.maybe.length}곳` : ''}이 돼요.</span><button class="btn" data-a="datefix" data-v="${fix.order.join(',')}">날짜 순서 바꾸기</button>` : '<span class="xs">일자 순서를 바꿔도 피할 수 없어요. 편집에서 해당 장소를 다른 곳으로 바꿔 보세요.</span>'}
+    <button class="pill" style="align-self:flex-start" data-a="dateopen">날짜 바꾸기</button></div>`;
+}
+function dateView(){
+  if (!S.dateOpen) return '';
+  const st = pDate(S.tdate), ok = st ? dsort(PACKS.filter(p => !p.user)).filter(p => !issScore(p)).length : 0;
+  const top = st ? dsort(PACKS.filter(p => !p.user).sort(S.age ? byAge : S.likes.length ? byMatch : () => 0)).slice(0, 5) : [];
+  return `<div class="lmodal full" role="dialog" aria-modal="true" aria-label="여행 날짜"><div class="lbox">
+    <header><span class="step">여행 날짜</span><h3>언제 출발하세요?</h3><span class="xs sub">출발일을 넣으면 일차마다 요일을 맞춰 보고, 그날 쉬는 박물관·식당이 없는 동선팩을 먼저 추천해요.</span></header>
+    <div class="lgroups"><div class="datebox"><label for="tdate"><b>출발일</b></label><input type="date" id="tdate" value="${S.tdate}" min="2026-01-01" max="2027-12-31">${st ? `<span class="xs sub">${dLab(st)} 출발 · 일본 공휴일·연말연시도 반영해요.</span>` : ''}</div>
+    ${st ? `<h4>휴무 없이 갈 수 있는 동선팩 ${ok}개 / ${PACKS.filter(p => !p.user).length}개</h4>${top.map(p => `<button class="ltp" data-a="dateopenp" data-v="${p.id}"><span class="row"><b class="grow">${esc(p.title)}</b>${dBadge(p)}</span><span class="xs sub">${p.city} · ${p.nights} · ${dLab(st)} ~ ${dLab(addD(st, route(p).length - 1))}</span></button>`).join('')}
+      <p class="anote">휴무일은 まっぷるウェブ와 각 장소 안내에 실린 정기 휴무 기준이에요. 정기 휴무 정보가 없는 곳은 '쉬는 날 없음'으로 보지 않고 표시하지 않았어요. 임시 휴무는 방문 전에 한 번 더 확인해 주세요.</p>` : ''}</div>
+    <footer>${S.tdate ? '<button class="pill" data-a="dateclear">날짜 지우기</button>' : ''}<button class="btn" data-a="dateclose">${st ? '이 날짜로 추천 보기' : '닫기'}</button></footer></div></div>`;
+}
+document.addEventListener('change', e => { if (e.target.id !== 'tdate') return; const v = e.target.value; S.tdate = pDate(v) ? v : ''; try { S.tdate ? localStorage.setItem(TD_KEY, S.tdate) : localStorage.removeItem(TD_KEY); } catch (er) {} render(); });
+
 function likeBar(){
   const L = S.likes;
   return `<button class="likebar ${L.length ? 'set' : ''}" data-a="likes"><span class="lb1">${L.length ? `내 카테고리 · ${L.slice(0, 2).map(k => INAME[k]).join(', ')}${L.length > 2 ? ` 외 ${L.length - 2}` : ''}` : '카테고리 고르고 동선팩 추천받기'}</span><span class="lb2">${L.length ? '맞춤순 · 바꾸기 ›' : '›'}</span></button>`;
@@ -1232,10 +1335,10 @@ function onbView(){
   const L = S.likes, X = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
   if (S.onb === 1) return `<div class="lmodal full" role="dialog" aria-modal="true" aria-label="여행 카테고리 고르기"><div class="lbox">
     <header><span class="step">1 / 2</span><h3>어떤 여행을 하고 싶으세요?</h3><span class="xs sub">카테고리를 고르면 딱 맞는 동선팩을 추천하고, 동선을 고칠 때도 맞는 장소·맛집을 먼저 보여 드려요. 여러 개 고를 수 있어요.</span></header>
-    <div class="lgroups">${INT.map(g => `<section><h4>${g.e} ${g.g}</h4><div class="chips">${g.l.map(([k, n]) => `<button class="chip ${L.includes(k) ? 'on' : ''}" data-a="liket" data-v="${k}" aria-pressed="${L.includes(k)}">${n}</button>`).join('')}</div></section>`).join('')}</div>
+    <div class="lgroups"><div class="datebox"><label for="tdate"><b>📅 출발일</b> <span class="xs sub">넣으면 그날 쉬는 곳이 없는 동선팩을 먼저 추천해요</span></label><input type="date" id="tdate" value="${S.tdate}" min="2026-01-01" max="2027-12-31">${S.tdate ? `<span class="xs sub">${dLab(pDate(S.tdate))} 출발</span>` : ''}</div>${INT.map(g => `<section><h4>${g.e} ${g.g}</h4><div class="chips">${g.l.map(([k, n]) => `<button class="chip ${L.includes(k) ? 'on' : ''}" data-a="liket" data-v="${k}" aria-pressed="${L.includes(k)}">${n}</button>`).join('')}</div></section>`).join('')}</div>
     <footer><button class="pill" data-a="onbskip">${onbSeen() ? '닫기' : '건너뛰기'}</button><button class="btn" data-a="onbnext" ${L.length ? '' : 'disabled'}>${L.length ? `${L.length}개로 동선팩 추천받기` : '카테고리를 골라 주세요'}</button></footer>
   </div></div>`;
-  const top = PACKS.slice().sort(byMatch).slice(0, 6);
+  const top = dsort(PACKS.slice().sort(byMatch)).slice(0, 6);
   const cs = Object.keys(CITY).map(c => { const l = PACKS.filter(p => p.city === c).sort(byMatch).slice(0, 3); return [c, Math.round(l.reduce((a, p) => a + matchOf(p).pct, 0) / l.length)]; }).sort((a, b) => b[1] - a[1]).slice(0, 4);
   return `<div class="lmodal full" role="dialog" aria-modal="true" aria-label="추천 동선팩"><div class="lbox">
     <header><span class="step">2 / 2</span><h3>이런 동선팩을 추천해요</h3><span class="xs sub">${L.map(k => '#' + INAME[k]).join(' ')} 을(를) 고른 분께 잘 맞는 순서예요.</span></header>
@@ -1559,7 +1662,7 @@ function detail(){
   return `<div class="dcol"><div class="dh"><div><h2>${esc(p.title)}</h2><p class="sub" style="margin-top:6px">${esc(p.sub)}</p>
     <p style="margin-top:8px">${p.user ? `<span class="badge ub">${p.draft ? '작성 중' : '여행자 등록'}</span> <span class="xs sub">${esc(p.who)}${p.by ? ' · 만든 사람 ' + esc(p.by) : ''}</span>` : `<span class="badge">예약 인증</span> <span class="xs sub">예약 내역과 함께 올라온 동선이라는 설정의 샘플 · ${esc(p.who)}</span>`}</p>
     ${p.draft ? `<div class="pubbox"><b>아직 등록 전이에요</b><span class="xs sub">편집에서 장소를 담은 뒤 등록하면 ${PDB ? '모든 사람이 볼 수 있어요' : '이 브라우저의 동선팩 목록에 올라가요'}.</span><div class="row" style="gap:8px;margin-top:8px"><button class="btn" style="flex:1" data-a="edit">장소 담기·편집</button><button class="btn dark" style="flex:1" data-a="publish">동선팩 등록하기</button></div>${S.pubMsg ? `<p class="xs" style="margin-top:6px;color:var(--pri);font-weight:700">${esc(S.pubMsg)}</p>` : ''}</div>` : S.pubMsg && p.mine ? `<p class="xs" style="margin-top:6px;color:#166534;font-weight:700">${esc(S.pubMsg)}</p>` : ''}</div>
-  <div class="tabs" role="tablist"><button role="tab" class="${all ? 'on' : ''}" data-a="day" data-v="-1">전체</button>${r.map((x, i) => `<button role="tab" class="${!all && i === d ? 'on' : ''}" data-a="day" data-v="${i}">${i + 1}일차</button>`).join('')}</div></div>
+  <div class="tabs" role="tablist"><button role="tab" class="${all ? 'on' : ''}" data-a="day" data-v="-1">전체</button>${r.map((x, i) => `<button role="tab" class="${!all && i === d ? 'on' : ''}" data-a="day" data-v="${i}">${i + 1}일차${S.tdate ? `<small>${dLab(addD(pDate(S.tdate), i))}</small>` : ''}</button>`).join('')}</div>${dateWarn(p)}</div>
   <div class="dl">${MOVE_NOTE}${(all ? r.map((ids, k) => ({ ids, k })) : [{ ids:r[d], k:d }]).map(g => `<h3>${g.k + 1}일차 ${g.ids.length ? (g.ids.length > 1 ? `<span class="xs sub">· 이동 약 ${minT(dayMove(g.ids))}</span>` : '') : '· 귀국·자유 일정'}</h3><button class="lplus dplus" data-a="insat" data-v="${g.k}:0"><span>+</span>${g.ids.length ? '맨 앞에 추가' : '이 날 장소 추가'}</button>${g.ids.length ? `<div class="tl">${g.ids.map((id, i) => stopRow(id, g.k, i, g.ids, S.edit, r.length)).join('')}</div><button class="lplus dplus" data-a="insat" data-v="${g.k}:${g.ids.length}"><span>+</span>맨 뒤에 추가</button>` : ''}`).join('')}
   ${hotelSec(p)}
   </div></div>
@@ -2004,6 +2107,11 @@ function go(patch){ Object.assign(S, patch); render(); $('mn').scrollTop = 0; }
 const A = {
   go:v => go({ scr:v, ...(v === 'trip' ? {} : {}) }),
   big:() => go({ big:!S.big }),
+  dateopen:() => { S.dateOpen = 1; render(); },
+  dateclose:() => { S.dateOpen = 0; render(); },
+  dateclear:() => { S.tdate = ''; try { localStorage.removeItem(TD_KEY); } catch (e) {} render(); },
+  dateopenp:v => { S.dateOpen = 0; A.open(v); },
+  datefix:v => { const p = pack(), r = route(p), o = v.split(',').map(Number); if (o.length !== r.length) return; setRoute(o.map(i => r[i].slice())); render(); },
   gohome:() => { Object.assign(S, { edit:false, place:null, tpick:0, ageOpen:0, onb:0, ins:null, rep:null, sel:null, dsel:null, cityOpen:false, cs:'peek' }); go({ scr:'home' }); if (typeof fitJapan === 'function') setTimeout(() => fitJapan(true), 0); },
   fbk:() => fkOpen(),
   hjp:() => fitJapan(true),
