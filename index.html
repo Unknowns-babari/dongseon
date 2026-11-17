@@ -155,6 +155,9 @@ a{color:var(--pri)}
 .svbar{display:grid;grid-template-columns:44px 1fr 64px;gap:8px;align-items:center;font-size:.85em}
 .svbar i{display:block;height:10px;border-radius:5px;background:var(--pri)}
 .svbar span:nth-child(2){background:var(--soft);border-radius:5px;overflow:hidden}
+.fbk .svlock{flex-direction:row;display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.fbk .svlock input{flex:1 1 140px;min-width:0;letter-spacing:2px}
+.fbk .svlock .btn{flex:0 0 auto;min-height:44px;padding:0 16px}
 .svtab{width:100%;border-collapse:collapse;font-size:.9em;margin-top:4px}
 .svtab th,.svtab td{border:1px solid var(--line);padding:7px 8px;text-align:center}
 .svtab th{background:var(--soft);font-weight:700}
@@ -2012,6 +2015,9 @@ $('fbk').addEventListener('click', e => {
   if (k === 'close') fkClose();
   else if (k === 'star'){ FK.stars = FK.stars === +v ? 0 : +v; fkRender(); }
   else if (k === 'sort'){ FK.sort = v; fkList(); }
+  else if (k === 'svask'){ SV.ask = true; SV.pmsg = ''; FK.pend = false; $('fklist').innerHTML = fkListHTML(); const i = $('svpw'); i && i.focus(); }
+  else if (k === 'svhide'){ SV.ask = false; SV.pmsg = ''; FK.pend = false; $('fklist').innerHTML = fkListHTML(); }
+  else if (k === 'svlockup'){ SV.open = false; SV.ask = false; try { sessionStorage.removeItem('dongseon-sv-open'); } catch (e) {} FK.pend = false; fkList(); }
   else if (k === 'svcsv') svSaveFile();
   else if (k === 'svcopy') svCopy();
   else if (k === 'rep'){ if (FK.rep !== v){ FK.rtext = ''; FK.rmsg = ''; } FK.rep = v; if (b.dataset.to) FK.rtext = '@' + b.dataset.to + ' '; FK.pend = false; $('fklist').innerHTML = fkListHTML(); const t = $('fkrtext'); if (t){ t.focus(); t.setSelectionRange(t.value.length, t.value.length); } }
@@ -2021,7 +2027,13 @@ $('fbk').addEventListener('input', e => { const id = e.target.id; if (id === 'fk
 $('fbk').addEventListener('focusout', () => setTimeout(() => { if (FK.pend) fkList(); }, 0));
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && FK.open){ e.stopImmediatePropagation(); fkClose(); } }, true);
 $('fbk').addEventListener('submit', async e => {
-  e.preventDefault(); if (FK.busy) return; const kind = e.target.dataset.fkForm, st = fkStore();
+  e.preventDefault();
+  if (e.target.dataset.fkForm === 'svpw'){ const i = $('svpw'), v = (i && i.value || '').trim(), h = await svHash(v);
+    if (h === null){ SV.pmsg = '이 브라우저에서는 비밀번호를 확인할 수 없어요. 주소가 https로 시작하는지 확인해 주세요.'; }
+    else if (h === SVH){ SV.open = true; SV.ask = false; SV.pmsg = ''; try { sessionStorage.setItem('dongseon-sv-open', '1'); } catch (er) {} }
+    else SV.pmsg = '비밀번호가 맞지 않아요.';
+    FK.pend = false; { const L = $('fklist'); if (L) L.innerHTML = fkListHTML(); } if (!SV.open){ const j = $('svpw'); j && j.focus(); } return; }
+  if (FK.busy) return; const kind = e.target.dataset.fkForm, st = fkStore();
   if (!st) return;
   const post = kind === 'post', text = (post ? FK.text : FK.rtext).trim(), name = (post ? FK.name : FK.rname).trim().slice(0, 20) || '익명';
   const say = m => { if (post) FK.msg = m; else FK.rmsg = m; post ? fkRender() : (FK.pend = false, $('fklist').innerHTML = fkListHTML()); };
@@ -2076,11 +2088,12 @@ $('srv').addEventListener('click', e => {
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && SV.step){ e.stopImmediatePropagation(); SV.done = true; SV.step = 0; svRender(); } }, true);
 function svResHTML(){
+  if (!SV.open) return svLockHTML();
   const l = SV.list; if (!l.length) return '';
   const yes = l.filter(v => v.use === 'yes'), pct = n => Math.round(n / l.length * 100), t = svTable();
   const bar = (lab, n, tot) => `<div class="svbar"><b>${lab}</b><span><i style="width:${tot ? Math.round(n / tot * 100) : 0}%"></i></span><span class="sub">${n}명 · ${tot ? Math.round(n / tot * 100) : 0}%</span></div>`;
   const tab = (rows, cap) => `<table class="svtab"><caption class="xs sub" style="text-align:left;padding:6px 0 2px">${cap}</caption><thead><tr>${rows[0].map(c => `<th scope="col">${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows.slice(1).map((r, i, a) => `<tr class="${i === a.length - 1 ? 'tot' : ''}">${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
-  return `<div class="svres"><b>출시 의향 설문 결과</b><p style="margin:0"><b style="font-size:1.4em;color:var(--pri)">${pct(yes.length)}%</b> <span class="sub">· 응답 ${l.length}명 중 "예" ${yes.length}명</span></p>
+  return `<div class="svres"><span style="display:flex;justify-content:space-between;align-items:center"><b>출시 의향 설문 결과</b><button class="lnk" data-fk="svlockup">🔒 다시 잠그기</button></span><p style="margin:0"><b style="font-size:1.4em;color:var(--pri)">${pct(yes.length)}%</b> <span class="sub">· 응답 ${l.length}명 중 "예" ${yes.length}명</span></p>
     ${yes.length ? '<p class="xs sub" style="margin:4px 0 0">"예"라고 답한 사람의 연령대</p>' + AGES.map(a => bar(a, yes.filter(v => v.age === a).length, yes.length)).join('') : ''}
     ${tab(t.sum, '표 1. 출시되면 사용하겠는가')}${tab(t.age, '표 2. "예" 응답자의 연령대 분포')}
     <div class="svbtns"><button data-fk="svcsv">표 파일로 저장 (엑셀)</button><button data-fk="svcopy">표 복사</button></div><p id="svnote" class="msg" role="status" hidden></p></div>`;
@@ -2112,6 +2125,18 @@ async function svCopy(){
   catch (e) { const ta = document.createElement('textarea'); ta.value = tsv; document.body.appendChild(ta); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (er) {} ta.remove(); svNote(ok ? '표를 복사했어요. 엑셀이나 한글 표에 붙여넣으면 돼요.' : '복사가 막혀 있어요. 아래 표를 화면 캡처해 주세요.'); }
 }
 function svNote(m){ const el = $('svnote'); if (el){ el.hidden = false; el.textContent = m; } }
+
+const SVH = 'ce431f60653812af0c00b3df1d05f7c7a20224d197bbe78a359700dc42691736';
+SV.open = (() => { try { return sessionStorage.getItem('dongseon-sv-open') === '1'; } catch (e) { return false; } })();
+async function svHash(t){
+  if (window.crypto && crypto.subtle){ const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
+  return null;
+}
+function svLockHTML(){
+  if (!SV.list.length && !SV.ask) return '';
+  return SV.ask ? `<form class="svlock" data-fk-form="svpw"><b style="flex:1 1 100%">설문 결과 보기</b><input id="svpw" type="password" inputmode="numeric" autocomplete="off" maxlength="20" placeholder="비밀번호" aria-label="설문 결과 비밀번호"><button class="btn">확인</button><button type="button" class="btn ghost" data-fk="svhide">취소</button>${SV.pmsg ? `<p class="msg" role="alert" style="flex:1 1 100%;margin:0">${esc(SV.pmsg)}</p>` : ''}</form>`
+    : `<button class="lnk" data-fk="svask">🔒 설문 결과 보기 (비밀번호 필요)</button>`;
+}
 
 let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (S.scr === 'home' || S.scr === 'detail') render(); }, 150); });
 render();
