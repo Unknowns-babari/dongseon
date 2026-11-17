@@ -293,7 +293,20 @@ main.full>*{animation:none}
 .ichips{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0 2px}
 .ichip{font-size:.75em;padding:2px 8px;border-radius:10px;background:#f1f5f9;color:#475569}
 .ichip.on{background:#dcfce7;color:#166534;font-weight:700}
-.lmodal{position:absolute;inset:0;z-index:60;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;justify-content:center}
+.lrec{flex-shrink:0;display:flex;gap:10px;overflow-x:auto;padding:8px 0 4px;scrollbar-width:none}
+.lrec::-webkit-scrollbar{display:none}
+.lrc{flex:0 0 220px;border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:4px;background:var(--card)}
+.lrn{display:flex;align-items:center;gap:6px;border:0;background:none;padding:0;text-align:left;font-size:.92em}
+.lmodal.full{align-items:stretch}
+.lmodal.full .lbox{max-height:none;height:100%;border-radius:0;max-width:none}
+.lbox .step{display:inline-block;font-size:.75em;font-weight:800;color:var(--pri);margin-bottom:4px}
+.lbox .btn:disabled{opacity:.45}
+.lbox .chips .chip .mbadge{margin:0 0 0 4px}
+.ltp .row{display:flex;align-items:center;gap:6px}
+.lkb{display:inline-block;font-size:.72em;font-weight:800;color:#166534;background:#dcfce7;border-radius:8px;padding:1px 6px;vertical-align:middle}
+.epin.rec.like b{box-shadow:0 0 0 3px #22c55e}
+.epin.rec.like span{color:#166534;font-weight:700}
+.lmodal{position:absolute;inset:0;z-index:2000;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;justify-content:center}
 .lbox{background:var(--card);width:100%;max-width:520px;max-height:88%;border-radius:18px 18px 0 0;display:flex;flex-direction:column}
 .lbox header{flex-shrink:0;display:block;padding:18px 18px 8px;position:static;height:auto;border:0}
 .lbox header .xs{display:block}
@@ -649,7 +662,7 @@ const cityPlaces = c => Object.keys(PL).filter(id => PL[id].c === c);
 
 const SAVE_KEY = 'dongseon-routes-v3';
 let saved = {}; try { saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}') || {}; } catch (e) { saved = {}; }
-const S = { scr:'home', cityOpen:false, cs:'peek', sel:null, city:'도쿄', rf:'전체', pid:'tk1', day:0, edit:false, routes:saved, up:false, off:{}, place:null, mf:'전체', pl:'', chg:false, rprev:false, rep:null, ins:null, dsel:null, pickList:false, toMap:false, filter:'전체', big:false, alt:null, loaded:false, made:false, shared:false, likes:(() => { try { const v = JSON.parse(localStorage.getItem('dongseon-likes-v1') || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } })(), likeOpen:false };
+const S = { scr:'home', cityOpen:false, cs:'peek', sel:null, city:'도쿄', rf:'전체', pid:'tk1', day:0, edit:false, routes:saved, up:false, off:{}, place:null, mf:'전체', pl:'', chg:false, rprev:false, rep:null, ins:null, dsel:null, pickList:false, toMap:false, filter:'전체', big:false, alt:null, loaded:false, made:false, shared:false, likes:(() => { try { const v = JSON.parse(localStorage.getItem('dongseon-likes-v1') || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } })(), likeOpen:false, onb:0 };
 const R = { name:'', text:'', stars:0, msg:'', busy:false, files:[] };
 const $ = id => document.getElementById(id);
 const pack = () => PACKS.find(p => p.id === S.pid);
@@ -744,7 +757,7 @@ function home(){
   return `<div class="stage">
     ${OM.ok ? '<div class="hslot"></div>' : `<div class="pan" data-key="home"><svg aria-hidden="true"><g class="world">${land}</g></svg>${pins}</div>`}
     <div class="ovl col"><div class="daychips">${Object.keys(CITY).map(x => `<button class="chip ${open && S.city === x ? 'on' : ''}" data-a="city" data-v="${x}">${x}</button>`).join('')}</div>
-      <span class="hint">지도를 끌어서 움직이고, 두 손가락·휠로 확대해 보세요</span>${open ? '' : `<button class="likefab" data-a="likes">${S.likes.length ? `내 취향 ${S.likes.length}개 ✎` : '✨ 내 취향으로 추천받기'}</button>`}</div>
+      <span class="hint">지도를 끌어서 움직이고, 두 손가락·휠로 확대해 보세요</span>${open || S.onb ? '' : `<button class="likefab" data-a="likes">${S.likes.length ? `🏷 내 카테고리 ${S.likes.length}개 · 바꾸기` : '🏷 카테고리 고르기'}</button>`}</div>
     <div class="zoom" style="bottom:${open ? (full ? H * 0.78 + 12 : 274) : 16}px">${OM.ok ? '' : '<button data-a="zin" aria-label="확대">+</button><button data-a="zout" aria-label="축소">−</button>'}<button data-a="${OM.ok ? 'hjp' : 'zreset'}" aria-label="일본 전체 보기">⟲</button></div>
     ${open ? `<div class="bsheet ${full ? 'full' : ''}" role="region" aria-label="${S.city} 동선팩 목록">
       <button class="grab" data-a="cs" aria-label="${full ? '목록 접기' : '목록 펼치기'}"><i></i></button>
@@ -755,7 +768,7 @@ function home(){
       ${full ? `<div class="blist">${list.map(packCard).join('')}<p class="note">동선과 후기 요약은 여행 블로그·가이드를 참고한 샘플이에요. 작성자와 숙소 요금은 예시예요. <a href="#" data-a="go" data-v="src">참고한 자료 보기</a></p></div>`
         : `<div class="carousel">${list.map(p => { const r = route(p).flat(); return `<button class="ccard" data-a="open" data-v="${p.id}"><span class="cstrip" style="background:${p.color}">${p.nights}</span>${mBadge(p)}<b>${esc(p.title)}</b><span class="xs sub">${esc(p.who)} · ${r.length}곳 · ${r.slice(0, 3).map(id => esc(PL[id].k)).join(' → ')}${r.length > 3 ? ' …' : ''}</span><span class="price">${won(sum(items(p)))}~</span></button>`; }).join('')}</div>`}
     </div>` : ''}
-    ${likeModal()}
+    ${onbView()}
   </div>`;
 }
 
@@ -819,25 +832,37 @@ function matchOf(p){
   const all = route(p).flat(), places = all.filter(id => tagsOf(id).some(k => L.includes(k))).length;
   return { pct:Math.round(100 * (0.6 * hit.length / L.length + 0.4 * (all.length ? places / all.length : 0))), hit, places };
 }
+const likeOk = id => S.likes.some(k => tagsOf(id).includes(k));
+const catOk = (id, mf) => mf === '전체' || (mf === '맞춤' ? !S.likes.length || likeOk(id) : PL[id].cat === mf);
+const ONB_KEY = 'dongseon-onb-v1';
+const onbSeen = () => { try { return !!localStorage.getItem(ONB_KEY); } catch (e) { return true; } };
+const onbSet = () => { try { localStorage.setItem(ONB_KEY, '1'); } catch (e) {} };
+if (!onbSeen()) S.onb = 1;
 const byMatch = (a, b) => { const x = matchOf(a), y = matchOf(b); return (y.pct - x.pct) || (y.places - x.places); };
-const mBadge = p => { const m = matchOf(p); return m ? `<span class="mbadge ${m.pct >= 75 ? 'hi' : m.pct >= 40 ? 'mid' : ''}">취향 ${m.pct}%</span>` : ''; };
+const mBadge = p => { const m = matchOf(p); return m ? `<span class="mbadge ${m.pct >= 75 ? 'hi' : m.pct >= 40 ? 'mid' : ''}">맞춤 ${m.pct}%</span>` : ''; };
 function intChips(id){
   const t = tagsOf(id); if (!t.length) return '';
   return `<div class="ichips">${t.map(k => `<span class="ichip ${S.likes.includes(k) ? 'on' : ''}">#${INAME[k]}</span>`).join('')}</div>`;
 }
 function likeBar(){
   const L = S.likes;
-  return `<button class="likebar ${L.length ? 'set' : ''}" data-a="likes"><span class="lb1">${L.length ? `내 취향 · ${L.slice(0, 2).map(k => INAME[k]).join(', ')}${L.length > 2 ? ` 외 ${L.length - 2}` : ''}` : '내 취향 고르고 맞춤 동선 추천받기'}</span><span class="lb2">${L.length ? '취향순 · 바꾸기 ›' : '›'}</span></button>`;
+  return `<button class="likebar ${L.length ? 'set' : ''}" data-a="likes"><span class="lb1">${L.length ? `내 카테고리 · ${L.slice(0, 2).map(k => INAME[k]).join(', ')}${L.length > 2 ? ` 외 ${L.length - 2}` : ''}` : '카테고리 고르고 동선팩 추천받기'}</span><span class="lb2">${L.length ? '맞춤순 · 바꾸기 ›' : '›'}</span></button>`;
 }
-function likeModal(){
-  if (!S.likeOpen) return '';
-  const L = S.likes, top = L.length ? PACKS.slice().sort(byMatch).slice(0, 3) : [];
-  const cityScore = L.length ? Object.keys(CITY).map(c => { const l = PACKS.filter(p => p.city === c).sort(byMatch).slice(0, 3); return [c, Math.round(l.reduce((a, p) => a + matchOf(p).pct, 0) / l.length)]; }).sort((a, b) => b[1] - a[1]).slice(0, 3) : [];
-  return `<div class="lmodal" role="dialog" aria-modal="true" aria-label="내 취향 고르기"><div class="lbox">
-    <header><h3>어떤 여행을 좋아하세요?</h3><span class="xs sub">관심사를 골라 주면 동선팩과 장소를 취향 맞는 순으로 보여 줘요.</span></header>
-    <div class="lgroups">${INT.map(g => `<section><h4>${g.e} ${g.g}</h4><div class="chips">${g.l.map(([k, n]) => `<button class="chip ${L.includes(k) ? 'on' : ''}" data-a="liket" data-v="${k}" aria-pressed="${L.includes(k)}">${n}</button>`).join('')}</div></section>`).join('')}
-    ${L.length ? `<section class="ltop"><h4>지금 취향과 잘 맞는 곳</h4><p class="xs sub">도시: ${cityScore.map(([c, v]) => `${c} ${v}%`).join(' · ')}</p>${top.map(p => `<button class="ltp" data-a="likeopen" data-v="${p.id}"><b>${esc(p.title)}</b><span class="xs sub">${p.city} · ${mBadge(p)} · 맞는 장소 ${matchOf(p).places}곳</span></button>`).join('')}</section>` : ''}</div>
-    <footer><button class="pill" data-a="likeclr">초기화</button><button class="btn" data-a="likedone">${L.length ? `${L.length}개 선택 · 완료` : '닫기'}</button></footer>
+function onbView(){
+  if (!S.onb) return '';
+  const L = S.likes, X = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
+  if (S.onb === 1) return `<div class="lmodal full" role="dialog" aria-modal="true" aria-label="여행 카테고리 고르기"><div class="lbox">
+    <header><span class="step">1 / 2</span><h3>어떤 여행을 하고 싶으세요?</h3><span class="xs sub">카테고리를 고르면 딱 맞는 동선팩을 추천하고, 동선을 고칠 때도 맞는 장소·맛집을 먼저 보여 드려요. 여러 개 고를 수 있어요.</span></header>
+    <div class="lgroups">${INT.map(g => `<section><h4>${g.e} ${g.g}</h4><div class="chips">${g.l.map(([k, n]) => `<button class="chip ${L.includes(k) ? 'on' : ''}" data-a="liket" data-v="${k}" aria-pressed="${L.includes(k)}">${n}</button>`).join('')}</div></section>`).join('')}</div>
+    <footer><button class="pill" data-a="onbskip">${onbSeen() ? '닫기' : '건너뛰기'}</button><button class="btn" data-a="onbnext" ${L.length ? '' : 'disabled'}>${L.length ? `${L.length}개로 동선팩 추천받기` : '카테고리를 골라 주세요'}</button></footer>
+  </div></div>`;
+  const top = PACKS.slice().sort(byMatch).slice(0, 6);
+  const cs = Object.keys(CITY).map(c => { const l = PACKS.filter(p => p.city === c).sort(byMatch).slice(0, 3); return [c, Math.round(l.reduce((a, p) => a + matchOf(p).pct, 0) / l.length)]; }).sort((a, b) => b[1] - a[1]).slice(0, 4);
+  return `<div class="lmodal full" role="dialog" aria-modal="true" aria-label="추천 동선팩"><div class="lbox">
+    <header><span class="step">2 / 2</span><h3>이런 동선팩을 추천해요</h3><span class="xs sub">${L.map(k => '#' + INAME[k]).join(' ')} 을(를) 고른 분께 잘 맞는 순서예요.</span></header>
+    <div class="lgroups"><h4>잘 맞는 도시</h4><div class="chips">${cs.map(([c, v]) => `<button class="chip" data-a="onbcity" data-v="${c}">${c} <b class="mbadge ${v >= 75 ? 'hi' : v >= 40 ? 'mid' : ''}">${v}%</b></button>`).join('')}</div>
+      <h4>추천 동선팩</h4>${top.map(p => { const m = matchOf(p); return `<button class="ltp" data-a="likeopen" data-v="${p.id}"><span class="row"><b class="grow">${esc(p.title)}</b>${mBadge(p)}</span><span class="xs sub">${p.city} · ${p.nights} · ${esc(p.who)} · 맞는 장소 ${m.places}곳</span><span class="ichips">${m.hit.map(k => `<span class="ichip on">#${INAME[k]}</span>`).join('')}</span></button>`; }).join('')}</div>
+    <footer><button class="pill" data-a="onbback">카테고리 다시 고르기</button><button class="btn" data-a="onbdone">지도에서 둘러보기</button></footer>
   </div></div>`;
 }
 
@@ -889,7 +914,7 @@ function detours(r, d, city){
     let best = { add:1e9, pos:ids.length };
     for (let i = 0; i <= ids.length; i++){ const t = ids.slice(0, i).concat([id], ids.slice(i)), add = score(t) - score(ids); if (add < best.add) best = { add, pos:i }; }
     return { id, add:Math.max(0, Math.round(dayMin(ids.slice(0, best.pos).concat([id], ids.slice(best.pos))) - dayMin(ids))), pos:best.pos, sc:best.add }; });
-  out.sort((a, b) => (a.sc ?? 0) - (b.sc ?? 0) || rate(b.id).n - rate(a.id).n);
+  out.sort((a, b) => (likeOk(b.id) - likeOk(a.id)) || (a.sc ?? 0) - (b.sc ?? 0) || rate(b.id).n - rate(a.id).n);
   const pick = [], cats = {}; for (const o of out){ if (o.add > 35) continue; if ((cats[PL[o.id].cat] || 0) >= 2) continue; pick.push(o); cats[PL[o.id].cat] = (cats[PL[o.id].cat] || 0) + 1; if (pick.length === 3) break; }
   return pick;
 }
@@ -919,7 +944,7 @@ function recoBox(p, r, d){
       <span class="xs">${o.seq.length}곳 · 이동 약 ${minT(o.m)} <b class="${diff > 0 ? 'up' : 'down'}">${diff === 0 ? '(같음)' : diff > 0 ? `(+${minT(diff)})` : `(−${minT(-diff)})`}</b></span>
       <div class="pact"><button class="mini ${on ? 'on' : ''}" data-a="rprev" data-v="${o.key}">${on ? '미리 보기 끄기' : '지도에서 보기'}</button><button class="mini add" data-a="ropt" data-v="${d}:${o.key}">이 경로로</button></div></div>`; }).join('')}</div>`;
   const dt = detours(r, d, p.city);
-  if (dt.length) html += `<span class="xs sub" style="margin-top:4px">${ids.length ? '가는 길에 들르기 좋은 곳' : '이 날 넣기 좋은 곳'}</span>
+  if (dt.length) html += `<span class="xs sub" style="margin-top:4px">${ids.length ? '가는 길에 들르기 좋은 곳' : '이 날 넣기 좋은 곳'}${S.likes.length ? ' · 내 카테고리에 맞는 곳 먼저' : ''}</span>
     ${dt.map(o => { const x = PL[o.id]; return `<div class="drow"><button class="dname" data-a="sel" data-v="${o.id}"><span class="dic ${x.cat === '맛집' ? 'food' : ''}">${ico(x.cat, 14)}</span><span class="grow"><b>${esc(x.n)}</b><span class="xs sub">${ids.length ? (o.add ? `이동 +${minT(o.add)}` : '거의 같은 길') + ` · ${o.pos === 0 ? '맨 앞' : o.pos >= ids.length ? '맨 뒤' : esc(PL[ids[o.pos - 1]].k) + ' 다음'}` : esc(x.when)} · ${esc(x.feeT)}</span></span></button><button class="mini add" data-a="ins" data-v="${o.id}:${d}:${o.pos}">넣기</button></div>`; }).join('')}`;
   return html + `<p class="xs sub">새로 들어가는 곳은 <span class="nwk">굵게</span> 표시했어요. 이동 시간은 가까운 역 기준 어림값이에요.</p></div>`;
 }
@@ -930,8 +955,8 @@ function recoBox(p, r, d){
 function detailMap(p, r, groups, d){
   const cp = cityPlaces(p.city), where = {}; r.forEach((ids, k) => ids.forEach((id, i) => where[id] = [k, i]));
   const shown = new Set(groups.flatMap(g => g.ids)), mf = S.mf || '전체';
-  const vis = cp.filter(id => shown.has(id) || (!where[id] && (mf === '전체' || PL[id].cat === mf) && !(PL[id].o && S.op === false)) || id === S.dsel);
-  const legend = `<div class="dleg">${['전체', '관광', '맛집'].map(c => `<button class="chip ${mf === c ? 'on' : ''}" data-a="mf" data-v="${c}">${c === '전체' ? '전체' : ico(c, 13) + ' ' + c}</button>`).join('')}<span class="xs sub">아이콘을 누르면 바로 넣거나 바꿀 수 있어요</span></div>`;
+  const vis = cp.filter(id => shown.has(id) || (!where[id] && catOk(id, mf) && !(PL[id].o && S.op === false)) || id === S.dsel);
+  const legend = `<div class="dleg">${['전체', '관광', '맛집'].concat(S.likes.length ? ['맞춤'] : []).map(c => `<button class="chip ${mf === c ? 'on' : ''}" data-a="mf" data-v="${c}">${c === '전체' ? '전체' : c === '맞춤' ? '✨ 내 카테고리' : ico(c, 13) + ' ' + c}</button>`).join('')}<span class="xs sub">아이콘을 누르면 바로 넣거나 바꿀 수 있어요</span></div>`;
   let map = window.__DMAP ? window.__DMAP(p, r, groups, d, vis, where) : null;
   if (!map) {
     const pts = vis.map(id => PL[id]); if (!pts.length) return legend;
@@ -942,7 +967,7 @@ function detailMap(p, r, groups, d){
     let lines = ''; groups.forEach(g => { const xy = g.ids.map(id => P(PL[id])); if (xy.length > 1) lines += `<polyline points="${xy.map(a => a.join(',')).join(' ')}" fill="none" stroke="${g.color}" stroke-width="3" stroke-dasharray="7 5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`; });
     const pins = vis.map(id => { const [x, y] = P(PL[id]), w = where[id], on = shown.has(id), q = PL[id], sel = S.dsel === id, st = `left:${(x / W * 100).toFixed(2)}%;top:${(y / H * 100).toFixed(2)}%`;
       if (w && on) return `<button class="epin ${sel ? 'sel' : ''}" data-a="dsel" data-v="${id}" style="${st}" aria-label="${w[0] + 1}일차 ${w[1] + 1}번 ${esc(q.n)}"><b style="background:${COLORS[w[0] % 5]}">${d < 0 ? (w[0] + 1) + '-' + (w[1] + 1) : w[1] + 1}</b><span>${esc(q.k)}</span></button>`;
-      return `<button class="epin rec ${q.cat === '맛집' ? 'food' : ''} ${q.o ? 'gpop' : ''} ${sel ? 'sel' : ''}" data-a="dsel" data-v="${id}" style="${st}" aria-label="${q.cat} ${esc(q.n)}"><b>${ico(q.cat, 14)}</b><span>${esc(q.k)}</span></button>`; }).join('');
+      return `<button class="epin rec ${q.cat === '맛집' ? 'food' : ''} ${likeOk(id) ? 'like' : ''} ${q.o ? 'gpop' : ''} ${sel ? 'sel' : ''}" data-a="dsel" data-v="${id}" style="${st}" aria-label="${q.cat} ${esc(q.n)}"><b>${ico(q.cat, 14)}</b><span>${esc(q.k)}</span></button>`; }).join('');
     let grid = ''; for (let i = 1; i < 8; i++) grid += `<line x1="${i * 50}" y1="0" x2="${i * 50}" y2="${H}" stroke="var(--grid)"/>`; for (let i = 1; i < 7; i++) grid += `<line x1="0" y1="${i * 50}" x2="${W}" y2="${i * 50}" stroke="var(--grid)"/>`;
     map = `<div class="map dmap"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${grid}${lines}</svg>${pins}</div>`;
   }
@@ -984,8 +1009,8 @@ function editStage(){
   const pins = cp.map(id => { const [x, y] = P(PL[id].lo, PL[id].la), w = where[id], sel = S.sel === id, x0 = PL[id], t = rate(id);
     if (w){ const [k, i] = w, cur = k === d;
       return `<button class="epin ${sel ? 'sel' : ''} ${cur ? '' : 'dim'}" data-a="sel" data-v="${id}" data-bx="${x.toFixed(1)}" data-by="${y.toFixed(1)}" aria-label="${k + 1}일차 ${i + 1}번 ${esc(x0.n)}"><b style="background:${COLORS[k % 5]}">${cur ? i + 1 : (k + 1) + '-' + (i + 1)}</b><span>${esc(x0.k)}</span></button>`; }
-    if (mf !== '전체' && x0.cat !== mf && !sel) return '';
-    return `<button class="epin rec ${x0.cat === '맛집' ? 'food' : ''} ${sel ? 'sel' : ''}" data-a="sel" data-v="${id}" data-bx="${x.toFixed(1)}" data-by="${y.toFixed(1)}" aria-label="${x0.cat} ${esc(x0.n)}${t.n ? ', 별점 ' + t.avg.toFixed(1) : ''}"><b>${ico(x0.cat, 15)}</b><span>${esc(x0.k)}${t.n ? ` <em>★${t.avg.toFixed(1)}</em>` : ''}</span></button>`; }).join('');
+    if (!catOk(id, mf) && !sel) return '';
+    return `<button class="epin rec ${x0.cat === '맛집' ? 'food' : ''} ${likeOk(id) ? 'like' : ''} ${sel ? 'sel' : ''}" data-a="sel" data-v="${id}" data-bx="${x.toFixed(1)}" data-by="${y.toFixed(1)}" aria-label="${x0.cat} ${esc(x0.n)}${t.n ? ', 별점 ' + t.avg.toFixed(1) : ''}"><b>${ico(x0.cat, 15)}</b><span>${esc(x0.k)}${t.n ? ` <em>★${t.avg.toFixed(1)}</em>` : ''}</span></button>`; }).join('');
   const kmPer = 80 / P.s * 111.32, nice = [0.1,0.2,0.5,1,2,5,10,20].find(v => v >= kmPer * 0.6) || 20;
   const sel = S.sel && PL[S.sel] ? S.sel : null, mode = S.pl === 'list' ? 'list' : sel ? 'card' : 'day';
   const ph = mode === 'list' ? H - 116 : mode === 'card' ? Math.min(Math.max(Math.round(H * 0.5), 330), 370) : bottom;
@@ -994,7 +1019,7 @@ function editStage(){
     <div class="zoom" style="bottom:${ph + 40}px"><button data-a="zin" aria-label="확대">+</button><button data-a="zout" aria-label="축소">−</button><button data-a="zreset" aria-label="처음 위치로">⟲</button></div>`}
     <div class="ovl"><div class="sline" role="list" aria-label="전체 일정">${sline(r, d)}</div>
       <button class="pill on" data-a="edit">완료</button></div>
-    <div class="ovl f2">${['전체', '관광', '맛집'].map(c => `<button class="chip ${mf === c ? 'on' : ''}" data-a="mf" data-v="${c}">${c === '전체' ? '전체' : ico(c, 14) + ' ' + c}</button>`).join('')}${OM.ok ? `<button class="chip ${S.op !== false ? 'on' : ''}" data-a="optog">지도 인기 장소</button><button class="chip" data-a="opop" ${OP.busy ? 'disabled' : ''}>${OP.busy ? '찾는 중…' : '이 지역 다시 찾기'}</button>` : ''}</div>
+    <div class="ovl f2">${['전체', '관광', '맛집'].concat(S.likes.length ? ['맞춤'] : []).map(c => `<button class="chip ${mf === c ? 'on' : ''}" data-a="mf" data-v="${c}">${c === '전체' ? '전체' : c === '맞춤' ? '✨ 내 카테고리' : ico(c, 14) + ' ' + c}</button>`).join('')}${OM.ok ? `<button class="chip ${S.op !== false ? 'on' : ''}" data-a="optog">지도 인기 장소</button><button class="chip" data-a="opop" ${OP.busy ? 'disabled' : ''}>${OP.busy ? '찾는 중…' : '이 지역 다시 찾기'}</button>` : ''}</div>
     ${OM.ok && OP.msg ? `<p class="gerr">${esc(OP.msg)}</p>` : ''}
     <div class="legend ${OM.ok ? 'gm' : ''}" style="bottom:${ph + 8}px"><span><i class="lg n"></i>내 동선</span>${S.rprev ? '<span><i class="lg p"></i>추천 경로</span>' : ''}<button class="lgb ${mf === '관광' ? 'on' : ''}" data-a="mf" data-v="${mf === '관광' ? '전체' : '관광'}" aria-pressed="${mf === '관광'}"><i class="lg t"></i>관광만</button><button class="lgb ${mf === '맛집' ? 'on' : ''}" data-a="mf" data-v="${mf === '맛집' ? '전체' : '맛집'}" aria-pressed="${mf === '맛집'}"><i class="lg f"></i>맛집만</button>${OM.ok ? `<button class="lgb ${S.op !== false ? 'on' : ''}" data-a="optog" aria-pressed="${S.op !== false}"><i class="lg o"></i>지도 인기 장소</button>` : `<span><i class="lg r"></i>역·노선(대략)</span><span id="scl" data-s="${P.s}">${nice < 1 ? nice * 1000 + 'm' : nice + 'km'} <i class="sc" style="width:${(nice / 111.32 * P.s).toFixed(0)}px"></i></span>`}</div>
     ${S.ins || S.rep ? `<div class="epick">${pickBanner(r)}</div>` : ''}<div class="epanel ${mode}" style="${mode === 'card' ? `max-height:${Math.round(H * 0.66)}px` : `height:${ph}px`}">${mode === 'day' ? dayList(p, r, d) : nearPanel(p, r, d, sel, mode, where)}</div>
@@ -1011,23 +1036,25 @@ function nearPanel(p, r, d, sel, mode, where){
   const insNb = S.ins ? ((r[S.ins.d] || [])[S.ins.pos - 1] || (r[S.ins.d] || [])[S.ins.pos]) : null;
   const mf = S.mf || '전체', o = sel ? PL[sel] : insNb ? PL[insNb] : null;
   const pickDay = S.ins ? S.ins.d : S.rep && where[S.rep] ? where[S.rep][0] : -1, inDay = new Set(pickDay >= 0 ? r[pickDay] : []);
-  let ids = cityPlaces(p.city).filter(id => !inDay.has(id) && (mf === '전체' || PL[id].cat === mf || id === sel) && !(PL[id].o && S.op === false && id !== sel));
+  let ids = cityPlaces(p.city).filter(id => !inDay.has(id) && (catOk(id, mf) || id === sel) && !(PL[id].o && S.op === false && id !== sel));
   if (o) ids.sort((a, b) => (a === sel ? -1 : b === sel ? 1 : km(o, PL[a]) - km(o, PL[b])));
   else ids.sort((a, b) => rate(b).n - rate(a).n || (where[b] ? 1 : 0) - (where[a] ? 1 : 0));
+  if (S.likes.length){ const top = ids.filter(id => id !== sel && likeOk(id)), rest = ids.filter(id => id !== sel && !likeOk(id)); ids = (ids.includes(sel) ? [sel] : []).concat(top, rest); }
+  const lk = S.likes.length ? ' · 내 카테고리 먼저' : '';
   const x_ = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
   const insWhere = () => { const ids = r[S.ins.d] || [], pos = S.ins.pos; return `${S.ins.d + 1}일차 ${!ids.length ? '' : pos === 0 ? '맨 앞' : pos >= ids.length ? '맨 뒤' : esc(PL[ids[pos - 1]].k) + '와 ' + esc(PL[ids[pos]].k) + ' 사이'}`; };
   const repBar = S.ins ? `<div class="repbar"><span class="grow"><b>${insWhere()}</b>에 넣을 곳을 골라 주세요</span><button class="mini" data-a="repcancel">취소</button></div>`
     : S.rep && PL[S.rep] ? `<div class="repbar"><span class="grow"><b>${esc(PL[S.rep].n)}</b> 대신 넣을 곳을 골라 주세요</span><button class="mini" data-a="repcancel">취소</button></div>` : '';
-  if (mode === 'list') return `${repBar}<div class="row"><h3 class="grow">${esc(p.city)} 장소 ${ids.length}곳 <span class="xs sub">${o ? esc(o.k) + '에서 가까운 순' : '리뷰 많은 순'}${pickDay >= 0 ? ` · ${pickDay + 1}일차에 이미 있는 곳은 뺐어요` : ''}</span></h3><button class="ib" data-a="pl" data-v="" aria-label="목록 닫기">${x_}</button></div>
+  if (mode === 'list') return `${repBar}<div class="row"><h3 class="grow">${esc(p.city)} 장소 ${ids.length}곳 <span class="xs sub">${o ? esc(o.k) + '에서 가까운 순' : '리뷰 많은 순'}${lk}${pickDay >= 0 ? ` · ${pickDay + 1}일차에 이미 있는 곳은 뺐어요` : ''}</span></h3><button class="ib" data-a="pl" data-v="" aria-label="목록 닫기">${x_}</button></div>
     <div class="plist">${ids.map(id => { const x = PL[id];
       return `<article class="pl ${id === sel ? 'on' : ''}"><div class="pcb">
-        <button class="pname" data-a="pick" data-v="${id}"><span class="tag ${x.cat === '맛집' ? 'food' : ''}">${x.cat}</span> <b>${esc(x.n)}</b></button>
+        <button class="pname" data-a="pick" data-v="${id}"><span class="tag ${x.cat === '맛집' ? 'food' : ''}">${x.cat}</span>${likeOk(id) ? ' <span class="lkb">✨ 맞춤</span>' : ''} <b>${esc(x.n)}</b></button>${intChips(id)}
         <span>${rateT(id)} <span class="xs sub">· ${esc(x.feeT)}${o && id !== sel ? ' · 직선 ' + kmT(km(o, x)) : ''}</span></span>
         <div class="pact">${placeActs(id, r, d, where)}<button class="mini info" data-a="place" data-v="${id}" aria-label="정보·리뷰 보기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg></button></div></div></article>`; }).join('')}</div>`;
   return `${repBar}${S.chg && !S.rep ? `<button class="chgbar" data-a="showreco">동선이 바뀌었어요 · ${d + 1}일차 추천 경로 보기 ›</button>` : ''}<div class="row"><h3 class="grow" style="font-size:1em">주변 장소 ${ids.length}곳 <span class="xs sub" style="font-weight:500">· 옆으로 넘기기</span></h3><button class="pill" data-a="pl" data-v="list">목록 보기</button><button class="ib" data-a="sel" data-v="" aria-label="닫기">${x_}</button></div>
    <div class="pcar">${ids.map(id => { const x = PL[id];
      return `<article class="pc ${id === sel ? 'on' : ''}" data-a="sel" data-v="${id}"><div class="pcb">
-       <span><span class="tag ${x.cat === '맛집' ? 'food' : ''}">${x.cat}</span> ${rateT(id)}</span>
+       <span><span class="tag ${x.cat === '맛집' ? 'food' : ''}">${x.cat}</span>${likeOk(id) ? ' <span class="lkb">✨ 맞춤</span>' : ''} ${rateT(id)}</span>
        <b class="pn">${esc(x.n)}</b>
        <span class="xs sub">${[esc(x.feeT), esc(x.when), o && id !== sel ? '직선 ' + kmT(km(o, x)) : ''].filter(Boolean).join(' · ')}</span>
        <div class="pact">${placeActs(id, r, d, where)}<button class="mini info" data-a="place" data-v="${id}" aria-label="정보·리뷰 보기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg></button></div></div></article>`; }).join('')}</div>`;
@@ -1044,7 +1071,19 @@ function dayList(p, r, d){
    <p class="xs sub">+ 버튼으로 넣고, ✕로 빼고, ⇄로 교체해요. 리뷰·사진은 ⓘ를 누르면 보여요.</p>
    <div class="llist" style="--c:${c}">${plusEnd(0)}${rows}${ids.length ? plusEnd(ids.length) : ''}</div>
    <div class="row" style="flex-wrap:wrap">${ids.length ? `<a class="glink" href="${gdir(ids)}" target="_blank" rel="noopener">구글 지도에서 ${d + 1}일차 경로 열기</a>` : ''}</div>
+   ${likeRecs(p, r, d)}
    ${recoBox(p, r, d)}`;
+}
+function likeRecs(p, r, d){
+  if (!S.likes.length) return `<button class="likebar" style="margin:10px 0" data-a="likes"><span class="lb1">🏷 카테고리를 고르면 맞는 장소·맛집을 추천해 드려요</span><span class="lb2">›</span></button>`;
+  const used = new Set(r.flat()), ids = r[d] || [], c = ids.length ? { la:ids.reduce((a, id) => a + PL[id].la, 0) / ids.length, lo:ids.reduce((a, id) => a + PL[id].lo, 0) / ids.length } : CITY[p.city];
+  const hits = id => S.likes.filter(k => tagsOf(id).includes(k)).length;
+  const list = cityPlaces(p.city).filter(id => !used.has(id) && likeOk(id)).sort((a, b) => hits(b) - hits(a) || km(c, PL[a]) - km(c, PL[b])).slice(0, 6);
+  const head = `<div class="row" style="margin-top:12px"><b class="grow">✨ 내 카테고리 추천 장소·맛집</b><button class="pill" data-a="likes">카테고리 바꾸기</button></div><span class="xs sub">${S.likes.map(k => '#' + INAME[k]).join(' ')} 에 맞는 곳 중 ${d + 1}일차 동선에서 가까운 순이에요.</span>`;
+  if (!list.length) return head + `<p class="xs sub">이 도시에는 아직 동선에 없는 맞는 곳이 없어요.</p>`;
+  return head + `<div class="lrec">${list.map(id => { const x = PL[id];
+    return `<article class="lrc"><button class="lrn" data-a="sel" data-v="${id}"><span class="dic ${x.cat === '맛집' ? 'food' : ''}">${ico(x.cat, 14)}</span><b>${esc(x.n)}</b></button><span class="xs sub">${x.cat} · ${ids.length ? '동선에서 ' + kmT(km(c, x)) : esc(x.when)}</span>${intChips(id)}
+      <div class="pact"><button class="mini add" data-a="add" data-v="${id}">+ ${d + 1}일차에 넣기</button><button class="mini info" data-a="place" data-v="${id}" aria-label="정보·리뷰 보기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg></button></div></article>`; }).join('')}</div>`;
 }
 function selCard(id, r, d){
   const x = PL[id]; let w = null; r.forEach((ids, k) => { const i = ids.indexOf(id); if (i >= 0) w = [k, i]; });
@@ -1255,7 +1294,7 @@ try { const c = JSON.parse(localStorage.getItem(OKEY) || '{}'); Object.entries(c
 function saveO(){ try { const o = {}; Object.keys(PL).forEach(k => { if (PL[k].o) o[k] = PL[k]; }); localStorage.setItem(OKEY, JSON.stringify(o)); } catch (e) {} }
 function omPin(id, w, d){
   const x = PL[id], t = rate(id), sel = S.sel === id;
-  const cls = 'epin gp ' + (x.o ? 'gpop ' : '') + (w ? (w[0] === d ? '' : 'dim') : 'rec ' + (x.cat === '맛집' ? 'food' : '')) + (sel ? ' sel' : '');
+  const cls = 'epin gp ' + (x.o ? 'gpop ' : '') + (w ? (w[0] === d ? '' : 'dim') : 'rec ' + (x.cat === '맛집' ? 'food' : '') + (likeOk(id) ? ' like' : '')) + (sel ? ' sel' : '');
   const inner = w ? `<b style="background:${COLORS[w[0] % 5]}">${w[0] === d ? w[1] + 1 : (w[0] + 1) + '-' + (w[1] + 1)}</b><span>${esc(x.k)}</span>`
     : `<b>${ico(x.cat, 15)}</b><span>${esc(x.k)}${t.n ? ` <em>★${t.avg.toFixed(1)}</em>` : ''}</span>`;
   return `<div class="${cls}" role="button" aria-label="${esc(x.n)}">${inner}</div>`;
@@ -1283,7 +1322,7 @@ function syncOM(){
       L.polyline(ids.map(id => [PL[id].la, PL[id].lo]), { color:COLORS[k % 5], weight:cur ? 5 : 3, opacity:cur ? .9 : .35, dashArray:cur ? '10 8' : '4 8', lineCap:'round' }).addTo(OM.layer); });
     { const bo = prevSeq(r, d); if (bo && bo.length > 1) L.polyline(bo.map(id => [PL[id].la, PL[id].lo]), { color:'#141b2b', weight:3, opacity:.8, dashArray:'2 8', lineCap:'round' }).addTo(OM.layer); }
     cityPlaces(p.city).forEach(id => { const x = PL[id], w = where[id];
-      if (!w && mf !== '전체' && x.cat !== mf && S.sel !== id) return;
+      if (!w && !catOk(id, mf) && S.sel !== id) return;
       if (x.o && !w && S.op === false && S.sel !== id) return;
       const m = L.marker([x.la, x.lo], { icon:L.divIcon({ className:'omk', html:omPin(id, w, d), iconSize:null }), zIndexOffset:S.sel === id ? 1000 : w ? (w[0] === d ? 600 : 300) : x.o ? 0 : 100, keyboard:true, title:x.n });
       m.on('click', () => A.sel(id)); m.addTo(OM.layer); });
@@ -1377,7 +1416,7 @@ function syncDM(){
     groups.forEach(g => { if (g.ids.length > 1) L.polyline(g.ids.map(id => [PL[id].la, PL[id].lo]), { color:g.color, weight:4, opacity:.9, dashArray:'10 8', lineCap:'round' }).addTo(DM.layer); });
     vis.forEach(id => { const x = PL[id], w = where[id], on = w && shown.has(id), sel = S.dsel === id;
       const html = on ? `<div class="epin gp ${sel ? 'sel' : ''}" role="button" aria-label="${esc(x.n)}"><b style="background:${COLORS[w[0] % 5]}">${d < 0 ? (w[0] + 1) + '-' + (w[1] + 1) : w[1] + 1}</b><span>${esc(x.k)}</span></div>`
-        : `<div class="epin gp rec ${x.cat === '맛집' ? 'food' : ''} ${x.o ? 'gpop' : ''} ${sel ? 'sel' : ''}" role="button" aria-label="${esc(x.n)}"><b>${ico(x.cat, 14)}</b><span>${esc(x.k)}</span></div>`;
+        : `<div class="epin gp rec ${x.cat === '맛집' ? 'food' : ''} ${likeOk(id) ? 'like' : ''} ${x.o ? 'gpop' : ''} ${sel ? 'sel' : ''}" role="button" aria-label="${esc(x.n)}"><b>${ico(x.cat, 14)}</b><span>${esc(x.k)}</span></div>`;
       L.marker([x.la, x.lo], { icon:L.divIcon({ className:'omk', html, iconSize:null }), zIndexOffset:sel ? 1000 : on ? 500 : 0, title:x.n }).on('click', () => A.dsel(id)).addTo(DM.layer); });
     if (!OP.done[p.city]) fetchPop(p.city);
     const key = p.id + ':' + S.day;
@@ -1482,11 +1521,15 @@ const A = {
   dsel:v => { if (v && (S.ins || S.rep)) return pickPlace(v); S.dsel = v || null; render(); },
   dadd:v => { const cut = v.lastIndexOf(':'), id = v.slice(0, cut), d = v.slice(cut + 1), r = route(pack()).map(x => x.slice()); r.forEach(ids => { const j = ids.indexOf(id); if (j >= 0) ids.splice(j, 1); }); r[+d].push(id); setRoute(r); S.dsel = id; S.chg = true; render(); },
   tf:v => { S.tf = v; render(); },
-  likes:() => { S.likeOpen = true; render(); },
+  likes:() => { S.onb = 1; render(); },
   liket:v => { const L = S.likes; S.likes = L.includes(v) ? L.filter(k => k !== v) : L.concat(v); try { localStorage.setItem(LIKE_KEY, JSON.stringify(S.likes)); } catch (e) {} render(); },
   likeclr:() => { S.likes = []; try { localStorage.setItem(LIKE_KEY, '[]'); } catch (e) {} render(); },
-  likedone:() => { S.likeOpen = false; render(); },
-  likeopen:v => { S.likeOpen = false; A.open(v); },
+  onbnext:() => { if (!S.likes.length) return; S.onb = 2; render(); },
+  onbback:() => { S.onb = 1; render(); },
+  onbskip:() => { S.onb = 0; onbSet(); render(); },
+  onbdone:() => { S.onb = 0; onbSet(); S.tf = '전체'; render(); },
+  onbcity:v => { S.onb = 0; onbSet(); A.city(v); },
+  likeopen:v => { S.onb = 0; onbSet(); A.open(v); },
   optog:() => { S.op = S.op === false ? true : false; render(); },
   opop:() => { if (!OM.map) return; const c = OM.map.getCenter(), ne = OM.map.getBounds().getNorthEast(); fetchPop(pack().city, { lat:c.lat, lng:c.lng }, km({ la:c.lat, lo:c.lng }, { la:ne.lat, lo:ne.lng }) * 800); render(); },
   pick:v => { S.sel = v; S.pl = ''; render(); },
