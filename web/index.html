@@ -355,6 +355,17 @@ main.full>*{animation:none}
 .aest{display:inline-block;font-size:.72em;font-weight:800;padding:2px 8px;border-radius:10px;background:var(--warn);color:var(--warnInk);margin-left:6px;vertical-align:middle}
 .hcard .hb{display:inline-block;font-size:.72em;font-weight:800;padding:2px 8px;border-radius:10px;background:#dcfce7;color:#166534;margin-left:4px}
 .chlist{display:flex;flex-direction:column;gap:8px;padding:0 16px 16px;overflow:auto}
+.map,.tl,.tdays,.tphead,.warn,.done{flex-shrink:0}
+.tphead{display:flex;align-items:flex-start;gap:8px}
+.tphead h2{margin:2px 0 0}
+.tdays{display:flex;gap:6px;flex-wrap:wrap}
+.tdays .chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tswap{align-self:flex-start;margin-top:6px;min-height:36px;padding:0 12px;border-radius:18px;border:1px solid var(--pri);background:var(--card);color:var(--pri);font-weight:700;font-size:.85em}
+.tpk{display:flex;flex-direction:column;gap:4px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+.tpk.on{border-color:var(--pri);box-shadow:0 0 0 2px color-mix(in srgb,var(--pri) 25%,transparent)}
+.tpk .tdays .chip{min-height:38px}
+.talt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink)}
+.talt:hover{border-color:var(--pri)}
 .likebar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 16px 8px;padding:10px 14px;border-radius:12px;border:1px dashed var(--pri);background:transparent;color:var(--pri);font-weight:700;text-align:left;min-height:44px;flex-shrink:0}
 .likebar.set{border-style:solid;background:rgba(31,79,191,.07)}
 .likebar .lb2{font-size:.8em;font-weight:600;white-space:nowrap}
@@ -886,7 +897,7 @@ const cityPlaces = c => Object.keys(PL).filter(id => PL[id].c === c);
 
 const SAVE_KEY = 'dongseon-routes-v3';
 let saved = {}; try { saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}') || {}; } catch (e) { saved = {}; }
-const S = { scr:'home', cityOpen:false, cs:'peek', sel:null, city:'도쿄', rf:'전체', pid:'tk1', day:0, edit:false, routes:saved, up:false, off:{}, place:null, mf:'전체', pl:'', chg:false, rprev:false, rep:null, ins:null, dsel:null, pickList:false, toMap:false, filter:'전체', big:false, alt:null, loaded:false, made:false, shared:false, likes:(() => { try { const v = JSON.parse(localStorage.getItem('dongseon-likes-v1') || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } })(), likeOpen:false, onb:0 };
+const S = { scr:'home', cityOpen:false, cs:'peek', sel:null, city:'도쿄', rf:'전체', pid:'tk1', day:0, edit:false, routes:saved, up:false, off:{}, place:null, mf:'전체', pl:'', chg:false, rprev:false, rep:null, ins:null, dsel:null, pickList:false, toMap:false, filter:'전체', big:false, alt:null, loaded:false, made:false, shared:false, likes:(() => { try { const v = JSON.parse(localStorage.getItem('dongseon-likes-v1') || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } })(), likeOpen:false, onb:0, tp:'os1', td:1, tov:{}, tpick:0, tpc:'', tpf:'전체' };
 const R = { name:'', text:'', stars:0, msg:'', busy:false, files:[] };
 const $ = id => document.getElementById(id);
 const pack = () => PACKS.find(p => p.id === S.pid);
@@ -1516,6 +1527,7 @@ function stopRow(id, d, i, list, editMode, nDays){
   return `<div class="st"><div class="rail"><div class="dot" style="background:${COLORS[d % 5]}">${i + 1}</div>${i < list.length - 1 ? '<div class="bar"></div>' : ''}</div>
    <div class="sb">${S.scr === 'detail' ? `<div class="stop ${S.dsel === id ? 'on' : ''}"><span><span class="tag ${x.cat === '맛집' ? 'food' : ''}">${x.cat}</span> <span class="xs sub">${[esc(x.when), esc(x.feeT)].filter(Boolean).join(' · ')}</span></span><b>${esc(x.n)}</b></div>` : `<button class="stop" data-a="place" data-v="${id}"><span><span class="tag ${x.cat === '맛집' ? 'food' : ''}">${x.cat}</span> <span class="xs sub">${esc(x.when)} · ${esc(x.feeT)}</span></span><b>${esc(x.n)}</b>
      <span class="xs sub">${esc(x.pts[0])}</span><span class="xs" style="color:var(--pri);font-weight:700">후기 요약 ${x.pts.length}개 · 여행자 리뷰 ${cnt}개 보기 ›</span></button>`}
+     ${S.scr === 'trip' ? `<button class="tswap" data-a="tswap" data-v="${i}" aria-label="${esc(x.k)} 다른 곳으로 바꾸기">⇄ 바꾸기</button>` : ''}
      ${editMode ? `<div class="ed"><button data-a="mv" data-v="${d}:${i}:-1" ${i === 0 ? 'disabled' : ''} aria-label="위로">↑ 위로</button><button data-a="mv" data-v="${d}:${i}:1" ${i === list.length - 1 ? 'disabled' : ''} aria-label="아래로">↓ 아래로</button>
        <select data-a="today" data-v="${d}:${i}" aria-label="다른 날로 옮기기">${opts}</select><button class="del" data-a="del" data-v="${d}:${i}">빼기</button></div>` : ''}
      ${S.scr === 'detail' ? `<div class="sact"><button class="lic info" data-a="place" data-v="${id}" aria-label="${esc(x.k)} 정보·리뷰 보기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg></button><button class="lic del" data-a="del" data-v="${d}:${i}" aria-label="${esc(x.k)} 빼기"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><button class="lic rep" data-a="repstart" data-v="${id}" aria-label="${esc(x.k)} 다른 장소로 교체"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg></button></div>` : ''}
@@ -1573,17 +1585,48 @@ function paid(){
   <p class="note">샘플 앱이라 실제 결제는 되지 않아요.</p>`;
 }
 
+function tripPack(){ return PACKS.find(p => p.id === S.tp) || PACKS.find(p => p.id === 'os1') || PACKS[0]; }
+function tripStops(p, d){
+  const k = p.id + ':' + d; if (S.tov[k]) return S.tov[k];
+  const base = (route(p)[d] || []).slice();
+  if (p.id === 'os1' && d === 1 && S.alt) return S.alt === 'swap' ? ['kuromon','sky','castle'] : ['ebisu','kuromon','sky'];
+  return base;
+}
 function trip(){
-  const base = ['castle','kuromon','sky'], a = S.alt;
-  const stops = a === 'swap' ? ['kuromon','sky','castle'] : a === 'ebisu' ? ['ebisu','kuromon','sky'] : base;
-  return `<div><span class="xs sub">오사카 2박 3일 · 2일차 오늘 (샘플 상황)</span><h2>오사카성과 시장, 야경</h2></div>
-  ${a ? `<div class="done"><b>동선을 바꿨어요</b><span class="sub">${a === 'swap' ? '천수각은 내일 아침으로 미루고 시장부터 가요.' : '천수각 대신 도톤보리 관람차를 넣었어요. 천수각 입장권은 환불 신청했어요.'}</span><button class="pill" style="align-self:flex-start" data-a="alt" data-v="">원래 동선 보기</button></div>`
+  const p = tripPack(), r = route(p), d = Math.min(S.td, r.length - 1), stops = tripStops(p, d), k = p.id + ':' + d, sample = p.id === 'os1' && d === 1 && !S.tov[k] && stops.includes('castle') || (p.id === 'os1' && d === 1 && S.alt && !S.tov[k]);
+  const a = S.alt;
+  const alert = !sample ? '' : a ? `<div class="done"><b>동선을 바꿨어요</b><span class="sub">${a === 'swap' ? '천수각은 내일 아침으로 미루고 시장부터 가요.' : '천수각 대신 도톤보리 관람차를 넣었어요. 천수각 입장권은 환불 신청했어요.'}</span><button class="pill" style="align-self:flex-start" data-a="alt" data-v="">원래 동선 보기</button></div>`
    : `<div class="warn"><b>오사카성 천수각이 오늘 임시 휴관한다는 알림이 왔어요 (샘플)</b>
      <p style="font-size:.9em">어떻게 바꿀지 골라 보세요. 이동 거리는 실제 위치로 계산해요.</p>
      <div class="alt"><b>순서 바꾸기: 시장 → 전망대, 천수각은 다음 날 아침</b><span class="sub">구로몬시장까지 직선 약 ${kmT(km(PL.castle, PL.kuromon))}</span><button class="btn" style="flex:none;min-height:46px" data-a="alt" data-v="swap">이렇게 바꾸기</button></div>
-     <div class="alt"><b>대체 장소: ${esc(PL.ebisu.n)}</b><span class="sub">${esc(PL.ebisu.pts[0])}</span><button class="btn" style="flex:none;min-height:46px" data-a="alt" data-v="ebisu">이렇게 바꾸기</button></div></div>`}
-  ${mapHTML([{ ids:stops, color:COLORS[1] }])}
-  <div class="tl">${stops.map((id, i) => stopRow(id, 1, i, stops, false, 3)).join('')}</div>`;
+     <div class="alt"><b>대체 장소: ${esc(PL.ebisu.n)}</b><span class="sub">${esc(PL.ebisu.pts[0])}</span><button class="btn" style="flex:none;min-height:46px" data-a="alt" data-v="ebisu">이렇게 바꾸기</button></div>
+     <p class="xs sub" style="margin:0">다른 곳을 직접 고르려면 아래 목록에서 장소마다 있는 「⇄ 바꾸기」를 누르세요.</p></div>`;
+  return `<div class="tphead"><div class="grow"><span class="xs sub">${esc(p.city)} ${p.nights} · ${d + 1}일차 오늘${p.id === 'os1' ? ' (샘플 상황)' : ''}</span><h2>${esc(p.title)}</h2></div><button class="pill" data-a="tpopen">동선 바꾸기</button></div>
+  ${r.length > 1 ? `<div class="tdays" role="tablist" aria-label="여행 날짜">${r.map((x, i) => `<button class="chip ${i === d ? 'on' : ''}" role="tab" aria-selected="${i === d}" data-a="tday" data-v="${i}">${i + 1}일차 · ${x.length}곳</button>`).join('')}</div>` : ''}
+  ${S.tov[k] ? `<div class="done"><b>오늘 동선을 직접 바꿨어요</b><span class="sub">원래 동선: ${(route(p)[d] || []).map(id => esc(PL[id].k)).join(' → ') || '없음'}</span><button class="pill" style="align-self:flex-start" data-a="treset">원래 동선으로 되돌리기</button></div>` : alert}
+  ${stops.length ? mapHTML([{ ids:stops, color:COLORS[d % 5] }]) + `<div class="tl">${stops.map((id, i) => stopRow(id, d, i, stops, false, r.length)).join('')}</div>`
+    : `<p class="sub">이 날은 정해진 장소가 없어요(귀국일·자유 일정). 「동선 바꾸기」로 다른 날이나 다른 동선을 고르거나, 아래에서 장소를 넣어 보세요.</p><button class="btn" data-a="tswap" data-v="0">장소 넣기</button>`}
+  ${tripPicker(p, d, stops)}`;
+}
+function tripPicker(p, d, stops){
+  if (!S.tpick) return '';
+  const X = `<button class="ib" data-a="tpclose" aria-label="닫기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`;
+  if (S.tpick === 'pack'){
+    const c = S.tpc || p.city, l = PACKS.filter(x => x.city === c && !x.draft);
+    return `<div class="fbk" role="dialog" aria-modal="true" aria-labelledby="tpkt"><div class="fkbox"><div class="bh"><h2 id="tpkt">여행 중인 동선 고르기</h2>${X}</div>
+      <div class="bb"><div class="tagrow" style="padding:0">${Object.keys(CITY).map(x => `<button class="chip ${x === c ? 'on' : ''}" data-a="tpcity" data-v="${x}">${x}</button>`).join('')}</div>
+      ${l.map(x => { const rr = route(x); return `<div class="tpk ${x.id === p.id ? 'on' : ''}"><b>${esc(x.title)}</b><span class="xs sub">${x.nights} · ${esc(x.who)}${x.user ? ' · 여행자 등록' : ''}${edited(x) ? ' · 내가 바꾼 동선' : ''}</span>
+        <span class="xs sub">${rr.flat().slice(0, 4).map(id => esc(PL[id].k)).join(' → ')}${rr.flat().length > 4 ? ' …' : ''}</span>
+        <div class="tdays">${rr.map((dd, i) => `<button class="chip ${x.id === p.id && i === d ? 'on' : ''}" data-a="tpset" data-v="${x.id}:${i}" ${dd.length ? '' : 'disabled'}>${i + 1}일차${dd.length ? ` · ${dd.length}곳` : ' · 없음'}</button>`).join('')}</div></div>`; }).join('')}</div></div></div>`;
+  }
+  const i = +S.tpick.split(':')[1], cur = stops[i], from = cur ? PL[cur] : stops.length ? PL[stops[stops.length - 1]] : CITY[p.city];
+  const grp = id => PL[id].cat === '맛집' ? '맛집' : tagsOf(id).includes('exp') ? '체험' : '관광', tf = S.tpf || '전체';
+  const cand = Object.keys(PL).filter(id => PL[id].c === p.city && !stops.includes(id) && (tf === '전체' || grp(id) === tf)).map(id => [id, km(from, PL[id])]).sort((x, y) => x[1] - y[1]);
+  return `<div class="fbk" role="dialog" aria-modal="true" aria-labelledby="tpkt"><div class="fkbox"><div class="bh"><h2 id="tpkt">${cur ? `「${esc(PL[cur].k)}」 대신 갈 곳` : '넣을 장소 고르기'}</h2>${X}</div>
+    <div class="bb"><p class="xs sub" style="margin:0">${cur ? `${esc(PL[cur].n)}에서 가까운 순이에요.` : '가까운 순이에요.'} 고르면 오늘 동선의 ${i + 1}번째 자리에 들어가요.</p>
+    <div class="tagrow" style="padding:0">${['전체', '관광', '체험', '맛집'].map(t => `<button class="chip ${tf === t ? 'on' : ''}" data-a="tpf" data-v="${t}">${t}</button>`).join('')}</div>
+    ${cur && stops.length > 1 ? `<button class="talt" data-a="tsdel"><b>이 장소 빼기</b><span class="xs sub">다른 곳을 넣지 않고 오늘 동선에서 빼요.</span></button>` : ''}
+    ${cand.map(([id, dist]) => { const x = PL[id]; return `<button class="talt" data-a="tsrep" data-v="${id}"><span><span class="tag ${x.cat === '맛집' ? 'food' : ''}">${grp(id)}</span> <b>${esc(x.n)}</b></span><span class="xs sub">직선 ${kmT(dist)} · ${esc(x.when)} · ${esc(x.feeT)}</span><span class="xs sub">${esc(x.pts[0])}</span></button>`; }).join('') || '<p class="sub">조건에 맞는 장소가 없어요.</p>'}</div></div></div>`;
 }
 
 function make(){
@@ -2017,6 +2060,16 @@ const A = {
   pay:() => go({ scr:'paid', shared:false }),
   share:() => { S.shared = true; render(); },
   alt:v => { S.alt = v || null; render(); },
+  tpopen:() => { S.tpick = 'pack'; S.tpc = tripPack().city; render(); },
+  tpclose:() => { S.tpick = 0; render(); },
+  tpcity:v => { S.tpc = v; render(); },
+  tpset:v => { const [id, d] = v.split(':'); S.tp = id; S.td = +d; S.tpick = 0; render(); $('mn').scrollTop = 0; },
+  tday:v => { S.td = +v; render(); },
+  tswap:v => { S.tpick = 'stop:' + v; S.tpf = '전체'; render(); },
+  tpf:v => { S.tpf = v; render(); },
+  tsrep:v => { const p = tripPack(), d = Math.min(S.td, route(p).length - 1), l = tripStops(p, d).slice(), i = +S.tpick.split(':')[1]; if (i < l.length) l[i] = v; else l.push(v); S.tov[p.id + ':' + d] = l; S.tpick = 0; render(); },
+  tsdel:() => { const p = tripPack(), d = Math.min(S.td, route(p).length - 1), l = tripStops(p, d).slice(), i = +S.tpick.split(':')[1]; l.splice(i, 1); S.tov[p.id + ':' + d] = l; S.tpick = 0; render(); },
+  treset:() => { const p = tripPack(), d = Math.min(S.td, route(p).length - 1); delete S.tov[p.id + ':' + d]; render(); },
   load:() => { S.loaded = true; render(); },
   made:() => { S.made = true; render(); },
   mktag:v => { const M = S.mk; mkRead(); M.tags = M.tags.includes(v) ? M.tags.filter(t => t !== v) : M.tags.concat(v).slice(-3); render(); },
@@ -2262,6 +2315,7 @@ function svLockHTML(){
     : `<button class="lnk" data-fk="svask">🔒 설문 결과 보기 (비밀번호 필요)</button>`;
 }
 
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.tpick && S.scr === 'trip'){ S.tpick = 0; render(); } });
 let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (S.scr === 'home' || S.scr === 'detail') render(); }, 150); });
 render();
 
