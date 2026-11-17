@@ -366,6 +366,7 @@ main.full>*{animation:none}
 .tpk .tdays .chip{min-height:38px}
 .talt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink)}
 .talt:hover{border-color:var(--pri)}
+.tag.st{background:#e0f2fe;color:#075985}
 .likebar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 16px 8px;padding:10px 14px;border-radius:12px;border:1px dashed var(--pri);background:transparent;color:var(--pri);font-weight:700;text-align:left;min-height:44px;flex-shrink:0}
 .likebar.set{border-style:solid;background:rgba(31,79,191,.07)}
 .likebar .lb2{font-size:.8em;font-weight:600;white-space:nowrap}
@@ -1056,7 +1057,7 @@ const STA = {
  '구마모토':{ st:[['구마모토',32.7898,130.6888],['사쿠라마치 BT',32.8008,130.7038],['도리초스지',32.803,130.7105],['스이젠지코엔',32.7905,130.733]],
    ln:[[[32.7898,130.6888],[32.7972,130.6981],[32.8,130.703],[32.8015,130.706],[32.803,130.7105],[32.8018,130.7175],[32.796,130.726],[32.7905,130.733]]] }
 };
-const ICON = { '관광':'M5 21V4h12l-2 3.5L17 11H5', '맛집':'M7 3v18M4.5 3v5a2.5 2.5 0 0 0 5 0V3M17 21V3c-2.2.8-3.5 3.6-3.5 7.5H17' };
+const ICON = { '관광':'M5 21V4h12l-2 3.5L17 11H5', '거리':'M3 9l1.5-5h15L21 9M4 9v11h16V9M3 9h18M9 20v-6h6v6', '체험':'M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z', '맛집':'M7 3v18M4.5 3v5a2.5 2.5 0 0 0 5 0V3M17 21V3c-2.2.8-3.5 3.6-3.5 7.5H17' };
 const ico = (cat, z) => `<svg width="${z}" height="${z}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICON[cat] || ICON['관광']}"/></svg>`;
 const rate = id => { const l = REV[id] || [], n = l.length; return { n, avg:n ? l.reduce((a, r) => a + (+r.stars || 0), 0) / n : 0 }; };
 const okPh = p => typeof p === 'string' && (/^[\w.-]+$/.test(p) || /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(p));
@@ -1093,7 +1094,12 @@ function matchOf(p){
   return { pct:Math.round(100 * (0.6 * hit.length / L.length + 0.4 * (all.length ? places / all.length : 0))), hit, places };
 }
 const likeOk = id => S.likes.some(k => tagsOf(id).includes(k));
-const catOk = (id, mf) => mf === '전체' || (mf === '맞춤' ? !S.likes.length || likeOk(id) : PL[id].cat === mf);
+/* 가볼 만한 거리(상점가·옛 거리·요코초·시장 골목)와 체험 장소 */
+const STREETS = new Set(['takeshita','dotonbori','osu','otaru','sakuramachi','shimotori','shinsaibashi','chikagai','mojiko','tenjinbashi','yokamon','tanuki','saijo','takehara','hanami','nakazaki','omoide','ameyoko','haikara','josaien','janjan','canal']);
+const isStreet = id => STREETS.has(id) || id === 'senso';
+const isExp = id => tagsOf(id).includes('exp');
+const grp2 = id => STREETS.has(id) ? '거리' : isExp(id) ? '체험' : PL[id].cat === '맛집' ? '맛집' : '관광';
+const catOk = (id, mf) => mf === '전체' || (mf === '맞춤' ? !S.likes.length || likeOk(id) : mf === '거리' ? isStreet(id) : mf === '체험' ? isExp(id) : mf === '관광' ? PL[id].cat === '관광' && !STREETS.has(id) && !isExp(id) : PL[id].cat === mf);
 const ONB_KEY = 'dongseon-onb-v1';
 const onbSeen = () => { try { return !!localStorage.getItem(ONB_KEY); } catch (e) { return true; } };
 const onbSet = () => { try { localStorage.setItem(ONB_KEY, '1'); } catch (e) {} };
@@ -1369,7 +1375,7 @@ function detailMap(p, r, groups, d){
   const cp = cityPlaces(p.city), where = {}; r.forEach((ids, k) => ids.forEach((id, i) => where[id] = [k, i]));
   const shown = new Set(groups.flatMap(g => g.ids)), mf = S.mf || '전체';
   const vis = cp.filter(id => shown.has(id) || (!where[id] && catOk(id, mf) && !(PL[id].o && S.op === false)) || id === S.dsel);
-  const legend = `<div class="dleg">${['전체', '관광', '맛집'].concat(S.likes.length ? ['맞춤'] : []).map(c => `<button class="chip ${mf === c ? 'on' : ''}" data-a="mf" data-v="${c}">${c === '전체' ? '전체' : c === '맞춤' ? '✨ 내 카테고리' : ico(c, 13) + ' ' + c}</button>`).join('')}<span class="xs sub">아이콘을 누르면 바로 넣거나 바꿀 수 있어요</span></div>`;
+  const legend = `<div class="dleg">${['전체', '관광', '거리', '체험', '맛집'].concat(S.likes.length ? ['맞춤'] : []).map(c => `<button class="chip ${mf === c ? 'on' : ''}" data-a="mf" data-v="${c}">${c === '전체' ? '전체' : c === '맞춤' ? '✨ 내 카테고리' : ico(c, 13) + ' ' + c}</button>`).join('')}<span class="xs sub">아이콘을 누르면 바로 넣거나 바꿀 수 있어요</span></div>`;
   let map = window.__DMAP ? window.__DMAP(p, r, groups, d, vis, where) : null;
   if (!map) {
     const pts = vis.map(id => PL[id]); if (!pts.length) return legend;
@@ -1432,7 +1438,7 @@ function editStage(){
     <div class="zoom" style="bottom:${ph + 40}px"><button data-a="zin" aria-label="확대">+</button><button data-a="zout" aria-label="축소">−</button><button data-a="zreset" aria-label="처음 위치로">⟲</button></div>`}
     <div class="ovl"><div class="sline" role="list" aria-label="전체 일정">${sline(r, d)}</div>
       <button class="pill on" data-a="edit">완료</button></div>
-    <div class="ovl f2">${['전체', '관광', '맛집'].concat(S.likes.length ? ['맞춤'] : []).map(c => `<button class="chip ${mf === c ? 'on' : ''}" data-a="mf" data-v="${c}">${c === '전체' ? '전체' : c === '맞춤' ? '✨ 내 카테고리' : ico(c, 14) + ' ' + c}</button>`).join('')}${OM.ok ? `<button class="chip ${S.op !== false ? 'on' : ''}" data-a="optog">지도 인기 장소</button><button class="chip" data-a="opop" ${OP.busy ? 'disabled' : ''}>${OP.busy ? '찾는 중…' : '이 지역 다시 찾기'}</button>` : ''}</div>
+    <div class="ovl f2">${['전체', '관광', '거리', '체험', '맛집'].concat(S.likes.length ? ['맞춤'] : []).map(c => `<button class="chip ${mf === c ? 'on' : ''}" data-a="mf" data-v="${c}">${c === '전체' ? '전체' : c === '맞춤' ? '✨ 내 카테고리' : ico(c, 14) + ' ' + c}</button>`).join('')}${OM.ok ? `<button class="chip ${S.op !== false ? 'on' : ''}" data-a="optog">지도 인기 장소</button><button class="chip" data-a="opop" ${OP.busy ? 'disabled' : ''}>${OP.busy ? '찾는 중…' : '이 지역 다시 찾기'}</button>` : ''}</div>
     ${OM.ok && OP.msg ? `<p class="gerr">${esc(OP.msg)}</p>` : ''}
     <div class="legend ${OM.ok ? 'gm' : ''}" style="bottom:${ph + 8}px"><span><i class="lg n"></i>내 동선</span>${S.rprev ? '<span><i class="lg p"></i>추천 경로</span>' : ''}<button class="lgb ${mf === '관광' ? 'on' : ''}" data-a="mf" data-v="${mf === '관광' ? '전체' : '관광'}" aria-pressed="${mf === '관광'}"><i class="lg t"></i>관광만</button><button class="lgb ${mf === '맛집' ? 'on' : ''}" data-a="mf" data-v="${mf === '맛집' ? '전체' : '맛집'}" aria-pressed="${mf === '맛집'}"><i class="lg f"></i>맛집만</button>${OM.ok ? `<button class="lgb ${S.op !== false ? 'on' : ''}" data-a="optog" aria-pressed="${S.op !== false}"><i class="lg o"></i>지도 인기 장소</button>` : `<span><i class="lg r"></i>역·노선(대략)</span><span id="scl" data-s="${P.s}">${nice < 1 ? nice * 1000 + 'm' : nice + 'km'} <i class="sc" style="width:${(nice / 111.32 * P.s).toFixed(0)}px"></i></span>`}</div>
     ${S.ins || S.rep ? `<div class="epick">${pickBanner(r)}</div>` : ''}<div class="epanel ${mode}" style="${mode === 'card' ? `max-height:${Math.round(H * 0.66)}px` : `height:${ph}px`}">${mode === 'day' ? dayList(p, r, d) : nearPanel(p, r, d, sel, mode, where) + (mode === 'card' && !S.ins && !S.rep ? `<div class="mydl">${dayList(p, r, d, true)}</div>` : '')}</div>
@@ -1461,14 +1467,14 @@ function nearPanel(p, r, d, sel, mode, where){
   if (mode === 'list'){
     const sk = (a, b) => (S.likes.length ? likeOk(b) - likeOk(a) : 0) || (o ? km(o, PL[a]) - km(o, PL[b]) : rate(b).n - rate(a).n || (where[b] ? 1 : 0) - (where[a] ? 1 : 0));
     const base = cityPlaces(p.city).filter(id => (!inDay.has(id) || id === sel) && (mf !== '맞춤' || likeOk(id) || id === sel) && !(PL[id].o && S.op === false && id !== sel)).sort(sk);
-    const G = [['관광', '관광지'], ['체험', '체험코스'], ['맛집', '맛집']], grp = id => PL[id].cat === '맛집' ? '맛집' : tagsOf(id).includes('exp') ? '체험' : '관광';
-    const lt = G.some(g => g[0] === S.lt) ? S.lt : mf === '맛집' ? '맛집' : sel ? grp(sel) : '관광', ids = base.filter(id => grp(id) === lt);
+    const G = [['관광', '관광지'], ['거리', '거리·골목'], ['체험', '체험코스'], ['맛집', '맛집']], grp = grp2;
+    const lt = G.some(g => g[0] === S.lt) ? S.lt : ['맛집', '거리', '체험'].includes(mf) ? mf : sel ? grp(sel) : '관광', ids = base.filter(id => grp(id) === lt);
     const tabs = `<div class="ltabs" role="tablist">${G.map(([k, n]) => `<button class="ltab ${lt === k ? 'on' : ''}" role="tab" aria-selected="${lt === k}" data-a="lt" data-v="${k}">${n} <span>${base.filter(id => grp(id) === k).length}</span></button>`).join('')}</div>`;
     return `${repBar}<div class="row"><h3 class="grow">${esc(p.city)} ${G.find(g => g[0] === lt)[1]} ${ids.length}곳 <span class="xs sub">${o ? esc(o.k) + '에서 가까운 순' : '리뷰 많은 순'}${lk}${pickDay >= 0 ? ` · ${pickDay + 1}일차에 이미 있는 곳은 뺐어요` : ''}</span></h3><button class="pill back" data-a="pl" data-v="">← 내 동선</button></div>
     ${tabs}${ids.length ? '' : `<p class="sub" style="padding:16px 4px">넣을 수 있는 ${G.find(g => g[0] === lt)[1]} 목록이 비어 있어요.${mf === '맞춤' ? ' 내 카테고리 필터를 끄면 더 보여요.' : ''}</p>`}
     <div class="plist">${ids.map(id => { const x = PL[id];
       return `<article class="pl ${id === sel ? 'on' : ''}"><div class="pcb">
-        <button class="pname" data-a="pick" data-v="${id}"><span class="tag ${x.cat === '맛집' ? 'food' : grp(id) === '체험' ? 'exp' : ''}">${grp(id) === '체험' ? '체험' : x.cat}</span>${likeOk(id) ? ' <span class="lkb">✨ 맞춤</span>' : ''} <b>${esc(x.n)}</b></button>${intChips(id)}
+        <button class="pname" data-a="pick" data-v="${id}"><span class="tag ${grp(id) === '맛집' ? 'food' : grp(id) === '체험' ? 'exp' : grp(id) === '거리' ? 'st' : ''}">${grp(id)}</span>${likeOk(id) ? ' <span class="lkb">✨ 맞춤</span>' : ''} <b>${esc(x.n)}</b></button>${intChips(id)}
         <span>${rateT(id)} <span class="xs sub">· ${esc(x.feeT)}${o && id !== sel ? ' · 직선 ' + kmT(km(o, x)) : ''}</span></span>
         <div class="pact">${placeActs(id, r, d, where)}<button class="mini info" data-a="place" data-v="${id}" aria-label="정보·리뷰 보기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg></button></div></div></article>`; }).join('')}</div>`;
   }
@@ -1620,13 +1626,13 @@ function tripPicker(p, d, stops){
         <div class="tdays">${rr.map((dd, i) => `<button class="chip ${x.id === p.id && i === d ? 'on' : ''}" data-a="tpset" data-v="${x.id}:${i}" ${dd.length ? '' : 'disabled'}>${i + 1}일차${dd.length ? ` · ${dd.length}곳` : ' · 없음'}</button>`).join('')}</div></div>`; }).join('')}</div></div></div>`;
   }
   const i = +S.tpick.split(':')[1], cur = stops[i], from = cur ? PL[cur] : stops.length ? PL[stops[stops.length - 1]] : CITY[p.city];
-  const grp = id => PL[id].cat === '맛집' ? '맛집' : tagsOf(id).includes('exp') ? '체험' : '관광', tf = S.tpf || '전체';
+  const grp = grp2, tf = S.tpf || '전체';
   const cand = Object.keys(PL).filter(id => PL[id].c === p.city && !stops.includes(id) && (tf === '전체' || grp(id) === tf)).map(id => [id, km(from, PL[id])]).sort((x, y) => x[1] - y[1]);
   return `<div class="fbk" role="dialog" aria-modal="true" aria-labelledby="tpkt"><div class="fkbox"><div class="bh"><h2 id="tpkt">${cur ? `「${esc(PL[cur].k)}」 대신 갈 곳` : '넣을 장소 고르기'}</h2>${X}</div>
     <div class="bb"><p class="xs sub" style="margin:0">${cur ? `${esc(PL[cur].n)}에서 가까운 순이에요.` : '가까운 순이에요.'} 고르면 오늘 동선의 ${i + 1}번째 자리에 들어가요.</p>
-    <div class="tagrow" style="padding:0">${['전체', '관광', '체험', '맛집'].map(t => `<button class="chip ${tf === t ? 'on' : ''}" data-a="tpf" data-v="${t}">${t}</button>`).join('')}</div>
+    <div class="tagrow" style="padding:0">${['전체', '관광', '거리', '체험', '맛집'].map(t => `<button class="chip ${tf === t ? 'on' : ''}" data-a="tpf" data-v="${t}">${t}</button>`).join('')}</div>
     ${cur && stops.length > 1 ? `<button class="talt" data-a="tsdel"><b>이 장소 빼기</b><span class="xs sub">다른 곳을 넣지 않고 오늘 동선에서 빼요.</span></button>` : ''}
-    ${cand.map(([id, dist]) => { const x = PL[id]; return `<button class="talt" data-a="tsrep" data-v="${id}"><span><span class="tag ${x.cat === '맛집' ? 'food' : ''}">${grp(id)}</span> <b>${esc(x.n)}</b></span><span class="xs sub">직선 ${kmT(dist)} · ${esc(x.when)} · ${esc(x.feeT)}</span><span class="xs sub">${esc(x.pts[0])}</span></button>`; }).join('') || '<p class="sub">조건에 맞는 장소가 없어요.</p>'}</div></div></div>`;
+    ${cand.map(([id, dist]) => { const x = PL[id]; return `<button class="talt" data-a="tsrep" data-v="${id}"><span><span class="tag ${grp(id) === '맛집' ? 'food' : grp(id) === '체험' ? 'exp' : grp(id) === '거리' ? 'st' : ''}">${grp(id)}</span> <b>${esc(x.n)}</b></span><span class="xs sub">직선 ${kmT(dist)} · ${esc(x.when)} · ${esc(x.feeT)}</span><span class="xs sub">${esc(x.pts[0])}</span></button>`; }).join('') || '<p class="sub">조건에 맞는 장소가 없어요.</p>'}</div></div></div>`;
 }
 
 function make(){
@@ -2044,7 +2050,7 @@ const A = {
   opop:() => { if (!OM.map) return; const c = OM.map.getCenter(), ne = OM.map.getBounds().getNorthEast(); fetchPop(pack().city, { lat:c.lat, lng:c.lng }, km({ la:c.lat, lo:c.lng }, { la:ne.lat, lo:ne.lng }) * 800); render(); },
   pick:v => { S.sel = v; S.pl = ''; render(); },
   pl:v => { S.pl = v; if (!v){ S.rep = null; S.ins = null; } render(); },
-  mf:v => { S.mf = v; render(); },
+  mf:v => { S.mf = v; if (['관광', '거리', '체험', '맛집'].includes(v)) S.lt = v; render(); },
   rmph:v => { const f = R.files.splice(+v, 1)[0]; if (f) try { URL.revokeObjectURL(f.url); } catch (e) {} $('sh').innerHTML = sheet(); },
   rf:v => { S.rf = v; render(); },
   open:v => { S.up = false; S.hid = null; S.off = {}; S.dsel = null; const p = PACKS.find(x => x.id === v); go({ scr:'detail', pid:v, city:p.city, day:-1, edit:false }); },
