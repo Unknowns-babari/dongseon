@@ -150,7 +150,7 @@ main.full>*{animation:none}
 .cstrip{color:#fff;font-size:.78em;font-weight:700;padding:6px 12px;margin-bottom:4px}
 .blist{overflow-y:auto;padding:4px 16px 16px;display:flex;flex-direction:column;gap:12px}
 .daychips{display:flex;gap:6px;overflow-x:auto;flex:1}
-.daychips .chip{white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.daychips .chip{white-space:nowrap;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.12)}
 .epin{position:absolute;transform:translate(-50%,-50%);border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:1px;z-index:2;min-width:32px;min-height:32px}
 .epin b{width:30px;height:30px;border-radius:50%;color:#fff;border:3px solid var(--card);display:grid;place-items:center;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,.3)}
 .epin span{padding:0 5px;border-radius:5px;background:var(--card);font-size:10.5px;font-weight:700;white-space:nowrap;color:var(--ink)}
@@ -490,7 +490,19 @@ const PL = {
  shiroi:{ n:'시로이 코이비토 파크', k:'시로이코이비토', c:'삿포로', la:43.0890, lo:141.2715, cat:'관광', fee:null, feeT:'요금 현장 확인', when:'오후', pts:['홋카이도 명과 시로이 코이비토 제조 라인을 견학하고 나만의 과자를 만들 수 있는 과자 테마파크예요.','지하철 도자이선 미야노사와역에서 걸어서 8분이에요.','로즈가든과 가라쿠리 시계탑도 볼거리예요.'], src:[['처음 삿포로 엄선 스폿 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/article/item/20215/'],['삿포로 원데이 플랜 (LIVE JAPAN)','https://livejapan.com/ko/in-hokkaido/in-pref-hokkaido/in-sapporo_chitose/article-a1000239/'],['삿포로 명소 10곳 (tsunagu Japan)','https://www.tsunagujapan.com/ko/10-sightseeing-spots-in-sapporo/']] },
  susukino:{ n:'스스키노 (라멘·수프카레)', k:'스스키노', c:'삿포로', la:43.0563, lo:141.3512, cat:'맛집', fee:null, feeT:'식사 별도', when:'저녁', pts:['해산물, 라멘, 수프카레 등 홋카이도 명물 요리를 맛보기 좋은 번화가예요.'], src:[['삿포로 즐길 거리 15가지 (Trip To Japan)','https://www.triptojapan.com/ko/blog/15-best-things-to-do-in-sapporo-top-attractions-experiences']] },
  orizuru:{ n:'오리즈루 타워', k:'오리즈루', c:'히로시마', la:34.3968, lo:132.4538, cat:'관광', fee:null, feeT:'전망대 요금 현장 확인', when:'오후', pts:['원폭 돔 바로 옆 건물로, 유리 없는 옥상 전망대에서 평화공원과 맑은 날엔 미야지마 미센까지 보여요.','12층에서 접은 종이학을 약 50m 유리벽 ‘오리즈루의 벽’에 넣을 수 있어요.','1층부터 옥상까지 이어진 70m 미끄럼틀도 인기예요.'], src:[['오리즈루 타워 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/12535/']] },
- yamato:{ n:'구레 야마토 뮤지엄', k:'야마토뮤지엄', c:'히로시마', la:34.2416, lo:132.5560, cat:'관광', fee:null, feeT:'요금 현장 확인', when:'오전', pts:['구레에 있는 박물관으로, 전함 야마토의 10분의 1 모형이 상징이에요.','히로시마에서 JR로 다녀오는 교외 일정으로 많이 소개돼요.'], src:[['히로시마 명소 35선 (Have a Good Holiday)','https://haveagood-holiday.com/ko/articles/234359'],['히로시마 뚜벅이 여행 (jeepe)','https://www.jeepe.jp/ko/articles/hiroshima-no-car-spots-2943']] }
+ yamato:{ n:'구레 야마토 뮤지엄', k:'야마토뮤지엄', c:'히로시마', la:34.2416, lo:132.5560, cat:'관광', fee:null, feeT:'요금 현장 확인', when:'오전', pts:['구레에 있는 박물관으로, 전함 야마토의 10분의 1 모형이 상징이에요.','히로시마에서 JR로 다녀오는 교외 일정으로 많이 소개돼요.'], src:[['히로시마 명소 35선 (Have a Good Holiday)','https://haveagood-holiday.com/ko/articles/234359'],['히로시마 뚜벅이 여행 (jeepe)','https://www.jeepe.jp/ko/articles/hiroshima-no-car-spots-2943']] },
+ kokura:{ n:'고쿠라성', k:'고쿠라성', c:'기타큐슈', la:33.8845, lo:130.8742, cat:'관광', fee:500, feeName:'고쿠라성 천수각', feeT:'일반 ¥500', when:'오전', pts:['호소카와 다다오키가 1602년부터 쌓은 성으로, 지금 천수각은 1959년에 다시 지었어요. 후쿠오카현에서 유일하게 천수각이 있는 성이에요.','4층보다 5층이 더 큰 ‘가라즈쿠리’ 천수각이 특징이고, 5층 전망대에서 고쿠라 시내가 보여요.','미야모토 무사시와 사사키 고지로 전시가 있고, 봄에는 벚꽃 명소예요. JR 고쿠라역에서 걸어서 약 15분이에요.'], src:[['고쿠라성 (크로스로드 후쿠오카)','https://www.crossroadfukuoka.jp/kr/spot/13192'],['고쿠라성 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/12458/'],['기타큐슈 1박 2일 코스 (크로스로드 후쿠오카)','https://www.crossroadfukuoka.jp/kr/itineraries/20012']] },
+ kteien:{ n:'고쿠라성 정원', k:'고쿠라성정원', c:'기타큐슈', la:33.8836, lo:130.8752, cat:'관광', fee:300, feeName:'고쿠라성 정원', feeT:'어른 ¥300 · 다도 체험 ¥500', when:'오전', pts:['고쿠라 번주 오가사와라 가문의 별장 터에 다이묘 저택과 연못 정원을 재현한 곳이에요.','다다미방에서 말차를 마시는 다도 체험(¥500)을 할 수 있어요.','고쿠라성과 함께 보는 3곳 공통권(일반 ¥700)도 있어요.'], src:[['고쿠라성 정원 (크로스로드 후쿠오카)','https://www.crossroadfukuoka.jp/kr/spot/13111']] },
+ tanga:{ n:'단가 시장', k:'단가시장', c:'기타큐슈', la:33.8815, lo:130.8790, cat:'맛집', fee:null, feeT:'먹거리 별도', when:'점심', pts:['다이쇼 시대 어류 하역장에서 시작한 100년 넘은 ‘기타큐슈의 부엌’이에요. 약 120개 가게가 있어요.','고등어·정어리를 쌀겨에 조린 향토음식 누카다키, 시장 재료로 만드는 다이가쿠돈이 명물이에요.','11~13시가 가장 붐비고, 2022년 화재 뒤 재정비가 진행 중이에요. 모노레일 단가역 바로 앞이에요.'], src:[['단가 시장 (크로스로드 후쿠오카)','https://www.crossroadfukuoka.jp/kr/spot/13182'],['단가 시장 다이가쿠돈 (tsunagu Japan)','https://www.tsunagujapan.com/ko/fukuoka-kitakyushu-tangaichiba-daigakudon/'],['탄가시장 산책 가이드 (트립스토어)','https://www.tripstore.kr/blog/%EA%B8%B0%ED%83%80%ED%81%90%EC%8A%88-%ED%83%84%EA%B0%80%EC%8B%9C%EC%9E%A5-%EB%A0%88%ED%8A%B8%EB%A1%9C-%EC%95%84%EC%BC%80%EC%9D%B4%EB%93%9C-%EC%82%B0%EC%B1%85']] },
+ ishin:{ n:'오코노미야키 이신 (야키우동)', k:'야키우동', c:'기타큐슈', la:33.8850, lo:130.8800, cat:'맛집', fee:null, feeT:'식사 별도', when:'점심·저녁', pts:['1990년부터 이어진 고쿠라의 오코노미야키 전문점으로, 고쿠라에서 생긴 명물 야키우동도 팔아요.','굵은 면을 양배추·돼지고기와 볶고 소스를 뿌리는 쫀득한 야키우동이 기본이에요.','평일에는 작은 오코노미야키와 야키우동 런치 세트가 있어요.'], src:[['오코노미야키 이신 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/16578/']] },
+ sukesan:{ n:'스케상 우동 우오마치점', k:'스케상우동', c:'기타큐슈', la:33.8840, lo:130.8808, cat:'맛집', fee:null, feeT:'식사 별도', when:'언제든', pts:['기타큐슈에서 시작한 우동 체인으로, 우오마치 상점가에 있고 연중무휴 24시간 영업이에요.','인기 1위는 소고기와 우엉튀김을 올린 니쿠고보텐 우동이고, 보타모치도 명물이에요.','가격이 저렴하고 가성비가 좋았다는 후기가 있어요.'], src:[['스케상 우동 우오마치점 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/18592/'],['스케상 우동 후기 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/review/item/12987/']] },
+ sarakura:{ n:'사라쿠라산 전망대', k:'사라쿠라산', c:'기타큐슈', la:33.8530, lo:130.8030, cat:'관광', fee:1230, feeName:'사라쿠라산 케이블카·슬로프카 왕복', feeT:'케이블카·슬로프카 왕복 성인 ¥1,230', when:'밤', pts:['해발 622m 정상 전망대로, ‘신일본 3대 야경’에 뽑힌 기타큐슈 최고의 야경 명소예요.','서일본 최장급 케이블카(1,100m)와 슬로프카를 갈아타고 올라가요.','화요일은 케이블카가 쉬고, 겨울엔 상행 마감이 19:20이에요. JR 야하타역에서 무료 셔틀이 다닌다는 후기가 있어요.'], src:[['사라쿠라산 전망대 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/12873/'],['사라쿠라산 (크로스로드 후쿠오카)','https://www.crossroadfukuoka.jp/kr/spot/13073'],['사라쿠라산 야경 후기 (trvlogue)','https://www.trvlogue.com/ko/sarakurayama-night-view-guide']] },
+ mojiko:{ n:'모지코 레트로', k:'모지코', c:'기타큐슈', la:33.9455, lo:130.9625, cat:'관광', fee:null, feeT:'거리 무료 · 시설별 요금', when:'오후~밤', pts:['1889년 개항한 무역항으로, 메이지~쇼와 초기의 서양식 건물이 늘어선 항구 마을이에요.','모지코역, 구 모지 미쓰이클럽, 해협 위 도개교 블루윙 모지가 대표 볼거리예요.','밤에는 건물에 조명이 켜지고, 겨울밤엔 일루미네이션이 열려요.'], src:[['모지코 레트로 지구 (크로스로드 후쿠오카)','https://www.crossroadfukuoka.jp/kr/spot/13184'],['기타큐슈시 인기 명소 19선 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/article/item/20650/']] },
+ yakicurry:{ n:'오사마노 타마고 (모지코 야키카레)', k:'야키카레', c:'기타큐슈', la:33.9462, lo:130.9632, cat:'맛집', fee:null, feeT:'식사 별도', when:'점심', pts:['야키카레는 밥에 카레·치즈·달걀을 올려 오븐에 구운 모지코 향토음식으로, 쇼와 30년대 한 찻집에서 시작됐다는 설이 있어요.','오사마노 타마고는 모지코 레트로의 양식 카페로, 기본 야키카레와 해산물·채소 버전이 있어요.','바다를 마주한 테라스석이 있어요. 모지코에는 야키카레 가게가 25곳쯤 있어 지도를 들고 골라 먹는 방법도 있어요.'], src:[['오사마노 타마고 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/directory/item/18449/'],['모지코 야키카레 (크로스로드 후쿠오카)','https://www.crossroadfukuoka.jp/kr/spot/10415']] },
+ tetsudo:{ n:'규슈 철도기념관', k:'철도기념관', c:'기타큐슈', la:33.9438, lo:130.9612, cat:'관광', fee:300, feeName:'규슈 철도기념관', feeT:'성인 ¥300 · 미니열차 ¥300', when:'오전', pts:['1891년 지은 옛 규슈철도 본사 붉은 벽돌 건물을 쓰는 철도 박물관이에요. 9:00~17:00에 열어요.','실제 제어반으로 하는 운전 시뮬레이터가 가장 인기이고, 아이가 직접 모는 130m 미니철도도 있어요.','철도 팬이 아니어도 생각보다 재미있었다는 후기가 있어요.'], src:[['규슈 철도 기념관 (크로스로드 후쿠오카)','https://www.crossroadfukuoka.jp/kr/spot/13618'],['규슈 철도기념관 (국토교통성 다국어 해설)','https://www.mlit.go.jp/tagengo-db/common/001923030.pdf'],['규슈 철도 기념관 후기 (GOOD LUCK TRIP)','https://www.gltjp.com/ko/review/item/12987/']] },
+ mekari:{ n:'메카리 공원 제2전망대', k:'메카리', c:'기타큐슈', la:33.9600, lo:130.9695, cat:'관광', fee:null, feeT:'무료', when:'밤', pts:['혼슈까지 약 700m인 간몬 해협과 간몬교를 한눈에 보는 무료 전망대예요.','밤에 조명이 켜진 간몬교가 볼만하다고 소개돼요.','모지코역에서 버스로 가거나, 주말엔 레트로 관광열차 시오카제호로 약 10분이에요.'], src:[['메카리 공원 제2 전망대 (크로스로드 후쿠오카)','https://www.crossroadfukuoka.jp/kr/spot/10417']] },
+ inochi:{ n:'생명의 여행 박물관', k:'생명의여행', c:'기타큐슈', la:33.8728, lo:130.8180, cat:'관광', fee:null, feeT:'입장료 현장 확인', when:'오전', pts:['전시물 9,000점이 넘는 서일본 최대급 자연사·역사 박물관이에요.','지구 탄생부터 생명의 진화, 인류의 역사까지 ‘생명의 여행’을 주제로 보여 줘서 가족 여행지로 추천돼요.'], src:[['생명의 여행 박물관 (크로스로드 후쿠오카)','https://www.crossroadfukuoka.jp/kr/spot/13097'],['기타큐슈 1박 2일 코스 (크로스로드 후쿠오카)','https://www.crossroadfukuoka.jp/kr/itineraries/20012']] },
+ kawachi:{ n:'가와치 후지엔 (등나무 정원)', k:'가와치후지엔', c:'기타큐슈', la:33.8265, lo:130.8250, cat:'관광', fee:1600, feeName:'가와치 후지엔 (등나무 시즌)', feeT:'등나무 시즌 어른 ¥1,600 · 단풍 시즌 ¥500', when:'봄(4~5월)·가을', pts:['CNN ‘일본에서 가장 아름다운 곳 31선’에 뽑힌 등나무 정원이에요. 길이 80m·110m 등나무 터널이 하이라이트예요.','4월 하순~5월 초 절정기엔 편의점에서 날짜 지정 예약 티켓을 사야 해요. 개원 시기는 해마다 달라요.','11월 중순~12월 초에는 약 700그루 단풍이 물들어요. 차로 가는 곳이라 대중교통은 불편해요.'], src:[['가와치 후지엔 (크로스로드 후쿠오카)','https://www.crossroadfukuoka.jp/kr/spot/13153'],['가와치 후지엔 2026 (크로스로드 후쿠오카)','https://www.crossroadfukuoka.jp/kr/event/13153']] }
 };
 
 const CITY = {
@@ -499,10 +511,11 @@ const CITY = {
  '교토':{ la:35.0116, lo:135.7681, color:'#14795a', night:170000, hotel:'가와라마치 근처 호텔', upName:'기온 근처 료칸 (조식)', dx:-8, dy:-14, transit:[{ name:'한큐 오사카우메다↔교토가와라마치 왕복 (편도 ¥410)', yen:1640 }] },
  '나고야':{ la:35.1709, lo:136.8815, color:'#8a3fb5', night:130000, hotel:'사카에 근처 호텔', upName:'나고야역 직결 호텔', dx:8, dy:-8, transit:[] },
  '삿포로':{ la:43.0621, lo:141.3544, color:'#0e7490', night:150000, hotel:'스스키노 근처 호텔', upName:'대욕장 있는 삿포로역 호텔', dx:0, dy:-8, transit:[{ name:'JR 삿포로↔오타루 왕복 (편도 ¥800)', yen:3200, need:'otaru' }] },
- '히로시마':{ la:34.3853, lo:132.4553, color:'#be185d', night:130000, hotel:'히로시마역 근처 호텔', upName:'평화공원 전망 호텔', dx:-8, dy:-8, transit:[{ name:'미야지마 페리 왕복 + 방문세 (편도 ¥200, 세금 ¥100)', yen:1000, need:'miyajima' }] },
+ '히로시마':{ la:34.3853, lo:132.4553, color:'#be185d', night:130000, hotel:'히로시마역 근처 호텔', upName:'평화공원 전망 호텔', dx:8, dy:-8, transit:[{ name:'미야지마 페리 왕복 + 방문세 (편도 ¥200, 세금 ¥100)', yen:1000, need:'miyajima' }] },
  '마쓰야마':{ la:33.8392, lo:132.7657, color:'#a16207', night:120000, hotel:'오카이도 근처 호텔', upName:'도고온천 료칸 (조식)', dx:8, dy:10, transit:[] },
+ '기타큐슈':{ la:33.8834, lo:130.8752, color:'#4d7c0f', night:100000, hotel:'고쿠라역 근처 호텔', upName:'모지코 레트로 근처 호텔', dx:-8, dy:-8, transit:[] },
  '구마모토':{ la:32.8031, lo:130.7079, color:'#9a3412', night:110000, hotel:'구마모토역 근처 호텔', upName:'시모토리 근처 호텔 (조식)', dx:8, dy:10, transit:[] },
- '후쿠오카':{ la:33.5902, lo:130.4017, color:'#b42318', night:120000, hotel:'하카타역 근처 호텔', upName:'대욕장 있는 하카타 호텔', dx:-8, dy:-8, transit:[{ name:'공항↔하카타 지하철 왕복 (편도 ¥260)', yen:1040 },{ name:'니시테츠 텐진↔다자이후 왕복 (편도 ¥480)', yen:1920, need:'dazaifu' }] }
+ '후쿠오카':{ la:33.5902, lo:130.4017, color:'#b42318', night:120000, hotel:'하카타역 근처 호텔', upName:'대욕장 있는 하카타 호텔', dx:-8, dy:10, transit:[{ name:'공항↔하카타 지하철 왕복 (편도 ¥260)', yen:1040 },{ name:'니시테츠 텐진↔다자이후 왕복 (편도 ¥480)', yen:1920, need:'dazaifu' }] }
 };
 const RAW = [
  ['tk1','도쿄','처음 가는 도쿄, 아사쿠사부터 시부야까지','옛 도쿄와 지금의 도쿄를 하루씩. 전망대는 일몰 회차로','친구와 2인',['첫 해외여행'],[['senso','skytree'],['tsukiji','meiji','takeshita'],['shibuya','omoide'],[]]],
@@ -594,7 +607,17 @@ const RAW = [
  ['hs7','히로시마','구레까지 가는 히로시마 2박 3일','평화공원, 야마토 뮤지엄, 미야지마','친구와 2인',['역사·문화'],[['peace','shukkeien'],['yamato'],['miyajima']]],
  ['hs8','히로시마','부모님과 히로시마 정원 산책 1박 2일','슛케이엔과 성 산책, 다음 날 전망대','부모님과 2인',['부모님과','자연·힐링'],[['shukkeien','hcastle'],['orizuru','okonomi']]],
  ['hs9','히로시마','오코노미야키 두 번 1박 2일','오코노미무라와 밋짱 비교','친구와 2인',['맛집'],[['okonomimura','orizuru'],['miyajima','okonomi']]],
- ['hs10','히로시마','히로시마 사진 명소 2박 3일','오리즈루 타워 전망, 바다 위 도리이, 정원','연인과 2인',['사진 명소'],[['orizuru','hcastle'],['miyajima'],['shukkeien']]]
+ ['hs10','히로시마','히로시마 사진 명소 2박 3일','오리즈루 타워 전망, 바다 위 도리이, 정원','연인과 2인',['사진 명소'],[['orizuru','hcastle'],['miyajima'],['shukkeien']]],
+ ['kk1','기타큐슈','기타큐슈 대표 명소 1박 2일','고쿠라성과 사라쿠라산 야경, 다음 날 모지코','친구와 2인',['첫 해외여행','야경'],[['kokura','kteien','tanga','sarakura'],['tetsudo','yakicurry','mojiko']]],
+ ['kk2','기타큐슈','하카타에서 고쿠라 당일치기','고쿠라성, 단가 시장, 야키우동','혼자',['짧은 일정','혼자'],[['kokura','tanga','ishin']]],
+ ['kk3','기타큐슈','모지코 레트로 하루','철도기념관, 야키카레, 밤엔 간몬교 야경','연인과 2인',['야경','짧은 일정'],[['tetsudo','yakicurry','mojiko','mekari']]],
+ ['kk4','기타큐슈','기타큐슈 야경 2박 3일','고쿠라의 밤, 사라쿠라산, 모지코와 간몬교','연인과 2인',['야경'],[['kokura','sukesan'],['sarakura'],['mojiko','mekari']]],
+ ['kk5','기타큐슈','아이와 함께 기타큐슈 2박 3일','공룡 박물관, 철도기념관, 고쿠라성','가족 3인',['아이와 함께'],[['inochi'],['tetsudo','yakicurry'],['kokura']]],
+ ['kk6','기타큐슈','등나무 시즌 기타큐슈 1박 2일','가와치 후지엔 예약 티켓 필수, 다음 날 고쿠라','친구와 2인',['자연·힐링','사진 명소'],[['kawachi'],['kokura','kteien']]],
+ ['kk7','기타큐슈','고쿠라·모지코 먹방 1박 2일','단가 시장, 야키우동, 24시간 우동, 야키카레','친구와 2인',['맛집'],[['tanga','ishin'],['sukesan','yakicurry','mojiko']]],
+ ['kk8','기타큐슈','부모님과 기타큐슈 2박 3일','정원 다도 체험, 모지코 산책, 시장','부모님과 2인',['부모님과','역사·문화'],[['kteien','kokura'],['mojiko'],['tanga']]],
+ ['kk9','기타큐슈','혼자 기타큐슈 1박 2일','걸어서 도는 고쿠라와 모지코','혼자',['혼자','걷기 좋아함'],[['tanga','sukesan','kokura'],['tetsudo','mojiko']]],
+ ['kk10','기타큐슈','기타큐슈 사진 명소 2박 3일','등나무 터널, 레트로 항구, 100억 달러 야경','연인과 2인',['사진 명소'],[['kawachi'],['mojiko','mekari'],['sarakura']]]
 ];
 const PACKS = RAW.map(([id, city, title, sub, who, tags, days]) => { const n = days.length - 1, c = CITY[city];
   return { id, city, title, sub, who, tags, days, color:c.color, nights:n ? n + '박 ' + (n + 1) + '일' : '당일치기',
@@ -730,6 +753,8 @@ const STA = {
    ln:[[[34.3973,132.4753],[34.3901,132.4351],[34.3657,132.3611],[34.3127,132.3029]],[[34.3973,132.4753],[34.394,132.458],[34.3953,132.4535],[34.3925,132.443],[34.3901,132.4351]]], fe:[[[34.3127,132.3029],[34.3001,132.322]]] },
  '마쓰야마':{ st:[['마쓰야마',33.837,132.751],['마쓰야마시',33.8363,132.7635],['오카이도',33.8425,132.77],['도고온천',33.8501,132.7856]],
    ln:[[[33.837,132.751],[33.8412,132.7605],[33.8425,132.77],[33.8438,132.777],[33.8501,132.7856]],[[33.8363,132.7635],[33.8412,132.7605]]] },
+ '기타큐슈':{ st:[['고쿠라',33.8868,130.8829],['니시코쿠라',33.8879,130.8735],['단가',33.8817,130.8796],['스페이스월드',33.8723,130.8165],['야하타',33.8697,130.8115],['모지코',33.9454,130.9619]],
+   ln:[[[33.9454,130.9619],[33.932,130.935],[33.905,130.92],[33.8868,130.8829],[33.8879,130.8735],[33.874,130.84],[33.8723,130.8165],[33.8697,130.8115]],[[33.8868,130.8829],[33.8817,130.8796]]] },
  '구마모토':{ st:[['구마모토',32.7898,130.6888],['사쿠라마치 BT',32.8008,130.7038],['도리초스지',32.803,130.7105],['스이젠지코엔',32.7905,130.733]],
    ln:[[[32.7898,130.6888],[32.7972,130.6981],[32.8,130.703],[32.8015,130.706],[32.803,130.7105],[32.8018,130.7175],[32.796,130.726],[32.7905,130.733]]] }
 };
@@ -749,7 +774,7 @@ const rateT = id => { const t = rate(id); return t.n ? `<span class="rt">★ ${t
 
 
 /* ---------- 이동 방법 (가까운 역 기준 어림) ---------- */
-const LN = {"도쿄": ["JR 야마노테선", "긴자선"], "오사카": ["미도스지선", "JR 오사카 순환선", "JR 유메사키선"], "교토": ["가라스마선", "도자이선", "JR 사가노선", "JR 나라선", "한큐 교토선"], "나고야": ["히가시야마선", "메이조선", "메이테쓰 나고야본선"], "후쿠오카": ["공항선", "니시테쓰 전철"], "삿포로": ["JR 하코다테본선", "난보쿠선", "노면전차"], "히로시마": ["JR 산요본선", "노면전차"], "마쓰야마": ["이요테쓰 노면전차", "노면전차"], "구마모토": ["노면전차(시덴)"]};
+const LN = {"도쿄": ["JR 야마노테선", "긴자선"], "오사카": ["미도스지선", "JR 오사카 순환선", "JR 유메사키선"], "교토": ["가라스마선", "도자이선", "JR 사가노선", "JR 나라선", "한큐 교토선"], "나고야": ["히가시야마선", "메이조선", "메이테쓰 나고야본선"], "후쿠오카": ["공항선", "니시테쓰 전철"], "삿포로": ["JR 하코다테본선", "난보쿠선", "노면전차"], "히로시마": ["JR 산요본선", "노면전차"], "마쓰야마": ["이요테쓰 노면전차", "노면전차"], "구마모토": ["노면전차(시덴)"], "기타큐슈": ["JR 가고시마본선", "기타큐슈 모노레일"]};
 const stLines = (city, la, lo) => { const sd = STA[city]; if (!sd) return []; return sd.ln.map((l, i) => l.some(([a, b]) => km({ la:a, lo:b }, { la, lo }) < 0.2) ? (LN[city] || [])[i] : null).filter(Boolean); };
 function nearSt(city, x){ const sd = STA[city]; if (!sd) return null; let best = null; sd.st.forEach(([n, la, lo]) => { const d = km(x, { la, lo }); if (d < 1.6 && (!best || d < best.d)) best = { n, la, lo, d }; }); return best; }
 const walkM = k => Math.max(1, Math.round(k * 1.25 / 4.5 * 60));
@@ -761,13 +786,14 @@ function legInfo(a, b){
     if (isl(a) && isl(b)) return { ic:'walk', t:'걸어서', m:walkM(d) };
     return { ic:'ferry', t:'JR 산요본선으로 미야지마구치역 → 미야지마 페리(약 10분)', m:65 };
   }
+  if (a === 'kawachi' || b === 'kawachi') return { ic:'bus', t:'택시·렌터카 (대중교통이 불편해요)', m:Math.round(d * 1.3 / 30 * 60) + 10 };
   const sa = nearSt(city, A), sb = nearSt(city, B);
   if (sa && sb && sa.n !== sb.n){
     const la = stLines(city, sa.la, sa.lo), lb = stLines(city, sb.la, sb.lo), common = la.filter(x => lb.includes(x));
     const ride = Math.round(km(sa, sb) * 1.2 / 30 * 60) + 5, m = walkM(sa.d) + ride + walkM(sb.d) + (common.length ? 0 : 8);
     return { ic:'train', t:`${sa.n}역 → ${common.length ? common[0] : '전철(갈아타기)'} → ${sb.n}역`, m };
   }
-  const gen = { '도쿄':'지하철·버스', '오사카':'지하철·버스', '나고야':'지하철·버스', '후쿠오카':'지하철·버스', '삿포로':'지하철·버스', '교토':'시내버스' }[city] || '노면전차·버스';
+  const gen = { '도쿄':'지하철·버스', '오사카':'지하철·버스', '나고야':'지하철·버스', '후쿠오카':'지하철·버스', '삿포로':'지하철·버스', '교토':'시내버스', '기타큐슈':'JR·버스' }[city] || '노면전차·버스';
   return { ic:d < 6 ? 'bus' : 'train', t:gen + (d > 3 ? '' : ' 또는 택시'), m:Math.round(d * 1.3 / 22 * 60) + 10 };
 }
 const LIC = { walk:'M13 4a2 2 0 1 1-4 0 2 2 0 0 1 4 0M10 8l-3 5h3l-1 8M12 8l3 4 3 1M10 13l4 3v5', train:'M7 3h10a2 2 0 0 1 2 2v9a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V5a2 2 0 0 1 2-2zM5 10h14M8 21l2-4M16 21l-2-4M9 14h.01M15 14h.01', bus:'M6 3h12a2 2 0 0 1 2 2v12H4V5a2 2 0 0 1 2-2zM4 11h16M7 21v-4M17 21v-4M8 14h.01M16 14h.01', ferry:'M3 17l2 3h14l2-3H3zM6 17V9h12v8M12 9V4M9 6h6' };
