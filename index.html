@@ -309,6 +309,45 @@ main.full>*{animation:none}
 .glink{font-size:.85em;font-weight:700;text-decoration:none}
 .linkbtn{align-self:flex-start;border:0;background:none;color:var(--pri);font-weight:700;font-size:.85em;min-height:40px;padding:0}
 @media (prefers-reduced-motion:no-preference){main>*{animation:up .22s ease both}@keyframes up{from{opacity:0;transform:translateY(6px)}}}
+
+/* ===== 웹(넓은 화면) ===== */
+.dcol,.dmapcol,.dh,.dl{display:contents}
+main.dt .dh>*{order:0}
+main.dt .dmapcol>*{order:1}
+main.dt .dl>*{order:2}
+.brand{font-weight:900;color:var(--pri);letter-spacing:-.02em}
+.wnav{display:flex;gap:4px;margin-left:auto}
+.wnav button{border:0;background:none;min-height:44px;padding:0 14px;border-radius:10px;font-weight:700;color:var(--sub);font-size:.95em}
+.wnav button.on{color:var(--pri);background:var(--soft)}
+.web body{background:var(--bg)}
+.web .app{max-width:none;box-shadow:none}
+.web header{padding:10px 32px;min-height:64px}
+.web header h1{font-size:1.2em}
+.web nav{display:none}
+.web main:not(.full):not(.dt){padding:28px max(32px,calc(50% - 400px)) 40px}
+.web .foot{flex-direction:row;align-items:center;justify-content:flex-end;gap:28px;padding:12px 32px}
+.web .foot>.row{gap:16px}
+.web .foot .btn,.web .foot .btns{width:auto}
+.web .foot .btn{padding:0 32px}
+/* 홈: 왼쪽 목록 + 오른쪽 지도 */
+.web .stage .bsheet,.web .stage .bsheet.full{top:0;bottom:0;left:0;right:auto;width:420px;max-height:none;border-radius:0;box-shadow:4px 0 16px rgba(0,0,0,.08)}
+.web .stage .bsheet .grab,.web .bhead .pill,.web .bhead .ib{display:none}
+.web .stage>.ovl.col{left:436px}
+.web .stage>.zoom{bottom:16px!important}
+.web .stage .hint{display:none}
+/* 상세: 왼쪽 일정 + 오른쪽 큰 지도 */
+.web main.dt{display:grid;grid-template-columns:minmax(380px,1fr) minmax(0,1.3fr);grid-template-rows:minmax(0,1fr);gap:28px;padding:20px 32px 0;overflow:hidden}
+.web main.dt .dcol{display:flex;flex-direction:column;gap:16px;overflow-y:auto;min-height:0;padding:4px 8px 28px 0}
+.web main.dt .dh,.web main.dt .dl{display:flex;flex-direction:column;gap:16px}
+.web main.dt .dmapcol{display:flex;flex-direction:column;gap:10px;min-height:0;padding-bottom:16px;overflow-y:auto}
+.web main.dt .dmap{flex:1 0 420px;height:auto!important;aspect-ratio:auto}
+/* 지도 크게 보기(편집): 왼쪽 패널 + 오른쪽 지도 */
+.web .stage.edit .epanel{top:0;bottom:0!important;left:0;right:auto;width:420px;height:auto!important;max-height:none!important;border-radius:0;box-shadow:4px 0 16px rgba(0,0,0,.08)}
+.web .stage.edit>.ovl{left:436px}
+.web .stage.edit>.ovl.f2{left:436px}
+.web .stage.edit>.legend{left:436px!important;bottom:14px!important}
+.web .stage.edit>.zoom{bottom:16px!important}
+.web .stage.edit>.keybar{left:436px}
 </style>
 </head>
 <body>
@@ -531,7 +570,7 @@ function header(){
   const titles = { home:'동선팩 · 일본', detail:S.edit ? '동선 편집 · ' + p.city : p.city + ' · ' + p.nights, book:'예약 내용', paid:'예약 완료', trip:'여행 중', make:'동선 만들기', src:'참고한 자료' };
   const back = S.scr === 'detail' && S.edit ? null : { detail:'home', book:'detail', paid:'home', src:'home' }[S.scr];
   return (back ? `<button class="ib" aria-label="뒤로 가기" data-a="go" data-v="${back}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>` : '')
-    + `<h1>${esc(titles[S.scr])}</h1><button class="pill ${S.big ? 'on' : ''}" aria-pressed="${S.big}" data-a="big">가 큰 글씨</button>`;
+    + `<h1>${isWeb() && S.scr === 'home' ? '<span class="brand">동선팩</span> <span class="xs sub" style="font-weight:500">일본 여행 동선을 예약까지 한 번에</span>' : esc(titles[S.scr])}</h1>${isWeb() ? `<div class="wnav">${[['home', '동선 찾기'], ['trip', '여행 중'], ['make', '동선 만들기']].map(x => `<button class="${S.scr === x[0] ? 'on' : ''}" data-a="go" data-v="${x[0]}">${x[1]}</button>`).join('')}</div>` : ''}<button class="pill ${S.big ? 'on' : ''}" aria-pressed="${S.big}" data-a="big">가 큰 글씨</button>`;
 }
 
 /* 일본 해안선: 대략적인 윤곽선 (위·경도) */
@@ -561,7 +600,7 @@ const pct = (v, T) => (v / T * 100).toFixed(2) + '%';
 const priceMan = n => n < 10000 ? (Math.round(n / 1000) || 1) + '천' : Math.round(n / 10000) + '만';
 let HP = null;
 function home(){
-  const W = mw(), H = mh(), open = !!S.cityOpen, full = S.cs === 'full';
+  const W = mw(), H = mh(), web = isWeb(), open = !!S.cityOpen || web, full = S.cs === 'full' || web;
   const P = fit([{ lo:129.4, la:30.9 }, { lo:141.4, la:40.8 }], W, H, 10, 96, 0); HP = P;
   const land = JP.map(poly => `<polygon points="${poly.map(([lo, la]) => P(lo, la).map(v => v.toFixed(1)).join(',')).join(' ')}" fill="var(--land)" stroke="var(--coast)" stroke-width="1.2" vector-effect="non-scaling-stroke"/>`).join('');
   const pins = Object.entries(CITY).map(([name, c]) => { const [x, y] = P(c.lo, c.la), on = open && S.city === name, l = PACKS.filter(p => p.city === name), min = Math.min(...l.map(p => sum(items(p))));
@@ -854,13 +893,13 @@ function detail(){
   if (S.edit) return editStage();
   const p = pack(), r = route(p), all = S.day === -1, d = all ? 0 : Math.min(S.day, r.length - 1);
   const groups = all ? r.map((ids, k) => ({ ids, color:COLORS[k % 5], label:k + 1 })).filter(g => g.ids.length) : [{ ids:r[d], color:COLORS[d % 5] }];
-  return `<div><h2>${esc(p.title)}</h2><p class="sub" style="margin-top:6px">${esc(p.sub)}</p>
+  return `<div class="dcol"><div class="dh"><div><h2>${esc(p.title)}</h2><p class="sub" style="margin-top:6px">${esc(p.sub)}</p>
     <p style="margin-top:8px"><span class="badge">예약 인증</span> <span class="xs sub">예약 내역과 함께 올라온 동선이라는 설정의 샘플 · ${p.who}</span></p></div>
-  <div class="tabs" role="tablist"><button role="tab" class="${all ? 'on' : ''}" data-a="day" data-v="-1">전체</button>${r.map((x, i) => `<button role="tab" class="${!all && i === d ? 'on' : ''}" data-a="day" data-v="${i}">${i + 1}일차</button>`).join('')}</div>
-  ${detailMap(p, r, groups, all ? -1 : d)}
-  <div class="maplinks">${all ? '' : (r[d].length ? `<a href="${gdir(r[d])}" target="_blank" rel="noopener">구글 지도에서 ${d + 1}일차 경로 열기</a>` : '')}${edited(p) ? `<button class="pill" data-a="reset">원래 동선으로</button>` : ''}<button class="pill" data-a="edit">지도 크게 보기</button></div>
-  ${MOVE_NOTE}${(all ? r.map((ids, k) => ({ ids, k })) : [{ ids:r[d], k:d }]).map(g => `<h3>${g.k + 1}일차 ${g.ids.length ? (g.ids.length > 1 ? `<span class="xs sub">· 이동 약 ${minT(dayMove(g.ids))}</span>` : '') : '· 귀국·자유 일정'}</h3><button class="lplus dplus" data-a="insat" data-v="${g.k}:0"><span>+</span>${g.ids.length ? '맨 앞에 추가' : '이 날 장소 추가'}</button>${g.ids.length ? `<div class="tl">${g.ids.map((id, i) => stopRow(id, g.k, i, g.ids, S.edit, r.length)).join('')}</div><button class="lplus dplus" data-a="insat" data-v="${g.k}:${g.ids.length}"><span>+</span>맨 뒤에 추가</button>` : ''}`).join('')}
-  `;
+  <div class="tabs" role="tablist"><button role="tab" class="${all ? 'on' : ''}" data-a="day" data-v="-1">전체</button>${r.map((x, i) => `<button role="tab" class="${!all && i === d ? 'on' : ''}" data-a="day" data-v="${i}">${i + 1}일차</button>`).join('')}</div></div>
+  <div class="dl">${MOVE_NOTE}${(all ? r.map((ids, k) => ({ ids, k })) : [{ ids:r[d], k:d }]).map(g => `<h3>${g.k + 1}일차 ${g.ids.length ? (g.ids.length > 1 ? `<span class="xs sub">· 이동 약 ${minT(dayMove(g.ids))}</span>` : '') : '· 귀국·자유 일정'}</h3><button class="lplus dplus" data-a="insat" data-v="${g.k}:0"><span>+</span>${g.ids.length ? '맨 앞에 추가' : '이 날 장소 추가'}</button>${g.ids.length ? `<div class="tl">${g.ids.map((id, i) => stopRow(id, g.k, i, g.ids, S.edit, r.length)).join('')}</div><button class="lplus dplus" data-a="insat" data-v="${g.k}:${g.ids.length}"><span>+</span>맨 뒤에 추가</button>` : ''}`).join('')}
+  </div></div>
+  <div class="dmapcol">${detailMap(p, r, groups, all ? -1 : d)}
+  <div class="maplinks">${all ? '' : (r[d].length ? `<a href="${gdir(r[d])}" target="_blank" rel="noopener">구글 지도에서 ${d + 1}일차 경로 열기</a>` : '')}${edited(p) ? `<button class="pill" data-a="reset">원래 동선으로</button>` : ''}<button class="pill" data-a="edit">지도 크게 보기</button></div></div>`;
 }
 
 function recList(p, r, d){
@@ -1053,7 +1092,7 @@ function syncOM(){
       m.on('click', () => A.sel(id)); m.addTo(OM.layer); });
     if (!OP.done[p.city]) fetchPop(p.city);
     if (OM.fitKey !== p.id){ OM.fitKey = p.id; const pts = cityPlaces(p.city).filter(id => !PL[id].o).map(id => [PL[id].la, PL[id].lo]);
-      const pan = document.querySelector('.epanel'); setTimeout(() => { OM.map.invalidateSize(); OM.map.fitBounds(pts, { paddingTopLeft:[30, 112], paddingBottomRight:[30, (pan ? pan.offsetHeight : 240) + 24] }); setTimeout(kickKo, 50); }, 0); }
+      const pan = document.querySelector('.epanel'); setTimeout(() => { OM.map.invalidateSize(); OM.map.fitBounds(pts, isWeb() ? { paddingTopLeft:[SIDE + 30, 112], paddingBottomRight:[30, 40] } : { paddingTopLeft:[30, 112], paddingBottomRight:[30, (pan ? pan.offsetHeight : 240) + 24] }); setTimeout(kickKo, 50); }, 0); }
   } catch (err) { OM.ok = false; OM.map = null; OM.el = null; setTimeout(render, 0); }
 }
 async function fetchPop(city, center, radius){
@@ -1102,7 +1141,7 @@ function baseLayer(map){
   map.on('baselayerchange', e => { try { localStorage.setItem('dongseon-basemap3', e.name); } catch (err) {} });
 }
 function sheetH(){ const b = document.querySelector('.bsheet'); return b ? b.offsetHeight : 0; }
-function fitJapan(animate){ if (!HM.map) return; HM.map.invalidateSize(); HM.map.fitBounds(JP_BOUNDS, { paddingTopLeft:[16, 110], paddingBottomRight:[16, sheetH() + 16], maxZoom:7, animate:!!animate }); setTimeout(kickKo, 50); }
+function fitJapan(animate){ if (!HM.map) return; HM.map.invalidateSize(); HM.map.fitBounds(JP_BOUNDS, isWeb() ? { paddingTopLeft:[SIDE + 16, 70], paddingBottomRight:[16, 16], maxZoom:7, animate:!!animate } : { paddingTopLeft:[16, 110], paddingBottomRight:[16, sheetH() + 16], maxZoom:7, animate:!!animate }); setTimeout(kickKo, 50); }
 function syncHome(){
   const slot = document.querySelector('.hslot'); if (!slot || !OM.ok) return;
   if (!HM.el){ HM.el = document.createElement('div'); HM.el.id = 'hmap'; }
@@ -1176,12 +1215,15 @@ document.addEventListener('wheel', e => { const el = e.target.closest('.pan'); i
 function zoomBtn(f){ const el = curPan(); if (!el) return; const v = viewOf(el); zoomAt(v, f, el.clientWidth / 2, el.clientHeight / 2); applyView(); }
 
 /* ---------- render & events ---------- */
+const isWeb = () => !!window.FORCE_WEB || (window.innerWidth || 0) >= 1024;
+const SIDE = 420;
 function render(){
+  try { document.documentElement.classList.toggle('web', isWeb()); } catch (e) {}
   document.body.classList.toggle('big', S.big);
   $('hd').innerHTML = header();
   const full = S.scr === 'home' || (S.scr === 'detail' && S.edit);
   $('ft').innerHTML = footer();
-  $('mn').className = full ? 'full' : '';
+  $('mn').className = full ? 'full' : S.scr === 'detail' ? 'dt' : '';
   $('mn').innerHTML = ({ home, detail, book, paid, trip, make, src })[S.scr]();
   $('ft').innerHTML = footer();
   $('sh').innerHTML = sheet() || pickSheet();
@@ -1196,7 +1238,7 @@ function render(){
 let progUntil = 0, scT = 0;
 function markSel(){ document.querySelectorAll('.epin').forEach(el => el.classList.toggle('sel', el.dataset.v === S.sel)); document.querySelectorAll('.pc').forEach(el => el.classList.toggle('on', el.dataset.v === S.sel)); }
 function centerOn(id){
-  if (OM.ok && OM.map && PL[id]){ const pan = document.querySelector('.epanel'), ph = pan ? pan.offsetHeight : 0; OM.map.panTo([PL[id].la, PL[id].lo], { animate:false }); OM.map.panBy([0, Math.round(ph / 2 - 50)], { animate:true }); return; }
+  if (OM.ok && OM.map && PL[id]){ const pan = document.querySelector('.epanel'), ph = pan ? pan.offsetHeight : 0; OM.map.panTo([PL[id].la, PL[id].lo], { animate:false }); OM.map.panBy(isWeb() ? [-SIDE / 2, 0] : [0, Math.round(ph / 2 - 50)], { animate:true }); return; }
   const el = curPan(), pin = el && el.querySelector(`.epin[data-v="${id}"]`); if (!pin) return;
   const v = viewOf(el), bx = +pin.dataset.bx, by = +pin.dataset.by, pan = document.querySelector('.epanel'), ph = pan ? pan.offsetHeight : 0, W = el.clientWidth, H = el.clientHeight, sx = v.x + bx * v.k, sy = v.y + by * v.k;
   if (sx > 40 && sx < W - 40 && sy > 110 && sy < H - ph - 30) return;
@@ -1211,7 +1253,7 @@ const A = {
   big:() => go({ big:!S.big }),
   hjp:() => fitJapan(true),
   city:v => { S.city = v; S.cityOpen = true; S.cs = 'peek'; render();
-    if (OM.ok && HM.map){ const c = CITY[v]; setTimeout(() => { HM.map.invalidateSize(); const z = 11, pt = HM.map.project([c.la, c.lo], z).add([0, sheetH() / 2 - 40]); HM.map.flyTo(HM.map.unproject(pt, z), z, { duration:.8 }); }, 0); return; }
+    if (OM.ok && HM.map){ const c = CITY[v]; setTimeout(() => { HM.map.invalidateSize(); const z = 11, pt = HM.map.project([c.la, c.lo], z).add(isWeb() ? [-SIDE / 2, 0] : [0, sheetH() / 2 - 40]); HM.map.flyTo(HM.map.unproject(pt, z), z, { duration:.8 }); }, 0); return; }
     const el = curPan(); if (el && HP){ const c = CITY[v], [bx, by] = HP(c.lo, c.la), vv = viewOf(el), k = Math.max(vv.k, v === '삿포로' ? 1.6 : 1.8), H = el.clientHeight;
       vv.k = k; vv.x = el.clientWidth / 2 - bx * k; vv.y = Math.max(120, (H - 274) / 2 + 40) - by * k; applyView(); } },
   zin:() => zoomBtn(1.5), zout:() => zoomBtn(1 / 1.5),
@@ -1300,7 +1342,7 @@ document.addEventListener('submit', async e => {
   R.busy = false; $('sh').innerHTML = sheet();
 });
 
-let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (S.scr === 'home' || S.edit) render(); }, 150); });
+let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (S.scr === 'home' || S.scr === 'detail') render(); }, 150); });
 render();
 
 (async () => {
