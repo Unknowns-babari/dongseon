@@ -312,6 +312,8 @@ main.full>*{animation:none}
 @media (prefers-reduced-motion:no-preference){main>*{animation:up .22s ease both}@keyframes up{from{opacity:0;transform:translateY(6px)}}}
 
 /* ===== 웹(넓은 화면) ===== */
+main.dt .dh>*,main.dt .dl>*,main.dt .dmapcol>*{flex-shrink:0}
+.blist>*{flex-shrink:0}
 .dcol,.dmapcol,.dh,.dl{display:contents}
 main.dt .dh>*{order:0}
 main.dt .dmapcol>*{order:1}
@@ -331,7 +333,7 @@ main.dt .dl>*{order:2}
 .web .foot .btn,.web .foot .btns{width:auto}
 .web .foot .btn{padding:0 32px}
 /* 홈: 왼쪽 목록 + 오른쪽 지도 */
-.web .stage .bsheet,.web .stage .bsheet.full{top:0;bottom:0;left:0;right:auto;width:420px;max-height:none;border-radius:0;box-shadow:4px 0 16px rgba(0,0,0,.08)}
+.web .stage .bsheet,.web .stage .bsheet.full{top:0;bottom:0;left:0;right:auto;width:420px;max-height:none;height:auto!important;border-radius:0;box-shadow:4px 0 16px rgba(0,0,0,.08)}
 .web .stage .bsheet .grab,.web .bhead .pill,.web .bhead .ib{display:none}
 .web .stage>.ovl.col{left:436px}
 .web .stage>.zoom{bottom:16px!important}
