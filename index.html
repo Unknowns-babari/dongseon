@@ -2099,6 +2099,9 @@ function svCSV(){
 }
 function svSaveFile(){
   const name = 'dongseon_survey_' + new Date().toISOString().slice(0, 10) + '.csv';
+  if (window.claude && window.claude.use){ (async () => { let dl = null; try { dl = await window.claude.use('downloads'); } catch (e) {}
+    if (!dl) return svNote('이 화면에서는 파일 저장이 막혀 있어요. 「표 복사」를 눌러 엑셀에 붙여넣어 주세요.');
+    try { await dl.save({ filename:name, data:svCSV() }); svNote('표 파일(CSV)을 저장했어요. 엑셀로 열 수 있어요.'); } catch (e) { svNote('저장을 취소했거나 저장하지 못했어요. 「표 복사」도 쓸 수 있어요.'); } })(); return; }
   try { const url = URL.createObjectURL(new Blob([svCSV()], { type:'text/csv;charset=utf-8' })), a = document.createElement('a');
     a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); svNote('엑셀에서 열 수 있는 표 파일(CSV)을 저장했어요.'); }
   catch (e) { svNote('이 화면에서는 파일 저장이 막혀 있어요. 「표 복사」를 눌러 엑셀에 붙여넣어 주세요.'); }
