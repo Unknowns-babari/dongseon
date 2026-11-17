@@ -142,6 +142,19 @@ a{color:var(--pri)}
 .fbk .tabs2{display:flex;gap:6px}
 .fbk .tabs2 button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;min-height:40px;padding:0 14px;font-weight:700}
 .fbk .tabs2 button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.srv .fkbox{max-width:440px}
+.web .srv .fkbox,.srv .fkbox{border-radius:20px}
+.srv{align-items:center;padding:16px;z-index:5100}
+.srv .q{font-size:1.15em;font-weight:800;margin:0;line-height:1.45}
+.srv .ages{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.srv .ages button,.srv .yn button{min-height:52px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-weight:700;font-size:1em}
+.srv .ages button:hover,.srv .yn button:hover{border-color:var(--pri)}
+.srv .yn{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.srv .yn button.yes{background:var(--pri);color:var(--priInk);border-color:var(--pri)}
+.svres{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.svbar{display:grid;grid-template-columns:44px 1fr 64px;gap:8px;align-items:center;font-size:.85em}
+.svbar i{display:block;height:10px;border-radius:5px;background:var(--pri)}
+.svbar span:nth-child(2){background:var(--soft);border-radius:5px;overflow:hidden}
 .msg{font-size:.85em;padding:10px 12px;border-radius:10px;background:var(--soft)}
 .jmap{position:relative;aspect-ratio:4/3;border-radius:18px;overflow:hidden;background:var(--sea);border:1px solid var(--line)}
 .jmap svg{position:absolute;inset:0;width:100%;height:100%}
@@ -472,6 +485,7 @@ main.dt .dl>*{order:2}
   <main id="mn"></main>
   <div id="ft"></div>
   <div id="sh"></div>
+  <div id="srv" class="fbk srv" hidden role="dialog" aria-modal="true" aria-labelledby="svq"></div>
   <div id="fbk" class="fbk" hidden role="dialog" aria-modal="true" aria-labelledby="fkt"></div>
 </div>
 <script>
@@ -1923,6 +1937,7 @@ document.addEventListener('submit', async e => {
     R.files.forEach(f => { try { URL.revokeObjectURL(f.url); } catch (e) {} }); R.files = []; R.text = ''; R.stars = 0; R.msg = '리뷰를 올렸어요. 고마워요!'; if (LOCAL && S.scr === 'detail' && S.edit) render(); }
   catch (err) { R.msg = err && err.code === 'invalid_argument' ? '리뷰를 쓸 권한이 없어요. 이 앱을 공유받을 때 참여자(Contributor) 이상 권한이 있어야 리뷰를 쓸 수 있어요.' : err && err.code === 'no_assets' ? '사진을 올릴 권한이 없어요. 사진을 빼고 다시 올려 주세요.' : err && err.code === 'quota_exceeded' ? '저장 공간이 가득 찼어요.' : '리뷰를 저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.'; }
   R.busy = false; $('sh').innerHTML = sheet();
+  if (R.msg === '리뷰를 올렸어요. 고마워요!') svAsk('review');
 });
 
 /* ---------- 피드백 게시판 (평가글 + 답글) ---------- */
@@ -1942,6 +1957,7 @@ function fkStore(){
     FK.store = { local:false, add:d => c.add(d),
       listen:f => c.limit(1000).onSnapshot(snap => f(snap.docs.map(x => x.data())), () => { FK.state = 'off'; fkList(); }) };
   }
+  svStore();
   FK.store.listen(arr => { FK.list = arr.filter(v => v && typeof v.text === 'string' && v.id); FK.state = 'ok'; fkList(); });
   return FK.store;
 }
@@ -1952,12 +1968,12 @@ function fkListHTML(){
   if (FK.state === 'off') return '<p class="msg">지금은 의견을 불러올 수 없어요. 잠시 뒤 다시 열어 주세요.</p>';
   const posts = FK.list.filter(v => v.kind === 'post'), reps = FK.list.filter(v => v.kind === 'reply');
   const loc = FK.store && FK.store.local ? '<p class="xs sub">이 버전에서는 의견이 지금 쓰는 브라우저에만 저장돼요.</p>' : '';
-  if (!posts.length) return loc + '<p class="sub">아직 올라온 의견이 없어요. 첫 평가를 남겨 주세요.</p>';
+  if (!posts.length) return loc + svResHTML() + '<p class="sub">아직 올라온 의견이 없어요. 첫 평가를 남겨 주세요.</p>';
   const rated = posts.filter(p => +p.stars > 0), avg = rated.length ? rated.reduce((a, p) => a + +p.stars, 0) / rated.length : 0;
   const by = {}; reps.forEach(r => (by[r.parent] = by[r.parent] || []).push(r));
   Object.values(by).forEach(a => a.sort((x, y) => (x.at || 0) - (y.at || 0)));
   const list = posts.slice().sort(FK.sort === 'top' ? (x, y) => (by[y.id] || []).length - (by[x.id] || []).length || (y.at || 0) - (x.at || 0) : (x, y) => (y.at || 0) - (x.at || 0));
-  return loc + `<div class="meta" style="justify-content:space-between"><span>${rated.length ? `<b>평균 ${avg.toFixed(1)}점</b> ` : ''}<span class="sub">· 의견 ${posts.length}개 · 답글 ${reps.length}개</span></span>
+  return loc + svResHTML() + `<div class="meta" style="justify-content:space-between"><span>${rated.length ? `<b>평균 ${avg.toFixed(1)}점</b> ` : ''}<span class="sub">· 의견 ${posts.length}개 · 답글 ${reps.length}개</span></span>
     <span class="tabs2"><button class="${FK.sort === 'new' ? 'on' : ''}" data-fk="sort" data-v="new">최신순</button><button class="${FK.sort === 'top' ? 'on' : ''}" data-fk="sort" data-v="top">답글 많은 순</button></span></div>`
     + list.map(p => { const rs = by[p.id] || [], st = +p.stars || 0;
       return `<article class="post"><div class="meta">${st ? `<span class="s" aria-label="별점 ${st}점">${fkStars(st)}</span>` : ''}<b>${esc(p.name || '익명')}</b><span class="xs sub">${fkDate(p.at)}</span></div>
@@ -2004,9 +2020,59 @@ $('fbk').addEventListener('submit', async e => {
   if (!post && text.length < 2) return say('답글을 두 글자 이상 적어 주세요.');
   FK.busy = true; say('');
   try { await st.add({ id:fkId(), kind:post ? 'post' : 'reply', parent:post ? '' : FK.rep, name, stars:post ? FK.stars : 0, text:(text || '(별점만 남김)').slice(0, 500), at:Date.now() });
-    FK.busy = false; if (post){ FK.text = ''; FK.stars = 0; say('의견을 올렸어요. 고마워요!'); } else { FK.rtext = ''; FK.rep = null; FK.rmsg = ''; FK.pend = false; $('fklist').innerHTML = fkListHTML(); } }
+    FK.busy = false; if (post){ FK.text = ''; FK.stars = 0; say('의견을 올렸어요. 고마워요!'); svAsk('feedback'); } else { FK.rtext = ''; FK.rep = null; FK.rmsg = ''; FK.pend = false; $('fklist').innerHTML = fkListHTML(); } }
   catch (err) { FK.busy = false; say(err && err.code === 'quota_exceeded' ? '브라우저 저장 공간이 부족해요.' : '올리지 못했어요. 잠시 뒤 다시 시도해 주세요.'); }
 });
+
+/* ---------- 출시 의향 설문 (리뷰·피드백을 올린 뒤 한 번) ---------- */
+const AGES = ['10대', '20대', '30대', '40대', '50대', '60대', '70대'];
+const SV = { step:0, from:'', list:[], store:null, done:(() => { try { return localStorage.getItem('dongseon-survey-v1') === '1'; } catch (e) { return false; } })() };
+function svStore(){
+  if (SV.store) return SV.store;
+  if (!DB && !LOCAL && !(FK.store && FK.store.local)) return null;
+  if (LOCAL || !DB){
+    let all = []; try { all = JSON.parse(localStorage.getItem('dongseon-local-survey') || '[]'); } catch (e) { all = []; }
+    SV.store = { add:async d => { all.push(d); try { localStorage.setItem('dongseon-local-survey', JSON.stringify(all)); } catch (e) { all.pop(); } SV.list = all.slice(); fkList(); } };
+    SV.list = all.slice();
+  } else {
+    const c = DB.collection('survey');
+    SV.store = { add:d => c.add(d) };
+    try { c.limit(2000).onSnapshot(snap => { SV.list = snap.docs.map(x => x.data()).filter(v => v && (v.use === 'yes' || v.use === 'no')); fkList(); }, () => {}); } catch (e) {}
+  }
+  return SV.store;
+}
+function svAsk(from){ if (SV.done) return; SV.from = from; SV.step = 1; setTimeout(svRender, 600); }
+function svRender(){
+  const el = $('srv');
+  if (!SV.step){ el.hidden = true; el.innerHTML = ''; return; }
+  el.hidden = false;
+  const body = SV.step === 1 ? `<p class="q" id="svq">만약 이 기능이 출시된다면<br>사용하시겠습니까?</p>
+      <div class="yn"><button class="yes" data-sv="yes">예</button><button data-sv="no">아니오</button></div>`
+    : SV.step === 2 ? `<p class="q" id="svq">연령대를 골라 주세요</p><div class="ages" role="group" aria-label="연령대">${AGES.map(a => `<button data-sv="age" data-v="${a}">${a}</button>`).join('')}</div>`
+    : `<p class="q" id="svq">응답해 주셔서 고마워요!</p><p class="sub" style="margin:0">남겨 주신 의견은 동선팩을 다듬는 데 쓸게요.</p><button class="btn" data-sv="close">닫기</button>`;
+  el.innerHTML = `<div class="fkbox"><div class="bh"><h2 style="font-size:1em" class="sub">잠깐 설문 한 가지</h2><button class="ib" data-sv="close" aria-label="설문 닫기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="bb">${body}</div></div>`;
+  setTimeout(() => { const b = el.querySelector('.yn button, .ages button, .btn'); b && b.focus(); }, 0);
+}
+async function svSave(use, age){
+  SV.done = true; try { localStorage.setItem('dongseon-survey-v1', '1'); } catch (e) {}
+  const st = svStore(); if (!st) return;
+  try { await st.add({ use, age:age || '', from:SV.from === 'feedback' ? 'feedback' : 'review', at:Date.now() }); } catch (e) {}
+}
+$('srv').addEventListener('click', e => {
+  const b = e.target.closest('[data-sv]'); if (!b) return; const k = b.dataset.sv;
+  if (k === 'yes'){ SV.step = 2; svRender(); }
+  else if (k === 'no'){ svSave('no', ''); SV.step = 3; svRender(); }
+  else if (k === 'age'){ svSave('yes', b.dataset.v); SV.step = 3; svRender(); }
+  else if (k === 'close'){ if (SV.step === 1 || SV.step === 2) SV.done = true; SV.step = 0; svRender(); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && SV.step){ e.stopImmediatePropagation(); SV.done = true; SV.step = 0; svRender(); } }, true);
+function svResHTML(){
+  const l = SV.list; if (!l.length) return '';
+  const yes = l.filter(v => v.use === 'yes'), pct = n => Math.round(n / l.length * 100);
+  const bar = (lab, n, tot) => `<div class="svbar"><b>${lab}</b><span><i style="width:${tot ? Math.round(n / tot * 100) : 0}%"></i></span><span class="sub">${n}명 · ${tot ? Math.round(n / tot * 100) : 0}%</span></div>`;
+  return `<div class="svres"><b>출시되면 쓰겠다는 응답</b><p style="margin:0"><b style="font-size:1.4em;color:var(--pri)">${pct(yes.length)}%</b> <span class="sub">· 응답 ${l.length}명 중 ${yes.length}명</span></p>
+    ${yes.length ? '<p class="xs sub" style="margin:4px 0 0">"예"라고 답한 사람의 연령대</p>' + AGES.map(a => bar(a, yes.filter(v => v.age === a).length, yes.length)).join('') : ''}</div>`;
+}
 
 let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (S.scr === 'home' || S.scr === 'detail') render(); }, 150); });
 render();
