@@ -311,6 +311,15 @@ main.full>*{animation:none}
 .linkbtn{align-self:flex-start;border:0;background:none;color:var(--pri);font-weight:700;font-size:.85em;min-height:40px;padding:0}
 @media (prefers-reduced-motion:no-preference){main>*{animation:up .22s ease both}@keyframes up{from{opacity:0;transform:translateY(6px)}}}
 
+/* 지도에서 골라 넣기 */
+.pickban{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#1d4ed8;color:#fff;border-radius:14px;padding:8px 8px 8px 12px;font-size:.88em;scroll-margin-top:8px}
+.pickban .mini{background:#fff;color:#1d4ed8;border-color:#fff}
+.pickban .pbi{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.2)}
+.epick{position:absolute;left:10px;right:10px;top:112px;z-index:7}
+.picking .epin.rec b,.picking .epin.gp.rec b{animation:pk 1.2s ease-in-out infinite;box-shadow:0 0 0 4px rgba(29,78,216,.28)}
+@keyframes pk{50%{transform:scale(1.15)}}
+@media (prefers-reduced-motion:reduce){.picking .epin.rec b{animation:none}}
+.web .stage.edit .epick{left:436px;right:auto;top:auto;bottom:64px;max-width:600px}
 /* ===== 웹(넓은 화면) ===== */
 main.dt .dh>*,main.dt .dl>*,main.dt .dmapcol>*{flex-shrink:0}
 .blist>*{flex-shrink:0}
@@ -519,7 +528,7 @@ const cityPlaces = c => Object.keys(PL).filter(id => PL[id].c === c);
 
 const SAVE_KEY = 'dongseon-routes-v3';
 let saved = {}; try { saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}') || {}; } catch (e) { saved = {}; }
-const S = { scr:'home', cityOpen:false, cs:'peek', sel:null, city:'도쿄', rf:'전체', pid:'tk1', day:0, edit:false, routes:saved, up:false, off:{}, place:null, mf:'전체', pl:'', chg:false, rprev:false, rep:null, ins:null, dsel:null, filter:'전체', big:false, alt:null, loaded:false, made:false, shared:false };
+const S = { scr:'home', cityOpen:false, cs:'peek', sel:null, city:'도쿄', rf:'전체', pid:'tk1', day:0, edit:false, routes:saved, up:false, off:{}, place:null, mf:'전체', pl:'', chg:false, rprev:false, rep:null, ins:null, dsel:null, pickList:false, toMap:false, filter:'전체', big:false, alt:null, loaded:false, made:false, shared:false };
 const R = { name:'', text:'', stars:0, msg:'', busy:false, files:[] };
 const $ = id => document.getElementById(id);
 const pack = () => PACKS.find(p => p.id === S.pid);
@@ -765,7 +774,7 @@ function detailMap(p, r, groups, d){
     let grid = ''; for (let i = 1; i < 8; i++) grid += `<line x1="${i * 50}" y1="0" x2="${i * 50}" y2="${H}" stroke="var(--grid)"/>`; for (let i = 1; i < 7; i++) grid += `<line x1="0" y1="${i * 50}" x2="${W}" y2="${i * 50}" stroke="var(--grid)"/>`;
     map = `<div class="map dmap"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${grid}${lines}</svg>${pins}</div>`;
   }
-  return legend + map + (S.dsel && PL[S.dsel] ? dselCard(S.dsel, r, d, where) : '');
+  return pickBanner(r) + legend + (S.ins || S.rep ? map.replace('class="map dmap', 'class="map dmap picking') : map) + (S.dsel && PL[S.dsel] && !(S.ins || S.rep) ? dselCard(S.dsel, r, d, where) : '');
 }
 function dselCard(id, r, d, where){
   const x = PL[id], w = where[id], dd = d < 0 ? (w ? w[0] : 0) : d;
@@ -808,7 +817,7 @@ function editStage(){
   const kmPer = 80 / P.s * 111.32, nice = [0.1,0.2,0.5,1,2,5,10,20].find(v => v >= kmPer * 0.6) || 20;
   const sel = S.sel && PL[S.sel] ? S.sel : null, mode = S.pl === 'list' ? 'list' : sel ? 'card' : 'day';
   const ph = mode === 'list' ? H - 116 : mode === 'card' ? Math.min(Math.max(Math.round(H * 0.5), 330), 370) : bottom;
-  return `<div class="stage edit">
+  return `<div class="stage edit ${S.ins || S.rep ? 'picking' : ''}">
     ${OM.ok ? '<div class="gslot"></div>' : `<div class="pan" data-key="edit:${p.id}"><svg aria-hidden="true"><g class="world">${grid}${rails}${lines}${arrows}${prevLine}</g></svg>${stas}${pins}</div>
     <div class="zoom" style="bottom:${ph + 40}px"><button data-a="zin" aria-label="확대">+</button><button data-a="zout" aria-label="축소">−</button><button data-a="zreset" aria-label="처음 위치로">⟲</button></div>`}
     <div class="ovl"><div class="sline" role="list" aria-label="전체 일정">${sline(r, d)}</div>
@@ -816,7 +825,7 @@ function editStage(){
     <div class="ovl f2">${['전체', '관광', '맛집'].map(c => `<button class="chip ${mf === c ? 'on' : ''}" data-a="mf" data-v="${c}">${c === '전체' ? '전체' : ico(c, 14) + ' ' + c}</button>`).join('')}${OM.ok ? `<button class="chip ${S.op !== false ? 'on' : ''}" data-a="optog">지도 인기 장소</button><button class="chip" data-a="opop" ${OP.busy ? 'disabled' : ''}>${OP.busy ? '찾는 중…' : '이 지역 다시 찾기'}</button>` : ''}</div>
     ${OM.ok && OP.msg ? `<p class="gerr">${esc(OP.msg)}</p>` : ''}
     <div class="legend ${OM.ok ? 'gm' : ''}" style="bottom:${ph + 8}px"><span><i class="lg n"></i>내 동선</span>${S.rprev ? '<span><i class="lg p"></i>추천 경로</span>' : ''}<button class="lgb ${mf === '관광' ? 'on' : ''}" data-a="mf" data-v="${mf === '관광' ? '전체' : '관광'}" aria-pressed="${mf === '관광'}"><i class="lg t"></i>관광만</button><button class="lgb ${mf === '맛집' ? 'on' : ''}" data-a="mf" data-v="${mf === '맛집' ? '전체' : '맛집'}" aria-pressed="${mf === '맛집'}"><i class="lg f"></i>맛집만</button>${OM.ok ? `<button class="lgb ${S.op !== false ? 'on' : ''}" data-a="optog" aria-pressed="${S.op !== false}"><i class="lg o"></i>지도 인기 장소</button>` : `<span><i class="lg r"></i>역·노선(대략)</span><span id="scl" data-s="${P.s}">${nice < 1 ? nice * 1000 + 'm' : nice + 'km'} <i class="sc" style="width:${(nice / 111.32 * P.s).toFixed(0)}px"></i></span>`}</div>
-    <div class="epanel ${mode}" style="${mode === 'card' ? `max-height:${Math.round(H * 0.66)}px` : `height:${ph}px`}">${mode === 'day' ? dayList(p, r, d) : nearPanel(p, r, d, sel, mode, where)}</div>
+    ${S.ins || S.rep ? `<div class="epick">${pickBanner(r)}</div>` : ''}<div class="epanel ${mode}" style="${mode === 'card' ? `max-height:${Math.round(H * 0.66)}px` : `height:${ph}px`}">${mode === 'day' ? dayList(p, r, d) : nearPanel(p, r, d, sel, mode, where)}</div>
   </div>`;
 }
 function placeActs(id, r, d, where){
@@ -1033,8 +1042,20 @@ function sheet(){
    </main></div>`;
 }
 
+function pickPlace(v){
+  if (S.rep){ if (v === S.rep) return; S.pickList = false; replaceStop(S.rep, v); if (!S.edit) S.dsel = v; return; }
+  if (S.ins){ S.pickList = false; A.insdo(v); if (!S.edit){ S.dsel = v; render(); } }
+}
+function pickWhere(r){
+  if (S.ins){ const ids = r[S.ins.d] || [], pos = S.ins.pos; return `${S.ins.d + 1}일차 ${!ids.length ? '' : pos === 0 ? '맨 앞' : pos >= ids.length ? '맨 뒤' : esc(PL[ids[pos - 1]].k) + '와 ' + esc(PL[ids[pos]].k) + ' 사이'}에 넣을 곳`; }
+  return S.rep && PL[S.rep] ? `${esc(PL[S.rep].k)} 대신 넣을 곳` : '';
+}
+function pickBanner(r){
+  if (!(S.ins || S.rep)) return '';
+  return `<div class="pickban" role="status"><span class="pbi">${ico('관광', 16)}</span><span class="grow"><b>${pickWhere(r)}</b>을 지도에서 눌러 주세요</span><button class="mini" data-a="picklist">목록에서 고르기</button><button class="mini" data-a="repcancel">취소</button></div>`;
+}
 function pickSheet(){
-  if (S.edit || S.scr !== 'detail' || !(S.ins || S.rep)) return '';
+  if (S.edit || S.scr !== 'detail' || !(S.ins || S.rep) || !S.pickList) return '';
   const p = pack(), r = route(p), where = {}; r.forEach((ids, k) => ids.forEach((id, i) => where[id] = [k, i]));
   const d = S.ins ? S.ins.d : (where[S.rep] || [0])[0];
   return `<div class="sheet pick" role="dialog" aria-modal="true" aria-label="넣을 장소 고르기"><div class="pickbody epanel list">${nearPanel(p, r, d, S.rep || null, 'list', where)}</div></div>`;
@@ -1234,6 +1255,7 @@ function render(){
   if (S.scr === 'detail' && S.edit) syncOM();
   if (S.scr === 'home') syncHome();
   if (S.scr === 'detail' && !S.edit) syncDM();
+  if (S.toMap){ S.toMap = false; const m = document.querySelector('.pickban'); if (m && m.scrollIntoView) try { m.scrollIntoView({ block:'start', behavior:'smooth' }); } catch (e) {} }
   { const pn = document.querySelector('.epanel.card'); if (pn){ const h = pn.offsetHeight; document.querySelectorAll('.legend').forEach(l => l.style.bottom = (h + 8) + 'px'); const z = document.querySelector('.stage.edit .zoom'); if (z) z.style.bottom = (h + 40) + 'px'; } }
   { const sl = document.querySelector('.sline'), on = sl && (sl.querySelector('.sst.on') || sl.querySelector('.sday.on')); if (on) sl.scrollLeft = Math.max(0, on.offsetLeft - (sl.clientWidth - on.offsetWidth) / 2); }
   if (S.scr === 'detail' && S.edit && S.sel){ centerOn(S.sel); const car = document.querySelector('.pcar'), on = car && car.querySelector('.pc.on'); if (on){ progUntil = Date.now() + 400; car.scrollLeft = on.offsetLeft - (car.clientWidth - on.offsetWidth) / 2; } }
@@ -1263,7 +1285,7 @@ const A = {
   zreset:() => { const el = curPan(); if (el){ VIEW[el.dataset.key] = { k:1, x:0, y:0 }; applyView(); } },
   cs:() => { S.cs = S.cs === 'full' ? 'peek' : 'full'; render(); },
   cclose:() => { S.cityOpen = false; render(); if (OM.ok && HM.map) setTimeout(() => fitJapan(true), 0); },
-  sel:v => { S.sel = v || null; render(); },
+  sel:v => { if (v && (S.ins || S.rep)) return pickPlace(v); S.sel = v || null; render(); },
   reorder:v => { const d = +v, r = route(pack()).map(x => x.slice()); r[d] = bestOrder(r[d]); setRoute(r); S.rprev = false; S.chg = false; render(); },
   rprev:v => { S.rprev = S.rprev === v ? '' : v; render(); },
   ropt:v => { const [d, key] = v.split(':'), r = route(pack()).map(x => x.slice()), o = routeOpts(pack(), r, +d).find(x => x.key === key); if (!o) return; r[+d] = o.seq.slice(); setRoute(r); S.rprev = ''; S.chg = false; render(); },
@@ -1276,14 +1298,15 @@ const A = {
     else return;
     setRoute(r); S.sel = id; S.chg = true; S.rprev = false; render(); },
   addto:v => { A.insat(v + ':' + route(pack())[+v].length); },
-  repstart:v => { S.ins = null; S.rep = v; S.sel = v; S.pl = 'list'; render(); },
-  insat:v => { const [d, pos] = v.split(':').map(Number); S.rep = null; S.ins = { d, pos }; if (S.edit) S.day = d; S.sel = null; S.pl = 'list'; render(); },
+  repstart:v => { S.ins = null; S.rep = v; S.sel = null; S.dsel = null; S.pl = ''; S.pickList = false; S.toMap = true; render(); },
+  insat:v => { const [d, pos] = v.split(':').map(Number); S.rep = null; S.ins = { d, pos }; if (S.edit) S.day = d; S.sel = null; S.dsel = null; S.pl = ''; S.pickList = false; S.toMap = true; render(); },
   insdo:v => { if (!S.ins) return; const r = route(pack()).map(x => x.slice()); let { d, pos } = S.ins;
     r.forEach((ids, k) => { const j = ids.indexOf(v); if (j >= 0){ ids.splice(j, 1); if (k === d && j < pos) pos--; } });
     r[d].splice(Math.min(pos, r[d].length), 0, v); setRoute(r); S.ins = null; S.pl = ''; S.sel = null; if (S.edit) S.day = d; S.chg = true; S.rprev = ''; render(); },
-  repcancel:() => { S.rep = null; S.ins = null; S.pl = ''; S.sel = null; render(); },
+  repcancel:() => { S.rep = null; S.ins = null; S.pl = ''; S.sel = null; S.pickList = false; render(); },
+  picklist:() => { if (S.edit) S.pl = 'list'; else S.pickList = true; render(); },
   repdo:v => { replaceStop(S.rep, v); },
-  dsel:v => { S.dsel = v || null; render(); },
+  dsel:v => { if (v && (S.ins || S.rep)) return pickPlace(v); S.dsel = v || null; render(); },
   dadd:v => { const cut = v.lastIndexOf(':'), id = v.slice(0, cut), d = v.slice(cut + 1), r = route(pack()).map(x => x.slice()); r.forEach(ids => { const j = ids.indexOf(id); if (j >= 0) ids.splice(j, 1); }); r[+d].push(id); setRoute(r); S.dsel = id; S.chg = true; render(); },
   optog:() => { S.op = S.op === false ? true : false; render(); },
   opop:() => { if (!OM.map) return; const c = OM.map.getCenter(), ne = OM.map.getBounds().getNorthEast(); fetchPop(pack().city, { lat:c.lat, lng:c.lng }, km({ la:c.lat, lo:c.lng }, { la:ne.lat, lo:ne.lng }) * 800); render(); },
