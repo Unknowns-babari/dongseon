@@ -2376,7 +2376,7 @@ const A = {
   dateopenp:v => { S.dateOpen = 0; A.open(v); },
   datefix:v => { const p = pack(), r = route(p), o = v.split(',').map(Number); if (o.length !== r.length) return; setRoute(o.map(i => r[i].slice())); render(); },
   gohome:() => { Object.assign(S, { edit:false, place:null, tpick:0, ageOpen:0, onb:0, ins:null, rep:null, sel:null, dsel:null, cityOpen:false, cs:'peek' }); go({ scr:'home' }); if (typeof fitJapan === 'function') setTimeout(() => fitJapan(true), 0); },
-  fbk:() => fkOpen(),
+  fbk:() => { if (SV.done) return fkOpen(); SV.from = 'feedback'; SV.next = 'fbk'; SV.step = 1; svRender(); },
   hjp:() => fitJapan(true),
   city:v => { if (S.city !== v) S.tf = '전체'; S.city = v; S.cityOpen = true; S.cs = 'peek'; render();
     if (OM.ok && HM.map){ const c = CITY[v]; setTimeout(() => { HM.map.invalidateSize(); const z = 11, pt = HM.map.project([c.la, c.lo], z).add(isWeb() ? [-SIDE / 2, 0] : [0, sheetH() / 2 - 40]); HM.map.flyTo(HM.map.unproject(pt, z), z, { duration:.8 }); }, 0); return; }
@@ -2612,7 +2612,7 @@ $('fbk').addEventListener('submit', async e => {
   if (!post && text.length < 2) return say('답글을 두 글자 이상 적어 주세요.');
   FK.busy = true; say('');
   try { await st.add({ id:fkId(), kind:post ? 'post' : 'reply', parent:post ? '' : FK.rep, name, stars:post ? FK.stars : 0, text:(text || '(별점만 남김)').slice(0, 500), at:Date.now() });
-    FK.busy = false; if (post){ FK.text = ''; FK.stars = 0; say('의견을 올렸어요. 고마워요!'); svAsk('feedback'); } else { FK.rtext = ''; FK.rep = null; FK.rmsg = ''; FK.pend = false; $('fklist').innerHTML = fkListHTML(); } }
+    FK.busy = false; if (post){ FK.text = ''; FK.stars = 0; say('의견을 올렸어요. 고마워요!'); } else { FK.rtext = ''; FK.rep = null; FK.rmsg = ''; FK.pend = false; $('fklist').innerHTML = fkListHTML(); } }
   catch (err) { FK.busy = false; say(err && err.code === 'quota_exceeded' ? '브라우저 저장 공간이 부족해요.' : '올리지 못했어요. 잠시 뒤 다시 시도해 주세요.'); }
 });
 
@@ -2641,23 +2641,23 @@ function svRender(){
   const body = SV.step === 1 ? `<p class="q" id="svq">만약 이 기능이 출시된다면<br>사용하시겠습니까?</p>
       <div class="yn"><button class="yes" data-sv="yes">예</button><button data-sv="no">아니오</button></div>`
     : SV.step === 2 ? `<p class="q" id="svq">연령대를 골라 주세요</p><div class="ages" role="group" aria-label="연령대">${AGES.map(a => `<button data-sv="age" data-v="${a}">${a}</button>`).join('')}</div>`
-    : `<p class="q" id="svq">응답해 주셔서 고마워요!</p><p class="sub" style="margin:0">남겨 주신 의견은 동선팩을 다듬는 데 쓸게요.</p><button class="btn" data-sv="close">닫기</button>`;
+    : `<p class="q" id="svq">응답해 주셔서 고마워요!</p><p class="sub" style="margin:0">${SV.next === 'fbk' ? '이제 써 보신 느낌을 후기로 남겨 주세요.' : '남겨 주신 응답은 과제 보고서에 쓰여요.'}</p><button class="btn" data-sv="close">${SV.next === 'fbk' ? '후기 쓰러 가기' : '닫기'}</button>`;
   el.innerHTML = `<div class="fkbox"><div class="bh"><h2 style="font-size:1em" class="sub">잠깐 설문 한 가지</h2><button class="ib" data-sv="close" aria-label="설문 닫기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="bb">${body}</div></div>`;
   setTimeout(() => { const b = el.querySelector('.yn button, .ages button, .btn'); b && b.focus(); }, 0);
 }
 async function svSave(use, age){
   SV.done = true; try { localStorage.setItem('dongseon-survey-v1', '1'); } catch (e) {}
   const st = svStore(); if (!st) return;
-  try { await st.add({ use, age:age || '', from:['feedback', 'browse'].includes(SV.from) ? SV.from : 'review', at:Date.now() }); } catch (e) {}
+  try { await st.add({ use, age:age || '', from:SV.from === 'feedback' ? 'feedback' : 'review', at:Date.now() }); } catch (e) {}
 }
 $('srv').addEventListener('click', e => {
   const b = e.target.closest('[data-sv]'); if (!b) return; const k = b.dataset.sv;
   if (k === 'yes'){ SV.step = 2; svRender(); }
   else if (k === 'no'){ svSave('no', ''); SV.step = 3; svRender(); }
   else if (k === 'age'){ svSave('yes', b.dataset.v); SV.step = 3; svRender(); }
-  else if (k === 'close'){ if (SV.step === 1 || SV.step === 2) SV.done = true; SV.step = 0; svRender(); }
+  else if (k === 'close'){ if (SV.step === 1 || SV.step === 2) SV.done = true; SV.step = 0; svRender(); if (SV.next === 'fbk'){ SV.next = ''; fkOpen(); } }
 });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && SV.step){ e.stopImmediatePropagation(); SV.done = true; SV.step = 0; svRender(); } }, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && SV.step){ e.stopImmediatePropagation(); SV.done = true; SV.step = 0; svRender(); if (SV.next === 'fbk'){ SV.next = ''; fkOpen(); } } }, true);
 function svResHTML(){
   if (!SV.open) return svLockHTML();
   const l = SV.list; if (!l.length) return '<div class="svres"><span style="display:flex;justify-content:space-between;align-items:center"><b>출시 의향 설문 결과</b><button class="lnk" data-fk="svlockup">🔒 다시 잠그기</button></span><p class="sub" style="margin:0">아직 응답이 없어요. 장소 리뷰나 피드백을 올리면 설문 창이 떠요.</p></div>';
@@ -2726,17 +2726,6 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.tpick &&
   el.addEventListener('click', e => { if (e.target.closest('[data-ntc]')) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !el.hidden){ e.stopImmediatePropagation(); close(); } }, true);
   setTimeout(() => { const b = el.querySelector('[data-ntc]'); b && b.focus(); }, 50);
-})();
-
-/* 리뷰를 안 남겨도: 1분 넘게 둘러보고 몇 번 눌러 본 사람에게 한 번 묻기 */
-(function(){
-  const t0 = Date.now(); let taps = 0;
-  document.addEventListener('click', () => { taps++; }, true);
-  const iv = setInterval(() => {
-    if (SV.done){ clearInterval(iv); return; }
-    const busy = SV.step || FK.open || S.place || S.onb || S.ageOpen || S.dateOpen || S.rv || S.tpick || !$('ntc').hidden || document.visibilityState !== 'visible';
-    if (!busy && Date.now() - t0 >= 60000 && taps >= 5){ clearInterval(iv); svAsk('browse'); }
-  }, 5000);
 })();
 
 let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (S.scr === 'home' || S.scr === 'detail') render(); }, 150); });
