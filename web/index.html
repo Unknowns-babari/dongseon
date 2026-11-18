@@ -393,6 +393,15 @@ main.full>*{animation:none}
 .ntc .fkbox{max-width:440px;border-radius:20px}
 .ntc .bb p{margin:0;line-height:1.55}
 .ntc ul{margin:0;padding-left:18px;line-height:1.6;font-size:.92em}
+.combo{display:flex;flex-direction:column;gap:8px}
+.cb{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg);display:flex;flex-direction:column;gap:3px}
+.cb .row{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.cb .pr{font-weight:800;color:var(--pri);white-space:nowrap}
+.cb .it{font-size:.9em}
+.dish{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.dish li{font-size:.88em;line-height:1.45}
+.dish b{display:inline-block;margin-right:4px}
+.hot{display:inline-block;font-size:.68em;font-weight:800;padding:1px 6px;border-radius:8px;background:#fee2e2;color:#991b1b;margin-left:4px;vertical-align:middle}
 .likebar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 16px 8px;padding:10px 14px;border-radius:12px;border:1px dashed var(--pri);background:transparent;color:var(--pri);font-weight:700;text-align:left;min-height:44px;flex-shrink:0}
 .likebar.set{border-style:solid;background:rgba(31,79,191,.07)}
 .likebar .lb2{font-size:.8em;font-weight:600;white-space:nowrap}
@@ -1884,6 +1893,87 @@ function menuBox(id, compact, bare){
   return `<div class="${bare ? '' : 'mbox'}">${bare ? '' : `<h4>${menuTitle(id)}</h4>`}${menuList(id, compact ? 4 : 0)}${more ? `<button class="linkbtn" data-a="place" data-v="${id}">${m.i.length - 4}개 더 보기 ›</button>` : ''}
    ${m.b ? `<p class="xs sub" style="margin:4px 0 0">${esc(m.b)}</p>` : ''}<p class="xs sub" style="margin:2px 0 0">가격 출처: <a href="${m.s[1]}" target="_blank" rel="noopener">${esc(m.s[0])}</a> · 조사 시점과 다를 수 있어요</p></div>`;
 }
+
+/* ---------- 맛집: 메뉴 설명 · 메뉴판으로 짜 본 추천 조합 · 가게 세트 ---------- */
+/* 일반적인 요리 설명(가게 고유 정보 아님) */
+const DISH = [
+ [/가에다마|면 추가/, '가에다마', '국물을 남겨 두고 면만 한 덩이 더 시키는 것. 하카타 라멘집에서 흔해요.'],
+ [/돈코츠/, '돈코츠 라멘', '돼지뼈를 오래 끓여 낸 뽀얀 국물 라멘. 면 익힘 정도를 고를 수 있는 가게가 많아요.'],
+ [/미소니코미/, '미소니코미 우동', '나고야식 우동. 붉은 된장 국물에 굵고 단단한 면을 뚝배기째 끓여 내요.'],
+ [/미소카츠|미소카쓰/, '미소카츠', '돈카츠에 달짝지근한 붉은 된장 소스를 끼얹은 나고야 명물.'],
+ [/히쓰마부시/, '히쓰마부시', '장어덮밥을 네 등분해 그대로, 양념 더해, 오차즈케로 바꿔 가며 먹는 나고야식.'],
+ [/데바사키/, '데바사키', '닭 날개 튀김에 달고 짭짤한 양념과 후추를 입힌 나고야 술안주.'],
+ [/쿠시카츠|쿠시카쓰/, '쿠시카츠', '고기·채소 꼬치를 튀긴 오사카 음식. 공용 소스는 한 번만 찍어요.'],
+ [/도테/, '도테야키·도테니', '소 힘줄을 된장으로 달게 졸인 것. 쿠시카츠·이자카야 곁들이로 많이 먹어요.'],
+ [/오코노미야키|부타타마|니쿠타마|스페셜/, '오코노미야키', '밀가루 반죽에 양배추·고기 등을 넣어 철판에 굽는 음식. 히로시마식은 면을 겹겹이 넣어요.'],
+ [/네기야키/, '네기야키', '양배추 대신 파를 듬뿍 넣어 구운 오사카식 철판 요리.'],
+ [/타코야키|아카시야키/, '타코야키·아카시야키', '문어를 넣은 반죽 구이. 아카시야키는 달걀이 많아 폭신하고 국물에 찍어 먹어요.'],
+ [/야키토리/, '야키토리', '닭꼬치구이. 소금(시오)과 양념(타레) 중에 고를 수 있어요.'],
+ [/모쓰니코미/, '모쓰니코미', '곱창을 된장·간장 국물에 오래 조린 이자카야 안주.'],
+ [/모쓰나베/, '모쓰나베', '소곱창과 양배추·부추를 끓이는 후쿠오카 전골. 마지막에 짬뽕면이나 죽으로 마무리해요.'],
+ [/미즈타키/, '미즈타키', '닭을 뽀얀 국물에 끓여 폰즈에 찍어 먹는 후쿠오카 전골. 국물부터 맛보는 게 보통이에요.'],
+ [/오토시/, '오토시', '자리에 앉으면 나오는 기본 안주이자 자릿세. 이자카야에서 따로 계산돼요.'],
+ [/교자|군만두/, '교자', '일본식 군만두. 하카타식 한입 교자는 작아서 여러 접시 시키는 경우가 많아요.'],
+ [/슈마이/, '슈마이', '다진 고기를 얇은 피로 싼 찐만두.'],
+ [/부타만/, '부타만', '돼지고기 소를 넣은 찐빵. 551 호라이의 대표 상품으로 알려져 있어요.'],
+ [/가이센동|해산물 덮밥/, '가이센동', '밥 위에 회를 여러 가지 올린 해산물 덮밥.'],
+ [/덴동|텐동/, '텐동', '튀김을 밥 위에 올리고 단짠 소스를 뿌린 덮밥.'],
+ [/스키야키/, '스키야키', '얇은 소고기를 단짠 간장 국물에 익혀 날달걀에 찍어 먹는 요리.'],
+ [/징기스칸/, '징기스칸', '가운데가 볼록한 철판에 양고기와 채소를 굽는 홋카이도 요리.'],
+ [/유도후/, '유도후', '두부를 다시마 국물에 데워 양념장에 찍어 먹는 교토 요리.'],
+ [/유바/, '유바', '두유를 데울 때 생기는 얇은 막. 교토 사찰 요리에 자주 나와요.'],
+ [/니신소바/, '니신소바', '달게 조린 청어를 올린 교토식 따뜻한 소바.'],
+ [/모리소바/, '모리소바', '차가운 소바를 쓰유에 찍어 먹는 기본 소바.'],
+ [/가모지루/, '가모지루 소바', '오리고기로 우린 따뜻한 국물에 찬 소바를 찍어 먹는 방식.'],
+ [/규카쓰|규카츠/, '규카츠', '소고기를 얇은 튀김옷으로 겉만 튀긴 것. 작은 화로에 취향대로 더 구워 먹어요.'],
+ [/돈카츠|돈카쓰|로스카쓰|히레카쓰/, '돈카츠', '돼지고기 튀김. 로스는 등심(기름 있음), 히레는 안심(담백)이에요.'],
+ [/야키카레/, '야키카레', '밥에 카레와 치즈·달걀을 올려 오븐에 구운 모지코 명물.'],
+ [/오므라이스/, '오므라이스', '볶음밥을 달걀로 감싼 일본식 양식.'],
+ [/굴|가키/, '굴 요리', '히로시마는 일본 최대 굴 산지예요. 생굴·구이·튀김을 비교해 먹는 사람이 많아요.'],
+ [/바사시|말고기/, '바사시', '말고기 회. 구마모토 향토 음식으로 생강·마늘 간장에 찍어 먹어요.'],
+ [/사쓰마메시|도미밥|도미솥밥|타이메시/, '타이메시', '에히메 도미밥. 우와지마식은 회를 양념에 비벼 밥에 올리고, 마쓰야마식은 솥밥으로 지어요.'],
+ [/다타키/, '다타키', '겉만 센 불에 그을린 생선(주로 가다랑어) 회.'],
+ [/가마보코|자코텐/, '어묵', '생선살을 갈아 찌거나 튀긴 것. 에히메는 자코텐이 유명해요.'],
+ [/명란|멘타이/, '명란(멘타이코)', '후쿠오카 대표 특산품. 밥·달걀말이·크림소스 등에 많이 넣어요.'],
+ [/젠자이/, '젠자이', '단팥죽에 떡을 넣은 디저트.'],
+ [/모미지/, '모미지 만주', '단풍잎 모양 카스텔라 만주. 미야지마 명물이고 튀긴 아게모미지도 있어요.'],
+ [/안미쓰|구즈키리|와라비/, '화과자 디저트', '한천·팥·흑밀 등을 곁들인 일본 전통 디저트.'],
+ [/말차|오우스/, '말차', '녹차 잎을 곱게 간 가루를 풀어 마시는 차. 우지가 대표 산지예요.'],
+ [/하이볼/, '하이볼', '위스키에 탄산수를 섞은 술. 일본 이자카야의 기본 음료예요.']
+];
+const dishOf = n => DISH.find(d => d[0].test(n));
+const yen = p => { const m = (p || '').replace(/,/g, '').match(/\d+/g); if (!m) return null; const a = +m[0], b = m.length > 1 && /~/.test(p) ? +m[1] : a; return [a, /~\s*$/.test(p.trim()) ? null : b]; };
+const KIND = n => /세트|코스|정식|회석|산케이|무제한|투어/.test(n) ? 'set' : /가에다마|면 추가|반숙|소금달걀|추가$/.test(n) ? 'top'
+  : /맥주|하이볼|사워|커피|주스|라씨|모히토|오우스/.test(n) ? 'drink'
+  : /푸딩|파르페|안미쓰|젠자이|모미지|젤라토|아이스|과자|보타모치|생과자|구즈키리|핫케이크|안닌|야한노쓰키|유키콘|과일/.test(n) ? 'sweet'
+  : /교자|만두|슈마이|데바사키|차슈 접시|오뎅|도테|가마보코|다타키|사시미|포테이토|달걀말이|굴튀김|구운 굴|생굴|아히요|소시지|조림|잔기|모쓰니코미|야키토리|쿠시카츠 1개|꼬치|가리비|굴 오일|타코야키|오토시/.test(n) ? 'side' : 'main';
+function combosOf(id){
+  const m = MENU[id]; if (!m || PL[id].cat !== '맛집') return null;
+  const it = m.i.filter(x => x[0] && !/오토시/.test(x[0])).map(x => ({ n:x[0], p:x[1], y:yen(x[1]), k:KIND(x[0]) }));
+  const by = k => it.filter(x => x.k === k), main = by('main'), side = by('side'), top = by('top'), sweet = by('sweet'), drink = by('drink'), sets = by('set');
+  const out = [], pick = (title, l, who) => { l = l.filter(Boolean); if (!l.length) return; const c = l.map(x => x.y), lo = c.every(Boolean) ? c.reduce((a, v) => a + v[0], 0) : null, hi = c.every(v => v && v[1] != null) ? c.reduce((a, v) => a + v[1], 0) : null;
+    out.push({ title, who, l, lo, hi }); };
+  if (main.length) pick('혼자 한 끼', [main[0], top[0] || side[0]], '1인');
+  if (main.length) pick('둘이 나눠 먹기', [main[0], main[1] && main[1].n.split('(')[0] !== main[0].n.split('(')[0] ? main[1] : main[0], side[0] || top[0], sweet[0] || drink[0]], '2인');
+  if (!main.length && side.length) pick('가볍게 맛보기', [side[0], side[1], drink[0] || sweet[0]], '1~2인');
+  if (main.length && sweet.length) pick('식사 + 디저트', [main[0], sweet[0]], '1인');
+  const seen = new Set(), uniq = out.filter(o => { const k = o.l.map(x => x.n).join('|'); if (seen.has(k) || o.l.length < 2) return false; seen.add(k); return true; });
+  return { combos:uniq.slice(0, 3), sets };
+}
+const yenT = (lo, hi) => lo == null ? '가격 일부 현장 확인' : '¥' + lo.toLocaleString() + (hi == null ? '~' : hi !== lo ? '~' + hi.toLocaleString() : '') + ' · 약 ' + won(Math.round(lo * YEN / 100) * 100) + (hi === lo ? '' : '~');
+function foodGuide(id){
+  const x = PL[id], m = MENU[id]; if (x.cat !== '맛집' || !m) return '';
+  const hot = m.i.filter(e => /인기|명물/.test(e[0]));
+  const ds = [], seen = new Set(); m.i.forEach(e => { const d = dishOf(e[0]); if (d && !seen.has(d[1])){ seen.add(d[1]); ds.push(d); } });
+  const c = combosOf(id), cnt = l => { const o = {}; l.forEach(e => o[e.n] = (o[e.n] || 0) + 1); return Object.entries(o).map(([n, k]) => esc(n) + (k > 1 ? ` ×${k}` : '')).join(' + '); };
+  return `${ds.length ? `<div class="card list"><h3>메뉴 설명</h3><ul class="dish">${ds.slice(0, 5).map(d => `<li><b>${esc(d[1])}</b>${esc(d[2])}</li>`).join('')}</ul><p class="xs sub" style="margin:6px 0 0">요리 자체에 대한 일반 설명이에요. 가게마다 맛과 구성은 달라요.</p></div>` : ''}
+  ${c && (c.combos.length || c.sets.length || hot.length) ? `<div class="card list"><h3>이렇게 시켜 보세요</h3><div class="combo">
+    ${hot.map(e => `<div class="cb"><div class="row"><b class="it">${esc(e[0].replace(/\(인기 1위\)/, ''))}<span class="hot">${/인기/.test(e[0]) ? '가게 인기 1위' : '명물'}</span></b><span class="pr">${esc(e[1] || '')}</span></div><span class="xs sub">메뉴판·가이드에 인기·명물로 소개된 메뉴예요.</span></div>`).join('')}
+    ${c.sets.map(e => `<div class="cb"><div class="row"><b class="it">${esc(e.n)}</b><span class="pr">${esc(e.p || '현장 확인')}</span></div><span class="xs sub">가게가 묶어 파는 세트·코스예요.</span></div>`).join('')}
+    ${c.combos.map(o => `<div class="cb"><div class="row"><b>${o.title} <span class="xs sub">${o.who}</span></b><span class="pr">${yenT(o.lo, o.hi)}</span></div><span class="it">${cnt(o.l)}</span></div>`).join('')}
+    </div><p class="xs sub" style="margin:6px 0 0">아래 조합은 메뉴판 가격으로 짜 본 예시로, 판매 순위가 아니에요. '가게 인기'·'명물' 표시만 출처에 그렇게 적힌 메뉴예요.</p></div>` : ''}`;
+}
+
 function topMenu(id){ const m = menuOf(id); if (!m) return ''; const t = m.i.find(e => e[1]); return t ? `${t[0]} ${t[1]}` : ''; }
 function sheet(){
   const id = S.place; if (!id) return '';
@@ -1900,6 +1990,7 @@ function sheet(){
     ${mapHTML([{ ids:[id], color:COLORS[0] }])}
     <div class="maplinks"><a href="${gmap(id)}" target="_blank" rel="noopener">구글 지도에서 위치 보기</a></div>
     <div class="card list"><h3>${menuTitle(id)}</h3>${menuBox(id, false, true)}</div>
+    ${foodGuide(id)}
     <div class="card list"><h3>여행자 후기 요약</h3><ul class="pts">${x.pts.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
      <div class="srcs"><span class="sub">${x.o ? '출처 (지도 데이터)' : '출처 (블로그·가이드 내용을 요약했어요)'}</span>${x.src.map(s => `<a href="${s[1]}" target="_blank" rel="noopener">${esc(s[0])}</a>`).join('')}</div></div>
     <div class="card list"><h3>동선팩 여행자 리뷰</h3><div id="revlist">${revList(id)}</div></div>
