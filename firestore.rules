@@ -33,7 +33,7 @@ service cloud.firestore {
       allow create: if request.resource.data.keys().hasOnly(['use', 'age', 'from', 'at'])
         && request.resource.data.use in ['yes', 'no']
         && request.resource.data.age in ['', '10대', '20대', '30대', '40대', '50대', '60대', '70대']
-        && request.resource.data.from in ['review', 'feedback']
+        && request.resource.data.from in ['review', 'feedback', 'browse']
         && request.resource.data.at is int;
       allow update, delete: if false;
     }

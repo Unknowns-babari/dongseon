@@ -2648,7 +2648,7 @@ function svRender(){
 async function svSave(use, age){
   SV.done = true; try { localStorage.setItem('dongseon-survey-v1', '1'); } catch (e) {}
   const st = svStore(); if (!st) return;
-  try { await st.add({ use, age:age || '', from:SV.from === 'feedback' ? 'feedback' : 'review', at:Date.now() }); } catch (e) {}
+  try { await st.add({ use, age:age || '', from:['feedback', 'browse'].includes(SV.from) ? SV.from : 'review', at:Date.now() }); } catch (e) {}
 }
 $('srv').addEventListener('click', e => {
   const b = e.target.closest('[data-sv]'); if (!b) return; const k = b.dataset.sv;
@@ -2726,6 +2726,17 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.tpick &&
   el.addEventListener('click', e => { if (e.target.closest('[data-ntc]')) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !el.hidden){ e.stopImmediatePropagation(); close(); } }, true);
   setTimeout(() => { const b = el.querySelector('[data-ntc]'); b && b.focus(); }, 50);
+})();
+
+/* 리뷰를 안 남겨도: 1분 넘게 둘러보고 몇 번 눌러 본 사람에게 한 번 묻기 */
+(function(){
+  const t0 = Date.now(); let taps = 0;
+  document.addEventListener('click', () => { taps++; }, true);
+  const iv = setInterval(() => {
+    if (SV.done){ clearInterval(iv); return; }
+    const busy = SV.step || FK.open || S.place || S.onb || S.ageOpen || S.dateOpen || S.rv || S.tpick || !$('ntc').hidden || document.visibilityState !== 'visible';
+    if (!busy && Date.now() - t0 >= 60000 && taps >= 5){ clearInterval(iv); svAsk('browse'); }
+  }, 5000);
 })();
 
 let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (S.scr === 'home' || S.scr === 'detail') render(); }, 150); });
