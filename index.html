@@ -2629,7 +2629,7 @@ function svStore(){
   } else {
     const c = DB.collection('survey');
     SV.store = { add:d => c.add(d) };
-    try { c.limit(2000).onSnapshot(snap => { SV.list = snap.docs.map(x => x.data()).filter(v => v && (v.use === 'yes' || v.use === 'no')); fkList(); }, () => {}); } catch (e) {}
+    try { c.limit(2000).onSnapshot(snap => { SV.list = snap.docs.map(x => x.data()).filter(v => v && (v.use === 'yes' || v.use === 'no')); fkList(); }, () => { SV.err = 'read'; fkList(); }); } catch (e) {}
   }
   return SV.store;
 }
@@ -2648,7 +2648,7 @@ function svRender(){
 async function svSave(use, age){
   SV.done = true; try { localStorage.setItem('dongseon-survey-v1', '1'); } catch (e) {}
   const st = svStore(); if (!st) return;
-  try { await st.add({ use, age:age || '', from:SV.from === 'feedback' ? 'feedback' : 'review', at:Date.now() }); } catch (e) {}
+  try { SV.err = SV.err === 'write' ? '' : SV.err; await st.add({ use, age:age || '', from:SV.from === 'feedback' ? 'feedback' : 'review', at:Date.now() }); } catch (e) { SV.err = 'write'; }
 }
 $('srv').addEventListener('click', e => {
   const b = e.target.closest('[data-sv]'); if (!b) return; const k = b.dataset.sv;
@@ -2660,7 +2660,8 @@ $('srv').addEventListener('click', e => {
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && SV.step){ e.stopImmediatePropagation(); SV.done = true; SV.step = 0; svRender(); if (SV.next === 'fbk'){ SV.next = ''; fkOpen(); } } }, true);
 function svResHTML(){
   if (!SV.open) return svLockHTML();
-  const l = SV.list; if (!l.length) return '<div class="svres"><span style="display:flex;justify-content:space-between;align-items:center"><b>출시 의향 설문 결과</b><button class="lnk" data-fk="svlockup">🔒 다시 잠그기</button></span><p class="sub" style="margin:0">아직 응답이 없어요. 장소 리뷰나 피드백을 올리면 설문 창이 떠요.</p></div>';
+  const l = SV.list; if (SV.err === 'read') return '<div class="svres"><b>출시 의향 설문 결과</b><p class="msg" style="margin:0">설문 결과를 불러오지 못했어요. Firebase 규칙에 설문(survey) 항목이 아직 게시되지 않은 것 같아요. 이 상태에서는 설문 응답도 저장되지 않아요.</p></div>';
+  if (!l.length) return '<div class="svres"><span style="display:flex;justify-content:space-between;align-items:center"><b>출시 의향 설문 결과</b><button class="lnk" data-fk="svlockup">🔒 다시 잠그기</button></span><p class="sub" style="margin:0">아직 응답이 없어요. 장소 리뷰나 피드백을 올리면 설문 창이 떠요.</p></div>';
   const yes = l.filter(v => v.use === 'yes'), pct = n => Math.round(n / l.length * 100), t = svTable();
   const bar = (lab, n, tot) => `<div class="svbar"><b>${lab}</b><span><i style="width:${tot ? Math.round(n / tot * 100) : 0}%"></i></span><span class="sub">${n}명 · ${tot ? Math.round(n / tot * 100) : 0}%</span></div>`;
   const tab = (rows, cap) => `<table class="svtab"><caption class="xs sub" style="text-align:left;padding:6px 0 2px">${cap}</caption><thead><tr>${rows[0].map(c => `<th scope="col">${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows.slice(1).map((r, i, a) => `<tr class="${i === a.length - 1 ? 'tot' : ''}">${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
