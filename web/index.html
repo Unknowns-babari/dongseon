@@ -406,6 +406,26 @@ main.full>*{animation:none}
 .pmap iframe{display:block;width:100%;height:260px;border:0}
 .pmapb{display:flex;gap:8px;flex-wrap:wrap}
 .pmapb a{flex:1 1 140px;display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:12px;border:1px solid var(--pri);color:var(--pri);font-weight:700;text-decoration:none;background:var(--card)}
+.rv{z-index:5050}
+.rv .fkbox{max-width:720px}
+.rvmap{height:280px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--soft);position:relative;flex-shrink:0}
+.rvmap svg{width:100%;height:100%}
+.rvo{display:flex;flex-direction:column;gap:6px}
+.rvr{display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--card)}
+.rvr.focus{border-color:var(--ink)}
+.rvr .sw{width:22px;height:6px;border-radius:3px;flex:none}
+.rvr .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;text-align:left;background:none;border:0;color:inherit;padding:0;font:inherit;cursor:pointer}
+.rvr .tx b{font-size:.92em}
+.rvr .pk{flex:none;min-height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--pri);background:var(--card);color:var(--pri);font-weight:700}
+.rvr .pk.on{background:var(--pri);color:var(--priInk)}
+.rvt{display:flex;gap:6px}
+.rvt button{flex:1;min-height:42px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-weight:700}
+.rvt button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.rvinfo{background:var(--soft);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;font-size:.92em}
+.rvinfo dl{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin:0}
+.rvinfo dt{color:var(--sub)}.rvinfo dd{margin:0;font-weight:600}
+.rvbtn{margin-top:6px;align-self:flex-start;min-height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--pri);background:var(--card);color:var(--pri);font-weight:700}
+.lrv{flex:none;border:1px solid var(--pri);background:var(--card);color:var(--pri);border-radius:14px;min-height:32px;padding:0 10px;font-weight:700;font-size:.82em;white-space:nowrap}
 .likebar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 16px 8px;padding:10px 14px;border-radius:12px;border:1px dashed var(--pri);background:transparent;color:var(--pri);font-weight:700;text-align:left;min-height:44px;flex-shrink:0}
 .likebar.set{border-style:solid;background:rgba(31,79,191,.07)}
 .likebar .lb2{font-size:.8em;font-weight:600;white-space:nowrap}
@@ -1458,10 +1478,10 @@ function legOpts(a, b){
     const sa = nearSts(city, A), sb = nearSts(city, B), pairs = [];
     sa.forEach(x => sb.forEach(y => { if (x.n !== y.n) pairs.push([x, y]); }));
     pairs.sort((p, q) => (p[0].d + p[1].d) - (q[0].d + q[1].d));
-    pairs.slice(0, 2).forEach(([x, y], i) => {
+    (d >= 0.8 ? pairs.slice(0, 2) : []).forEach(([x, y], i) => {
       const la = stLines(city, x.la, x.lo), lb = stLines(city, y.la, y.lo), common = la.filter(z => lb.includes(z));
       const m = walkM(x.d) + Math.round(km(x, y) * 1.2 / 30 * 60) + 5 + walkM(y.d) + (common.length ? 0 : 8);
-      add({ k:i ? 'train2' : 'train', ic:'train', t:`${i ? '다른 역 이용: ' : ''}${x.n}역 → ${common.length ? common[0] : '전철(갈아타기)'} → ${y.n}역`, m, how:'transit' });
+      add({ k:i ? 'train2' : 'train', ic:'train', t:`${i ? '다른 역 이용: ' : ''}${x.n}역 → ${common.length ? common[0] : '전철(갈아타기)'} → ${y.n}역`, m, how:'transit', via:[{ n:x.n, la:x.la, lo:x.lo }, { n:y.n, la:y.la, lo:y.lo }] });
     });
     if (!pairs.length && r > 1.3 && d >= 4) add({ k:'rail', ic:'train', t:{ '기타큐슈':'JR', '구마모토':'JR·노면전차', '히로시마':'JR·노면전차', '마쓰야마':'이요테쓰 전차' }[city] ? `${{ '기타큐슈':'JR', '구마모토':'JR·노면전차', '히로시마':'JR·노면전차', '마쓰야마':'이요테쓰 전차' }[city]} (역까지 걸어서)` : '전철 (역까지 걸어서)', m:Math.round(r / 30 * 60) + 18, how:'transit' });
     if (r > 0.8){
@@ -1482,11 +1502,104 @@ function legInfo(a, b){
   const o = legOpts(a, b), k = S.legs[legKey(a, b)];
   return o.find(x => x.k === k) || o.find(x => x.rec) || o[0];
 }
+
+/* ---------- 구간 경로 비교 지도: 경로마다 다른 색, 고르기, 경로 정보·주변 풍경 사진 ---------- */
+const RVC = { walk:'#16a34a', train:'#2563eb', train2:'#7c3aed', tram:'#db2777', bus:'#ea580c', rail:'#0284c7', taxi:'#111827', rent:'#64748b', ferry:'#0891b2', taxiferry:'#475569', auto:'#2563eb' };
+const rvCol = k => RVC[k] || '#2563eb';
+const RVG = {}, RVP = {};
+S.rv = null; S.rvk = null; S.rvt = 'info';
+function rvPts(a, b, x){ const A = PL[a], B = PL[b]; return [[A.la, A.lo]].concat((x.via || []).map(v => [v.la, v.lo])).concat([[B.la, B.lo]]); }
+async function rvRoute(a, b, x){
+  const key = legKey(a, b) + '|' + x.k; if (RVG[key]) return RVG[key];
+  const prof = x.k === 'walk' ? 'routed-foot' : (x.k === 'taxi' || x.k === 'rent') ? 'routed-car' : null;
+  if (!prof || !EXTMAP) return (RVG[key] = { est:true, pts:rvPts(a, b, x) });
+  RVG[key] = { loading:true, pts:rvPts(a, b, x) };
+  try {
+    const A = PL[a], B = PL[b];
+    const r = await fetch(`https://routing.openstreetmap.de/${prof}/route/v1/driving/${A.lo},${A.la};${B.lo},${B.la}?overview=full&geometries=geojson&steps=true`).then(r => r.json());
+    const rt = r.routes && r.routes[0]; if (!rt) throw 0;
+    const names = []; (rt.legs[0].steps || []).forEach(st => { const n = (st.name || '').trim(); if (n && !names.includes(n) && st.distance > 60) names.push(n); });
+    RVG[key] = { pts:rt.geometry.coordinates.map(c => [c[1], c[0]]), dist:rt.distance, dur:rt.duration, names:names.slice(0, 6), real:true };
+  } catch (e) { RVG[key] = { est:true, pts:rvPts(a, b, x) }; }
+  return RVG[key];
+}
+const kmTxt = m => m >= 1000 ? (m / 1000).toFixed(1) + 'km' : Math.round(m / 10) * 10 + 'm';
+function rvDist(a, b, x){ const g = RVG[legKey(a, b) + '|' + x.k]; if (g && g.real) return kmTxt(g.dist); const p = rvPts(a, b, x); let t = 0; for (let i = 1; i < p.length; i++) t += km({ la:p[i - 1][0], lo:p[i - 1][1] }, { la:p[i][0], lo:p[i][1] }); return '약 ' + kmTxt(t * 1000 * (x.k === 'walk' ? 1.25 : 1.2)) + ' (직선 기준)'; }
+async function rvPhotos(a, b, x){
+  const key = legKey(a, b) + '|' + x.k; if (RVP[key]) return RVP[key];
+  if (!EXTMAP) return (RVP[key] = { st:'off', l:[] });
+  RVP[key] = { st:'loading', l:[] };
+  const g = await rvRoute(a, b, x), p = g.pts, picks = [p[0], p[Math.floor(p.length / 2)], p[p.length - 1]].concat((x.via || []).map(v => [v.la, v.lo]));
+  const out = [], seen = new Set();
+  for (const [la, lo] of picks){
+    try {
+      const u = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=geosearch&ggscoord=' + la + '|' + lo + '&ggsradius=400&ggsnamespace=6&ggslimit=10&prop=imageinfo&iiprop=url|extmetadata|mime&iiurlwidth=500';
+      const j = await fetch(u).then(r => r.json());
+      Object.values((j.query || {}).pages || {}).forEach(pg => { const ii = (pg.imageinfo || [])[0] || {}, m = ii.extmetadata || {}, lic = ((m.LicenseShortName || {}).value || '').trim();
+        if (!seen.has(pg.title) && ii.thumburl && /image\/(jpeg|png|webp)/.test(ii.mime || '') && WM_OK.test(lic)){ seen.add(pg.title); out.push({ src:ii.thumburl, page:ii.descriptionurl, lic, by:stripH((m.Artist || {}).value).slice(0, 60) || '작자 미상', t:pg.title.replace(/^File:/, '').replace(/\.[a-z]+$/i, '').slice(0, 50) }); } });
+    } catch (e) {}
+  }
+  RVP[key] = { st:out.length ? 'ok' : 'none', l:out.slice(0, 8) };
+  return RVP[key];
+}
+function rvView(){
+  if (!S.rv) return '';
+  const [a, b] = S.rv.split('>'); if (!PL[a] || !PL[b]) return '';
+  const o = legOpts(a, b), cur = legInfo(a, b).k, fk = o.some(x => x.k === S.rvk) ? S.rvk : cur, fx = o.find(x => x.k === fk), g = RVG[S.rv + '|' + fk] || {};
+  const X = `<button class="ib" data-a="rvclose" aria-label="경로 비교 닫기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`;
+  const ph = RVP[S.rv + '|' + fk];
+  const info = S.rvt === 'photo'
+    ? (!EXTMAP ? '<p class="sub" style="margin:0">이 버전에서는 바깥 사진을 불러올 수 없어요. GitHub 사이트에서 볼 수 있어요.</p>'
+      : !ph || ph.st === 'loading' ? '<p class="sub" style="margin:0">경로 주변 사진을 찾는 중이에요…</p>'
+      : ph.st === 'none' ? '<p class="sub" style="margin:0">이 경로 주변에서 찾은 자유 이용 사진이 없어요.</p>'
+      : `<div class="wmg">${ph.l.map(p => `<figure><img src="${esc(p.src)}" alt="${esc(p.t)}" decoding="async" referrerpolicy="no-referrer" onerror="this.closest('figure').remove()"><figcaption>${esc(p.t)} · 사진: ${esc(p.by)} · ${esc(p.lic)} · <a href="${esc(p.page)}" target="_blank" rel="noopener">위키미디어 공용</a></figcaption></figure>`).join('')}</div><p class="xs sub" style="margin:0">출발·중간·도착 지점과 지나는 역 반경 400m 안에서 찍힌 사진이에요.</p>`)
+    : `<dl><dt>이동 방법</dt><dd>${esc(fx.t)}</dd><dt>예상 시간</dt><dd>약 ${minT(fx.m)}${g.real ? ` <span class="xs sub">(경로 계산 ${minT(Math.round(g.dur / 60))})</span>` : ''}</dd><dt>거리</dt><dd>${rvDist(a, b, fx)}</dd>
+      ${fx.via ? `<dt>타고 내리는 역</dt><dd>${fx.via.map(v => esc(v.n) + '역').join(' → ')}</dd>` : ''}${g.names && g.names.length ? `<dt>지나는 길</dt><dd>${g.names.map(esc).join(' → ')}</dd>` : ''}</dl>
+      <span class="xs sub">${g.real ? '도보·차 경로는 OpenStreetMap 도로 정보로 계산했어요.' : g.loading ? '실제 길을 계산하는 중이에요…' : '대중교통은 역 위치를 이은 대략적인 선이에요.'} 시간은 어림값이에요.</span>
+      <a class="rvbtn" href="${legURL(a, b, fx.how)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;text-decoration:none">구글 지도에서 이 방법으로 길찾기</a>`;
+  return `<div class="fbk rv" role="dialog" aria-modal="true" aria-labelledby="rvt"><div class="fkbox"><div class="bh"><h2 id="rvt">${esc(PL[a].k)} → ${esc(PL[b].k)} 경로 비교</h2>${X}</div>
+   <div class="bb"><div class="rvmap" id="rvmap"></div>
+   <div class="rvo" role="radiogroup" aria-label="이동 경로 고르기">${o.map(x => `<div class="rvr ${x.k === fk ? 'focus' : ''}"><span class="sw" style="background:${rvCol(x.k)}"></span>
+     <button class="tx" data-a="rvfocus" data-v="${x.k}"><b>${legIco(x.ic)} ${esc(x.t)}${x.rec ? ' <em class="xs">추천</em>' : ''}</b><span class="xs sub">약 ${minT(x.m)} · ${rvDist(a, b, x)}</span></button>
+     <button class="pk ${x.k === cur ? 'on' : ''}" data-a="rvpick" data-v="${x.k}" role="radio" aria-checked="${x.k === cur}">${x.k === cur ? '선택됨' : '이 경로로'}</button></div>`).join('')}</div>
+   <div class="rvt" role="tablist"><button role="tab" class="${S.rvt !== 'photo' ? 'on' : ''}" aria-selected="${S.rvt !== 'photo'}" data-a="rvtab" data-v="info">경로 정보</button><button role="tab" class="${S.rvt === 'photo' ? 'on' : ''}" aria-selected="${S.rvt === 'photo'}" data-a="rvtab" data-v="photo">경로 풍경 사진</button></div>
+   <div class="rvinfo"><b style="color:${rvCol(fk)}">● ${esc(fx.t)}</b>${info}</div></div></div></div>${(setTimeout(rvInit, 0), '')}`;
+}
+let RVM = null;
+async function rvInit(){
+  const el = document.getElementById('rvmap'); if (!el || !S.rv) return;
+  const [a, b] = S.rv.split('>'), o = legOpts(a, b), cur = legInfo(a, b).k, fk = o.some(x => x.k === S.rvk) ? S.rvk : cur;
+  const draw = () => {
+    const lines = o.map(x => ({ x, g:RVG[S.rv + '|' + x.k] || { pts:rvPts(a, b, x), est:true } }));
+    if (EXTMAP && window.L){
+      if (RVM){ try { RVM.remove(); } catch (e) {} }
+      el.innerHTML = ''; RVM = L.map(el, { zoomControl:true, attributionControl:true });
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'© OpenStreetMap' }).addTo(RVM);
+      const all = [];
+      lines.sort((p, q) => (p.x.k === fk) - (q.x.k === fk)).forEach(({ x, g }) => { all.push(...g.pts);
+        L.polyline(g.pts, { color:rvCol(x.k), weight:x.k === fk ? 7 : 4, opacity:x.k === fk ? .95 : .55, dashArray:g.real ? null : '8 8' }).on('click', () => { S.rvk = x.k; render(); }).addTo(RVM); });
+      [[PL[a], '출발'], [PL[b], '도착']].forEach(([p, t]) => L.marker([p.la, p.lo]).bindTooltip(t + ' · ' + p.k, { permanent:true, direction:'top' }).addTo(RVM));
+      RVM.fitBounds(L.latLngBounds(all), { padding:[24, 24] });
+    } else {
+      const P = lines.flatMap(l => l.g.pts), la0 = Math.min(...P.map(p => p[0])), la1 = Math.max(...P.map(p => p[0])), lo0 = Math.min(...P.map(p => p[1])), lo1 = Math.max(...P.map(p => p[1]));
+      const kx = Math.cos((la0 + la1) / 2 * Math.PI / 180), W = 400, H = 280, pad = 30, sc = Math.min((W - pad * 2) / Math.max((lo1 - lo0) * kx, 1e-4), (H - pad * 2) / Math.max(la1 - la0, 1e-4));
+      const xy = p => [(W / 2 + ((p[1] - (lo0 + lo1) / 2) * kx) * sc).toFixed(1), (H / 2 - (p[0] - (la0 + la1) / 2) * sc).toFixed(1)];
+      el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="경로 비교 개념도">${lines.map(({ x, g }, i) => `<polyline points="${g.pts.map(p => { const q = xy(p); return q[0] + ',' + (+q[1] + (g.real ? 0 : (i - lines.length / 2) * 3)); }).join(' ')}" fill="none" stroke="${rvCol(x.k)}" stroke-width="${x.k === fk ? 6 : 3}" stroke-opacity="${x.k === fk ? 1 : .6}" stroke-dasharray="${g.real ? '' : '8 6'}" stroke-linecap="round"/>`).join('')}
+        ${[[PL[a], '출발'], [PL[b], '도착']].map(([p, t]) => { const q = xy([p.la, p.lo]); return `<circle cx="${q[0]}" cy="${q[1]}" r="7" fill="#fff" stroke="#111" stroke-width="2.5"/><text x="${q[0]}" y="${q[1] - 12}" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">${t} ${esc(p.k)}</text>`; }).join('')}</svg>`;
+    }
+  };
+  draw();
+  const need = o.filter(x => !RVG[S.rv + '|' + x.k]);
+  if (need.length){ const key = S.rv; await Promise.all(need.map(x => rvRoute(a, b, x))); if (S.rv === key) render(); return; }
+  if (S.rvt === 'photo'){ const fx = o.find(x => x.k === fk), k2 = S.rv + '|' + fk; if (!RVP[k2]){ const key = S.rv; await rvPhotos(a, b, fx); if (S.rv === key) render(); } }
+}
+
 function legPanel(a, b){
   if (S.legOpen !== legKey(a, b)) return '';
   const o = legOpts(a, b), cur = legInfo(a, b).k;
   return `<div class="lopts" role="radiogroup" aria-label="이동 방법 고르기">${o.map(x => `<div class="lopt ${x.k === cur ? 'on' : ''}"><button data-a="legpick" data-v="${legKey(a, b)}|${x.k}" role="radio" aria-checked="${x.k === cur}">${legIco(x.ic)}<span class="grow">${esc(x.t)}${x.rec ? ' <em>추천</em>' : ''}</span><b>약 ${minT(x.m)}</b></button><a href="${legURL(a, b, x.how)}" target="_blank" rel="noopener" aria-label="구글 지도에서 이 방법으로 길찾기">지도</a></div>`).join('')}
-    <p class="xs sub">시간과 택시비는 거리로 계산한 어림값이에요. ‘지도’를 누르면 구글 지도에서 실제 경로와 다른 길도 볼 수 있어요.</p></div>`;
+    <button class="rvbtn" data-a="rvopen" data-v="${legKey(a, b)}">🗺 지도에서 경로 비교 · 경로 정보</button>
+    <p class="xs sub">시간과 택시비는 거리로 계산한 어림값이에요. ‘지도’를 누르면 구글 지도에서 실제 경로와 다른 길도 볼 수 있어요.</p></div>${rvView()}`;
 }
 const legBtn = (a, b, g) => { const n = legOpts(a, b).length; return `<button class="lsel grow" data-a="legopen" data-v="${legKey(a, b)}" aria-expanded="${S.legOpen === legKey(a, b)}">${esc(g.t)} · <b>약 ${minT(g.m)}</b>${n > 1 ? ` <span class="lchg">${S.legOpen === legKey(a, b) ? '닫기 ▴' : `이동 방법 ${n}개 ▾`}</span>` : ''}</button>`; };
 const legIco = k => `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${LIC[k]}"/></svg>`;
@@ -1670,7 +1783,7 @@ function nearPanel(p, r, d, sel, mode, where){
 function dayList(p, r, d, compact){
   const ids = r[d] || [], c = COLORS[d % 5];
   const plusEnd = pos => `<button class="lplus" data-a="insat" data-v="${d}:${pos}"><span>+</span>${pos === 0 ? (ids.length ? '맨 앞에 추가' : '장소 추가') : '맨 뒤에 추가'}</button>`;
-  const rows = ids.map((id, i) => `${i ? (g => `<div class="lleg" style="--c:${c}"><span class="lline"></span><button class="lpin" data-a="insat" data-v="${d}:${i}" aria-label="${i}번과 ${i + 1}번 사이에 장소 추가">+</button>${legIco(g.ic)}${legBtn(ids[i - 1], id, g)}<a href="${legURL(ids[i - 1], id)}" target="_blank" rel="noopener">길찾기</a></div>${legPanel(ids[i - 1], id)}`)(legInfo(ids[i - 1], id)) : ''}
+  const rows = ids.map((id, i) => `${i ? (g => `<div class="lleg" style="--c:${c}"><span class="lline"></span><button class="lpin" data-a="insat" data-v="${d}:${i}" aria-label="${i}번과 ${i + 1}번 사이에 장소 추가">+</button>${legIco(g.ic)}${legBtn(ids[i - 1], id, g)}<button class="lrv" data-a="rvopen" data-v="${legKey(ids[i - 1], id)}" aria-label="이 구간 경로 비교">🗺 경로</button><a href="${legURL(ids[i - 1], id)}" target="_blank" rel="noopener">길찾기</a></div>${legPanel(ids[i - 1], id)}`)(legInfo(ids[i - 1], id)) : ''}
     <div class="lrow2 ${S.rep === id ? 'on' : ''}"><button class="lmain" data-a="sel" data-v="${id}"><b class="num" style="background:${c}">${i + 1}</b><span class="grow"><b style="font-size:.92em">${esc(PL[id].n)}</b><span class="xs sub">${PL[id].cat} · ${esc(PL[id].feeT)}</span></span></button>
       <button class="lic info" data-a="place" data-v="${id}" aria-label="${esc(PL[id].k)} 정보·리뷰 보기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg></button>
       <button class="lic del" data-a="del" data-v="${d}:${i}" aria-label="${esc(PL[id].k)} 빼기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
@@ -1717,7 +1830,7 @@ function stopRow(id, d, i, list, editMode, nDays){
      ${editMode ? `<div class="ed"><button data-a="mv" data-v="${d}:${i}:-1" ${i === 0 ? 'disabled' : ''} aria-label="위로">↑ 위로</button><button data-a="mv" data-v="${d}:${i}:1" ${i === list.length - 1 ? 'disabled' : ''} aria-label="아래로">↓ 아래로</button>
        <select data-a="today" data-v="${d}:${i}" aria-label="다른 날로 옮기기">${opts}</select><button class="del" data-a="del" data-v="${d}:${i}">빼기</button></div>` : ''}
      ${S.scr === 'detail' ? `<div class="sact"><button class="lic info" data-a="place" data-v="${id}" aria-label="${esc(x.k)} 정보·리뷰 보기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg></button><button class="lic del" data-a="del" data-v="${d}:${i}" aria-label="${esc(x.k)} 빼기"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button><button class="lic rep" data-a="repstart" data-v="${id}" aria-label="${esc(x.k)} 다른 장소로 교체"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg></button></div>` : ''}
-     ${next ? (() => { const g = legInfo(id, next); return `<span class="move">${legIco(g.ic)} ${legBtn(id, next, g)} <a href="${legURL(id, next)}" target="_blank" rel="noopener">길찾기</a>${S.scr === 'detail' ? `<button class="mplus" data-a="insat" data-v="${d}:${i + 1}" aria-label="${i + 1}번과 ${i + 2}번 사이에 장소 추가">+ 사이에 추가</button>` : ''}</span>${legPanel(id, next)}`; })() : ''}</div></div>`;
+     ${next ? (() => { const g = legInfo(id, next); return `<span class="move">${legIco(g.ic)} ${legBtn(id, next, g)} <button class="lrv" data-a="rvopen" data-v="${legKey(id, next)}" aria-label="이 구간 경로 비교">🗺 경로</button> <a href="${legURL(id, next)}" target="_blank" rel="noopener">길찾기</a>${S.scr === 'detail' ? `<button class="mplus" data-a="insat" data-v="${d}:${i + 1}" aria-label="${i + 1}번과 ${i + 2}번 사이에 장소 추가">+ 사이에 추가</button>` : ''}</span>${legPanel(id, next)}`; })() : ''}</div></div>`;
 }
 
 const MOVE_NOTE = '<p class="xs sub mvnote">이동 방법은 가까운 역을 기준으로 어림한 거예요. 정확한 노선과 시간은 ‘길찾기’에서 확인하세요.</p>';
@@ -2298,6 +2411,11 @@ const A = {
   dadd:v => { const cut = v.lastIndexOf(':'), id = v.slice(0, cut), d = v.slice(cut + 1), r = route(pack()).map(x => x.slice()); r.forEach(ids => { const j = ids.indexOf(id); if (j >= 0) ids.splice(j, 1); }); r[+d].push(id); setRoute(r); S.dsel = id; S.chg = true; render(); },
   tf:v => { S.tf = v; render(); },
   legopen:v => { S.legOpen = S.legOpen === v ? null : v; render(); },
+  rvopen:v => { S.rv = v; S.legOpen = v; S.rvk = null; S.rvt = 'info'; render(); },
+  rvclose:() => { S.rv = null; if (RVM){ try { RVM.remove(); } catch (e) {} RVM = null; } render(); },
+  rvfocus:v => { S.rvk = v; render(); },
+  rvtab:v => { S.rvt = v; render(); },
+  rvpick:v => { const [a, b] = S.rv.split('>'); S.legs[legKey(a, b)] = v; try { localStorage.setItem(LEG_KEY, JSON.stringify(S.legs)); } catch (e) {} S.rvk = v; render(); },
   legpick:v => { const i = v.lastIndexOf('|'), key = v.slice(0, i), k = v.slice(i + 1); S.legs[key] = k; try { localStorage.setItem(LEG_KEY, JSON.stringify(S.legs)); } catch (e) {} S.legOpen = null; render(); },
   lt:v => { S.lt = v; render(); },
   likes:() => { S.onb = 1; render(); },
