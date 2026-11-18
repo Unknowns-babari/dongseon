@@ -1101,7 +1101,7 @@ async function wmLoad(id){
   if (WM[id] || !JA[id]) return; WM[id] = { st:'loading', l:[] };
   try { const c = JSON.parse(sessionStorage.getItem('wm-' + id) || 'null'); if (c){ WM[id] = c; return wmFill(id); } } catch (e) {}
   const q = encodeURIComponent(JA[id] + ' filetype:bitmap');
-  const url = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=8&gsrsearch=' + q + '&prop=imageinfo&iiprop=url|extmetadata|mime&iiurlwidth=640';
+  const url = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=8&gsrsearch=' + q + '&prop=imageinfo&iiprop=url|extmetadata|mime&iiurlwidth=500';
   try {
     const ctl = typeof AbortController === 'function' ? new AbortController() : null, tm = setTimeout(() => ctl && ctl.abort(), 8000);
     const r = await fetch(url, ctl ? { signal:ctl.signal } : {}); clearTimeout(tm);
@@ -1116,8 +1116,9 @@ async function wmLoad(id){
 }
 function wmHTML(id){
   const w = WM[id]; if (!w || w.st !== 'ok') return '';
-  return `<div class="wmg" role="list" aria-label="${esc(PL[id].n)} 사진">${w.l.map(x => `<figure role="listitem"><img src="${esc(x.src)}" alt="${esc(PL[id].n)} 사진" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('figure').remove()"><figcaption>사진: ${esc(x.by)} · ${esc(x.lic)} · <a href="${esc(x.page)}" target="_blank" rel="noopener">위키미디어 공용</a></figcaption></figure>`).join('')}</div>`;
+  return `<div class="wmg" role="list" aria-label="${esc(PL[id].n)} 사진">${w.l.map(x => `<figure role="listitem"><img src="${esc(x.src)}" alt="${esc(PL[id].n)} 사진" decoding="async" referrerpolicy="no-referrer" onerror="wmErr(this)"><figcaption>사진: ${esc(x.by)} · ${esc(x.lic)} · <a href="${esc(x.page)}" target="_blank" rel="noopener">위키미디어 공용</a></figcaption></figure>`).join('')}</div>`;
 }
+function wmErr(img){ const f = img.closest('figure'); if (f) f.remove(); const g = document.querySelector('.wmg'); if (g && !g.querySelector('figure')){ const w = g.parentElement; if (w) w.hidden = true; const n = document.getElementById('wmnote'); if (n) n.hidden = true; } }
 function wmFill(id){ const el = document.getElementById('wm-' + id); if (!el) return; const h = wmHTML(id); if (h){ el.innerHTML = h; el.hidden = false; const n = document.getElementById('wmnote'); if (n) n.hidden = false; } }
 
 const rateT = id => { const t = rate(id); return t.n ? `<span class="rt">★ ${t.avg.toFixed(1)}</span> <span class="xs sub">리뷰 ${t.n}</span>` : '<span class="xs sub">아직 리뷰 없음</span>'; };
