@@ -402,6 +402,10 @@ main.full>*{animation:none}
 .dish li{font-size:.88em;line-height:1.45}
 .dish b{display:inline-block;margin-right:4px}
 .hot{display:inline-block;font-size:.68em;font-weight:800;padding:1px 6px;border-radius:8px;background:#fee2e2;color:#991b1b;margin-left:4px;vertical-align:middle}
+.pmap{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--soft);flex-shrink:0}
+.pmap iframe{display:block;width:100%;height:260px;border:0}
+.pmapb{display:flex;gap:8px;flex-wrap:wrap}
+.pmapb a{flex:1 1 140px;display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:12px;border:1px solid var(--pri);color:var(--pri);font-weight:700;text-decoration:none;background:var(--card)}
 .likebar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 16px 8px;padding:10px 14px;border-radius:12px;border:1px dashed var(--pri);background:transparent;color:var(--pri);font-weight:700;text-align:left;min-height:44px;flex-shrink:0}
 .likebar.set{border-style:solid;background:rgba(31,79,191,.07)}
 .likebar .lb2{font-size:.8em;font-weight:600;white-space:nowrap}
@@ -997,8 +1001,8 @@ function mapHTML(groups){
   let lines = '', pins = '';
   groups.forEach(g => {
     const xy = g.ids.map(id => P(PL[id]));
-    if (xy.length > 1) lines += `<polyline points="${xy.map(a => a.join(',')).join(' ')}" fill="none" stroke="${g.color}" stroke-width="3" stroke-dasharray="7 5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
-    g.ids.forEach((id, i) => { const [x, y] = xy[i]; pins += `<button class="pin" data-a="place" data-v="${id}" style="left:${(x / W * 100).toFixed(2)}%;top:${(y / H * 100).toFixed(2)}%" aria-label="${esc(PL[id].n)} 후기 보기"><b style="background:${g.color}">${g.label ? g.label + '-' : ''}${i + 1}</b><span>${esc(PL[id].k)}</span></button>`; });
+    if (xy.length > 1 && !g.near) lines += `<polyline points="${xy.map(a => a.join(',')).join(' ')}" fill="none" stroke="${g.color}" stroke-width="3" stroke-dasharray="7 5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
+    g.ids.forEach((id, i) => { const [x, y] = xy[i]; pins += `<button class="pin" data-a="place" data-v="${id}" style="left:${(x / W * 100).toFixed(2)}%;top:${(y / H * 100).toFixed(2)}%" aria-label="${esc(PL[id].n)} 후기 보기"><b style="background:${g.color}">${g.near ? '·' : (g.label ? g.label + '-' : '') + (i + 1)}</b><span>${esc(PL[id].k)}</span></button>`; });
   });
   let grid = ''; for (let i = 1; i < 8; i++) grid += `<line x1="${i * 50}" y1="0" x2="${i * 50}" y2="300" stroke="var(--grid)" stroke-width="1"/>`; for (let i = 1; i < 6; i++) grid += `<line x1="0" y1="${i * 50}" x2="400" y2="${i * 50}" stroke="var(--grid)" stroke-width="1"/>`;
   return `<div class="map" role="img" aria-label="동선 지도: ${esc(groups.flatMap(g => g.ids.map(id => PL[id].n)).join(', '))}">
@@ -1134,6 +1138,19 @@ function wmHTML(id){
 }
 function wmErr(img){ const f = img.closest('figure'); if (f) f.remove(); const g = document.querySelector('.wmg'); if (g && !g.querySelector('figure')){ const w = g.parentElement; if (w) w.hidden = true; const n = document.getElementById('wmnote'); if (n) n.hidden = true; } }
 function wmFill(id){ const el = document.getElementById('wm-' + id); if (!el) return; const h = wmHTML(id); if (h){ el.innerHTML = h; el.hidden = false; const n = document.getElementById('wmnote'); if (n) n.hidden = false; } }
+
+
+/* ---------- 장소 위치 지도: 실제 지도(OpenStreetMap) + 주변 장소 + 구글 지도 링크 ---------- */
+const EXTMAP = !(window.claude && window.claude.use);
+function placeMap(id){
+  const x = PL[id], d = 0.006, la = x.la, lo = x.lo;
+  const near = Object.keys(PL).filter(k => k !== id && PL[k].c === x.c).map(k => [k, km(x, PL[k])]).sort((a, b) => a[1] - b[1]).slice(0, 4).filter(a => a[1] < 3).map(a => a[0]);
+  const g = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(la + ',' + lo);
+  const dir = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(la + ',' + lo);
+  const real = EXTMAP ? `<div class="pmap"><iframe title="${esc(x.n)} 위치 지도" loading="lazy" referrerpolicy="no-referrer" src="https://www.openstreetmap.org/export/embed.html?bbox=${(lo - d * 1.4).toFixed(5)},${(la - d).toFixed(5)},${(lo + d * 1.4).toFixed(5)},${(la + d).toFixed(5)}&layer=mapnik&marker=${la.toFixed(5)},${lo.toFixed(5)}"></iframe></div><p class="xs sub" style="margin:0">지도 © OpenStreetMap 기여자</p>` : '';
+  return `${real}${mapHTML([{ ids:[id], color:COLORS[0] }].concat(near.length ? [{ ids:near, color:'#9aa3b2', near:true }] : []))}${near.length ? `<p class="xs sub" style="margin:0">회색 핀은 주변 장소예요: ${near.map(k => esc(PL[k].k) + ' ' + kmT(km(x, PL[k]))).join(' · ')}</p>` : ''}
+  <div class="pmapb"><a href="${g}" target="_blank" rel="noopener">구글 지도에서 보기</a><a href="${dir}" target="_blank" rel="noopener">길찾기</a></div>`;
+}
 
 const rateT = id => { const t = rate(id); return t.n ? `<span class="rt">★ ${t.avg.toFixed(1)}</span> <span class="xs sub">리뷰 ${t.n}</span>` : '<span class="xs sub">아직 리뷰 없음</span>'; };
 
@@ -1987,7 +2004,7 @@ function sheet(){
     <p class="xs sub" id="wmnote" ${WM[id] && WM[id].st === 'ok' ? '' : 'hidden'} style="margin:0">위 사진은 위키미디어 공용에서 자유 이용 라이선스 사진을 장소 이름으로 찾아 보여 준 거예요. 사진마다 촬영자와 라이선스를 적었어요.</p>
     <div class="gal">${photoStrip(id, 6)}</div>
     <p class="xs sub">아래 사진은 동선팩 여행자가 리뷰와 함께 올린 거예요.</p>
-    ${mapHTML([{ ids:[id], color:COLORS[0] }])}
+    ${placeMap(id)}
     <div class="maplinks"><a href="${gmap(id)}" target="_blank" rel="noopener">구글 지도에서 위치 보기</a></div>
     <div class="card list"><h3>${menuTitle(id)}</h3>${menuBox(id, false, true)}</div>
     ${foodGuide(id)}
