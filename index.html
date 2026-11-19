@@ -449,6 +449,38 @@ main.full>*{animation:none}
 .cgf .when{font-size:.78em;font-weight:800;color:#b45309}
 .cgf .r{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
 .cgf .r button{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;min-height:30px;padding:0 10px;font-size:.78em;font-weight:700}
+.cg2{display:flex;flex-direction:column;gap:16px;padding:0 16px 18px}
+.cg2 .hero{position:relative;border-radius:18px;overflow:hidden;min-height:170px;display:flex;align-items:flex-end;background:linear-gradient(135deg,#1e3a5f,#3f7d20)}
+.cg2 .hero .bg{position:absolute;inset:0;background:center/cover no-repeat;transition:opacity .3s}
+.cg2 .hero .bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 20%,rgba(0,0,0,.75))}
+.cg2 .hero .tx{position:relative;color:#fff;padding:14px 16px;text-shadow:0 1px 4px rgba(0,0,0,.7)}
+.cg2 .hero .tx b{display:block;font-size:1.2em;margin-bottom:4px}
+.cg2 .hero .tx p{margin:0;font-size:.88em;line-height:1.55;opacity:.95}
+.cg2 h3{margin:6px 0 0;font-size:1.02em;color:#3f7d20;display:flex;align-items:center;gap:8px}
+.cg2 h3::before{content:'';width:26px;height:3px;border-radius:2px;background:#7cb342}
+.gi{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:center}
+.gi.flip .pic{order:2}
+.gi .pic,.gf .pic{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:4/3;background:var(--soft);display:grid;place-items:center}
+.gi .pic .em,.gf .pic .em{font-size:2.6em;opacity:.9}
+.gi .pic img,.gf .pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.gi .pic small,.gf .pic small{position:absolute;left:0;right:0;bottom:0;padding:3px 6px;font-size:.6em;color:#fff;background:linear-gradient(180deg,transparent,rgba(0,0,0,.6));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gi .sub2{display:block;font-size:.8em;font-weight:800;color:#3f7d20}
+.gi b{display:block;font-size:1.02em;margin:2px 0}
+.gi p{margin:0;font-size:.85em;line-height:1.55}
+.gi .meta{margin-top:5px;font-size:.74em;color:var(--sub)}
+.gi .meta strong{color:var(--ink);font-weight:800;margin-right:2px}
+.gfs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.gf{display:flex;flex-direction:column;gap:5px}
+.gf b{font-size:.95em}
+.gf .xs{line-height:1.45}
+.gf .r{display:flex;gap:4px;flex-wrap:wrap}
+.gf .r button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;min-height:30px;padding:0 9px;font-size:.74em;font-weight:700}
+.gm{display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:start;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px}
+.gm .pic{aspect-ratio:1/1;border-radius:12px}
+.gm .when{font-size:.76em;font-weight:800;color:#b45309}
+.gm b{display:block;margin:2px 0}
+.web .gfs{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (min-width:700px){.gi{grid-template-columns:1fr 1.1fr}}
 .likebar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 16px 8px;padding:10px 14px;border-radius:12px;border:1px dashed var(--pri);background:transparent;color:var(--pri);font-weight:700;text-align:left;min-height:44px;flex-shrink:0}
 .likebar.set{border-style:solid;background:rgba(31,79,191,.07)}
 .likebar .lb2{font-size:.8em;font-weight:600;white-space:nowrap}
@@ -1398,21 +1430,37 @@ const CG = {
   m:[['고쿠라 기온 다이코 (小倉祇園太鼓)', '7월 셋째 토요일 전후 3일', '앞뒤 양면을 치며 걷는 북 축제. 국가 중요무형민속문화재예요.', 'https://www.crossroadfukuoka.jp/event/13137'],
      ['왓쇼이 햐쿠만 나쓰마쓰리', '8월 초', '매년 150만 명 넘게 찾는 기타큐슈 대표 여름 축제. 전야제 불꽃놀이가 열려요.', 'https://www.city.kitakyushu.lg.jp/page/dayori/190715/special/special.html']] }
 };
+/* 사진 검색어(일본어): 먹을거리·축제 */
+const FJA = { '스시·가이센동':'海鮮丼 築地', '몬자야키':'もんじゃ焼き', '텐동':'天丼', '소바':'もりそば', '쿠시카츠':'串カツ 新世界', '오코노미야키·네기야키':'お好み焼き 大阪', '부타만':'豚まん 551', '오므라이스·양식':'オムライス', '유도후':'湯豆腐', '니신소바':'にしんそば', '말차 디저트':'抹茶パフェ', '교토 라멘·규카쓰':'牛カツ', '히쓰마부시':'ひつまぶし', '미소카츠':'味噌カツ', '데바사키':'手羽先 名古屋', '미소니코미 우동':'味噌煮込みうどん', '돈코츠 라멘':'博多ラーメン', '모쓰나베':'もつ鍋', '미즈타키':'水炊き 博多', '야타이 음식·한입 교자':'中洲 屋台', '미소 라멘':'札幌ラーメン 味噌', '징기스칸':'ジンギスカン 料理', '수프카레':'スープカレー', '해산물 덮밥·회전초밥':'二条市場 海鮮丼', '히로시마 오코노미야키':'広島風お好み焼き', '굴 요리':'焼き牡蠣 広島', '모미지 만주':'もみじ饅頭', '구마모토 라멘':'熊本ラーメン', '바사시':'馬刺し', '타이피엔':'太平燕', '타이메시 (도미밥)':'鯛めし 宇和島', '자코텐':'じゃこ天', '귤 주스·귤 디저트':'愛媛 みかん', '봇짱 당고':'坊っちゃん団子', '야키우동':'焼うどん', '모지코 야키카레':'焼きカレー 門司港', '단가 시장 먹거리':'旦過市場', '스케상 우동':'資さんうどん' };
+const MJA = { '스미다강 불꽃놀이':'隅田川花火大会', '하카타 돈타쿠':'博多どんたく', '나고야 마쓰리':'名古屋まつり', '아쓰타 마쓰리':'熱田まつり', 'YOSAKOI 소란 마쓰리':'YOSAKOIソーラン祭り', '삿포로 여름 축제·오텀 페스트':'さっぽろ夏まつり', '히로시마 플라워 페스티벌':'ひろしまフラワーフェスティバル', '마쓰야마 봄 축제 (도고온천 축제)':'道後温泉まつり', '마쓰야마 야큐켄 오도리':'野球拳おどり', '마쓰야마 도고 가을 축제':'道後 秋祭り 鉢合わせ', '왓쇼이 햐쿠만 나쓰마쓰리':'わっしょい百万夏まつり' };
+const GEM = { castle:'🏯', shrine:'⛩️', view:'🗼', sea:'🐋', onsen:'♨️', garden:'🌸', mountain:'🌋', museum:'🏛️', shop:'🏮', oldtown:'🏮', night:'🌃', kids:'🐋', exp:'🎡' };
+const gEmoji = id => { const t = tagsOf(id); return GEM[t.find(k => GEM[k])] || '📍'; };
+const fEmoji = n => /라멘|소바|우동/.test(n) ? '🍜' : /스시|가이센|해산물/.test(n) ? '🍣' : /오코노미|몬자|네기/.test(n) ? '🥞' : /카레|오므/.test(n) ? '🍛' : /교자|부타만|만주/.test(n) ? '🥟' : /굴/.test(n) ? '🦪' : /당고|말차|귤/.test(n) ? '🍡' : /데바사키|징기스칸|바사시|카츠/.test(n) ? '🍖' : /두부|유도후|나베|미즈타키|타이피엔/.test(n) ? '🍲' : '🍱';
+const mEmoji = n => /눈 축제/.test(n) ? '❄️' : /불꽃|하나비/.test(n) ? '🎆' : /다이코|북/.test(n) ? '🥁' : /춤|오도리|YOSAKOI|돈타쿠/.test(n) ? '💃' : /플라워/.test(n) ? '🌷' : '🏮';
+function gPic(key, q, em, alt){
+  if (q && !JA[key]) JA[key] = q;
+  const w = WM[key], ok = w && w.st === 'ok';
+  return `<div class="pic" data-wk="${esc(key)}"><span class="em" aria-hidden="true">${em}</span>${ok ? `<img src="${esc(w.l[0].src)}" alt="${esc(alt)}" referrerpolicy="no-referrer" onerror="this.remove()"><small>사진: ${esc(w.l[0].by)} · ${esc(w.l[0].lic)}</small>` : ''}</div>`;
+}
+const wmWait = k => new Promise(res => { let n = 0; const t = () => { const w = WM[k]; if (w && w.st !== 'loading' || n++ > 40) return res(); setTimeout(t, 300); }; wmLoad(k).then(t, t); });
+function gPicFill(){
+  if (!EXTMAP) return;
+  document.querySelectorAll('.cg2 .pic[data-wk]').forEach(el => { const k = el.dataset.wk; if (!JA[k] || (WM[k] && WM[k].st !== 'loading' && el.querySelector('img'))) return;
+    wmWait(k).then(() => { const w = WM[k]; if (!w || w.st !== 'ok' || el.querySelector('img')) return; const im = new Image(); im.alt = ''; im.referrerPolicy = 'no-referrer'; im.onerror = () => im.remove(); im.src = w.l[0].src; el.appendChild(im); const sm = document.createElement('small'); sm.textContent = '사진: ' + w.l[0].by + ' · ' + w.l[0].lic; el.appendChild(sm); }); });
+  const hero = document.querySelector('.cg2 .hero .bg[data-wk]'); if (hero){ const k = hero.dataset.wk; wmWait(k).then(() => { const w = WM[k]; if (w && w.st === 'ok') hero.style.backgroundImage = `url("${w.l[Math.min(1, w.l.length - 1)].src}")`; }); }
+}
 function cityGuide(c){
-  const g = CG[c]; if (!g) return '<div class="cg"><p class="sub">준비 중이에요.</p></div>';
-  setTimeout(() => g.h.forEach(([id]) => { if (JA[id] && EXTMAP){ wmLoad(id).then(() => { const el = document.getElementById('cgp-' + id), w = WM[id]; if (el && w && w.st === 'ok'){ el.style.backgroundImage = `url("${w.l[0].src}")`; el.title = '사진: ' + w.l[0].by + ' · ' + w.l[0].lic; el.parentElement.classList.remove('nophoto'); el.hidden = false; } }); } }), 0);
-  const photo = id => { const w = WM[id]; return w && w.st === 'ok' ? `<span class="cph" id="cgp-${id}" style="background-image:url('${esc(w.l[0].src)}')" title="사진: ${esc(w.l[0].by)} · ${esc(w.l[0].lic)}"></span>` : `<span class="cph" id="cgp-${id}" hidden></span>`; };
-  return `<div class="cg">
-   <div class="lead"><b>${esc(c)} · ${esc(g.t)}</b><p>${esc(g.d)}</p></div>
-   <h3>볼거리</h3>${g.h.map(([id, sub, d]) => { const x = PL[id]; return `<div class="cgi ${WM[id] && WM[id].st === 'ok' ? '' : 'nophoto'}">${photo(id)}<div><span class="sub2">${esc(sub)}</span><b>${esc(x.n)}</b><p>${esc(d)}</p><div class="meta"><strong>추천 시간</strong>${esc(x.when)} · <strong>요금</strong>${esc(x.feeT)} · <button class="lnk" style="border:0;background:none;color:var(--pri);font-weight:700;padding:0" data-a="place" data-v="${id}">자세히 ›</button></div></div></div>`; }).join('')}
-   <h3>먹을거리</h3>${g.f.map(([n, d, r]) => `<div class="cgf"><b>${esc(n)}</b><span class="xs">${esc(d)}</span>${r.length ? `<span class="r">${r.filter(id => PL[id]).map(id => `<button data-a="place" data-v="${id}">${esc(PL[id].k)} ›</button>`).join('')}</span>` : ''}</div>`).join('')}
-   <h3>마츠리·축제</h3>${g.m.map(([n, w, d, u]) => `<div class="cgf"><span class="when">📅 ${esc(w)}</span><b>${esc(n)}</b><span class="xs">${esc(d)}</span>${u ? `<span class="xs sub">출처: <a href="${u}" target="_blank" rel="noopener">${esc(u.replace(/^https?:\/\/(www\.)?/, '').split('/')[0])}</a></span>` : ''}</div>`).join('')}
-   <p class="xs sub" style="margin:0">축제 날짜는 해마다 조금씩 달라질 수 있어요. 가기 전에 공식 안내를 확인해 주세요. 볼거리·먹을거리 설명은 동선팩이 직접 정리한 글이에요.</p></div>`;
+  const g = CG[c]; if (!g) return '<div class="cg2"><p class="sub">준비 중이에요.</p></div>';
+  setTimeout(gPicFill, 0);
+  const hk = g.h[0][0];
+  return `<div class="cg2">
+   <div class="hero"><div class="bg" data-wk="${hk}"${WM[hk] && WM[hk].st === 'ok' ? ` style="background-image:url('${esc(WM[hk].l[Math.min(1, WM[hk].l.length - 1)].src)}')"` : ''}></div><div class="tx"><b>${esc(c)} · ${esc(g.t)}</b><p>${esc(g.d)}</p></div></div>
+   <h3>볼거리</h3>${g.h.map(([id, sub, d], i) => { const x = PL[id]; return `<div class="gi ${i % 2 ? 'flip' : ''}">${gPic(id, null, gEmoji(id), x.n)}<div><span class="sub2">${esc(sub)}</span><b>${esc(x.n)}</b><p>${esc(d)}</p><div class="meta"><strong>추천</strong>${esc(x.when)} · <strong>요금</strong>${esc(x.feeT)}</div><button class="lnk" style="border:0;background:none;color:var(--pri);font-weight:700;padding:4px 0;min-height:32px" data-a="place" data-v="${id}">자세히 보기 ›</button></div></div>`; }).join('')}
+   <h3>먹을거리</h3><div class="gfs">${g.f.map(([n, d, r]) => `<div class="gf">${gPic('f:' + n, FJA[n], fEmoji(n), n)}<b>${esc(n)}</b><span class="xs">${esc(d)}</span>${r.length ? `<span class="r">${r.filter(id => PL[id]).map(id => `<button data-a="place" data-v="${id}">${esc(PL[id].k)} ›</button>`).join('')}</span>` : ''}</div>`).join('')}</div>
+   <h3>마츠리·축제</h3>${g.m.map(([n, w, d, u]) => { const jq0 = (n.match(/\(([^)]+)\)/) || [])[1], jq = MJA[n] || (jq0 && /[\u3040-\u30ff\u4e00-\u9fff]/.test(jq0) ? jq0 : null); return `<div class="gm">${gPic('m:' + n, jq || null, mEmoji(n), n)}<div><span class="when">📅 ${esc(w)}</span><b>${esc(n)}</b><span class="xs">${esc(d)}</span>${u ? `<span class="xs sub" style="display:block;margin-top:4px">출처: <a href="${u}" target="_blank" rel="noopener">${esc(u.replace(/^https?:\/\/(www\.)?/, '').split('/')[0])}</a></span>` : ''}</div></div>`; }).join('')}
+   <p class="xs sub" style="margin:0">사진은 위키미디어 공용의 자유 이용 사진을 이름으로 찾아 보여 줘요(사진 아래 촬영자·라이선스 표기). 사진을 못 불러오면 그림 아이콘이 대신 보여요. 축제 날짜는 해마다 달라질 수 있어요.</p></div>`;
 }
 
-
-/* ---------- 하단 탭: 도시 소개 ---------- */
-S.gcity = S.gcity || '오사카';
 function guide(){
   const c = CG[S.gcity] ? S.gcity : '오사카';
   return `<div class="tagrow" role="tablist" aria-label="도시 고르기" style="padding:0 0 4px">${Object.keys(CG).map(x => `<button class="chip ${x === c ? 'on' : ''}" role="tab" aria-selected="${x === c}" data-a="gcity" data-v="${x}">${x}</button>`).join('')}</div>
