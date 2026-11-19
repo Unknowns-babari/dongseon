@@ -85,7 +85,7 @@ p{margin:0}.sub{color:var(--sub);font-size:.88em}.xs{font-size:.78em}
 .btn{flex:1;min-height:54px;border-radius:12px;border:0;background:var(--pri);color:var(--priInk);font-weight:700;padding:0 12px}
 .btn.ghost{background:var(--card);color:var(--ink);border:1px solid var(--ink)}
 .btn.dark{background:var(--ink);color:var(--bg)}
-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:var(--card);border-top:1px solid var(--line)}
+nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--card);border-top:1px solid var(--line)}
 nav button{height:62px;border:0;background:none;font-size:.85em;color:var(--sub);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
 nav button.on{color:var(--pri);font-weight:700}
 .warn{background:var(--warn);border:2px solid var(--warnLine);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;color:var(--warnInk)}
@@ -437,7 +437,8 @@ main.full>*{animation:none}
 .cg h3::before{content:'';width:22px;height:3px;border-radius:2px;background:#7cb342}
 .cgi{display:grid;grid-template-columns:96px 1fr;gap:10px;align-items:start;border-bottom:1px dashed var(--line);padding-bottom:10px}
 .cgi:last-child{border-bottom:0}
-.cgi .ph{width:96px;height:72px;border-radius:12px;background:var(--soft) center/cover no-repeat}
+.cgi .cph[hidden]{display:none}
+.cgi .cph{width:96px;height:72px;border-radius:12px;background:var(--soft) center/cover no-repeat}
 .cgi .sub2{display:block;font-size:.78em;font-weight:700;color:#3f7d20}
 .cgi b{display:block;font-size:.98em}
 .cgi p{margin:3px 0 0;font-size:.86em;line-height:1.55}
@@ -1056,10 +1057,10 @@ function mapHTML(groups){
 /* ---------- screens ---------- */
 function header(){
   const p = pack();
-  const titles = { home:'동선팩 · 일본', detail:S.edit ? '동선 편집 · ' + p.city : p.city + ' · ' + p.nights, book:'예약 내용', paid:'예약 완료', trip:'여행 중', make:'동선 만들기', src:'참고한 자료' };
+  const titles = { guide:'도시 소개', home:'동선팩 · 일본', detail:S.edit ? '동선 편집 · ' + p.city : p.city + ' · ' + p.nights, book:'예약 내용', paid:'예약 완료', trip:'여행 중', make:'동선 만들기', src:'참고한 자료' };
   const back = S.scr === 'detail' && S.edit ? null : { detail:'home', book:'detail', paid:'home', src:'home' }[S.scr];
   return (back ? `<button class="ib" aria-label="뒤로 가기" data-a="go" data-v="${back}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>` : '')
-    + `<h1>${isWeb() && S.scr === 'home' ? '<span class="brand">동선팩</span> <span class="xs sub" style="font-weight:500">일본 여행 동선을 예약까지 한 번에</span>' : esc(titles[S.scr])}</h1>${isWeb() ? `<div class="wnav">${[['home', '동선 찾기'], ['trip', '여행 중'], ['make', '동선 만들기']].map(x => `<button class="${S.scr === x[0] ? 'on' : ''}" data-a="go" data-v="${x[0]}">${x[1]}</button>`).join('')}</div>` : ''}${S.scr !== 'home' || S.cityOpen ? '<button class="ib hmb" data-a="gohome" aria-label="홈으로" title="홈으로"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></button>' : ''}<button class="pill" data-a="fbk" aria-haspopup="dialog">피드백</button><button class="pill ${S.big ? 'on' : ''}" aria-pressed="${S.big}" data-a="big">가 큰 글씨</button>`;
+    + `<h1>${isWeb() && S.scr === 'home' ? '<span class="brand">동선팩</span> <span class="xs sub" style="font-weight:500">일본 여행 동선을 예약까지 한 번에</span>' : esc(titles[S.scr])}</h1>${isWeb() ? `<div class="wnav">${[['guide', '도시 소개'], ['home', '동선 찾기'], ['trip', '여행 중'], ['make', '동선 만들기']].map(x => `<button class="${S.scr === x[0] ? 'on' : ''}" data-a="go" data-v="${x[0]}">${x[1]}</button>`).join('')}</div>` : ''}${S.scr !== 'home' || S.cityOpen ? '<button class="ib hmb" data-a="gohome" aria-label="홈으로" title="홈으로"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></button>' : ''}<button class="pill" data-a="fbk" aria-haspopup="dialog">피드백</button><button class="pill ${S.big ? 'on' : ''}" aria-pressed="${S.big}" data-a="big">가 큰 글씨</button>`;
 }
 
 /* 일본 해안선: 대략적인 윤곽선 (위·경도) */
@@ -1400,13 +1401,23 @@ const CG = {
 function cityGuide(c){
   const g = CG[c]; if (!g) return '<div class="cg"><p class="sub">준비 중이에요.</p></div>';
   setTimeout(() => g.h.forEach(([id]) => { if (JA[id] && EXTMAP){ wmLoad(id).then(() => { const el = document.getElementById('cgp-' + id), w = WM[id]; if (el && w && w.st === 'ok'){ el.style.backgroundImage = `url("${w.l[0].src}")`; el.title = '사진: ' + w.l[0].by + ' · ' + w.l[0].lic; el.parentElement.classList.remove('nophoto'); el.hidden = false; } }); } }), 0);
-  const photo = id => { const w = WM[id]; return w && w.st === 'ok' ? `<span class="ph" id="cgp-${id}" style="background-image:url('${esc(w.l[0].src)}')" title="사진: ${esc(w.l[0].by)} · ${esc(w.l[0].lic)}"></span>` : `<span class="ph" id="cgp-${id}" hidden></span>`; };
+  const photo = id => { const w = WM[id]; return w && w.st === 'ok' ? `<span class="cph" id="cgp-${id}" style="background-image:url('${esc(w.l[0].src)}')" title="사진: ${esc(w.l[0].by)} · ${esc(w.l[0].lic)}"></span>` : `<span class="cph" id="cgp-${id}" hidden></span>`; };
   return `<div class="cg">
    <div class="lead"><b>${esc(c)} · ${esc(g.t)}</b><p>${esc(g.d)}</p></div>
    <h3>볼거리</h3>${g.h.map(([id, sub, d]) => { const x = PL[id]; return `<div class="cgi ${WM[id] && WM[id].st === 'ok' ? '' : 'nophoto'}">${photo(id)}<div><span class="sub2">${esc(sub)}</span><b>${esc(x.n)}</b><p>${esc(d)}</p><div class="meta"><strong>추천 시간</strong>${esc(x.when)} · <strong>요금</strong>${esc(x.feeT)} · <button class="lnk" style="border:0;background:none;color:var(--pri);font-weight:700;padding:0" data-a="place" data-v="${id}">자세히 ›</button></div></div></div>`; }).join('')}
    <h3>먹을거리</h3>${g.f.map(([n, d, r]) => `<div class="cgf"><b>${esc(n)}</b><span class="xs">${esc(d)}</span>${r.length ? `<span class="r">${r.filter(id => PL[id]).map(id => `<button data-a="place" data-v="${id}">${esc(PL[id].k)} ›</button>`).join('')}</span>` : ''}</div>`).join('')}
    <h3>마츠리·축제</h3>${g.m.map(([n, w, d, u]) => `<div class="cgf"><span class="when">📅 ${esc(w)}</span><b>${esc(n)}</b><span class="xs">${esc(d)}</span>${u ? `<span class="xs sub">출처: <a href="${u}" target="_blank" rel="noopener">${esc(u.replace(/^https?:\/\/(www\.)?/, '').split('/')[0])}</a></span>` : ''}</div>`).join('')}
    <p class="xs sub" style="margin:0">축제 날짜는 해마다 조금씩 달라질 수 있어요. 가기 전에 공식 안내를 확인해 주세요. 볼거리·먹을거리 설명은 동선팩이 직접 정리한 글이에요.</p></div>`;
+}
+
+
+/* ---------- 하단 탭: 도시 소개 ---------- */
+S.gcity = S.gcity || '오사카';
+function guide(){
+  const c = CG[S.gcity] ? S.gcity : '오사카';
+  return `<div class="tagrow" role="tablist" aria-label="도시 고르기" style="padding:0 0 4px">${Object.keys(CG).map(x => `<button class="chip ${x === c ? 'on' : ''}" role="tab" aria-selected="${x === c}" data-a="gcity" data-v="${x}">${x}</button>`).join('')}</div>
+   <div style="margin:0 -16px">${cityGuide(c)}</div>
+   <button class="btn" data-a="gtocity" data-v="${c}">${c} 동선팩 보러 가기</button>`;
 }
 
 function cityHotels(city){
@@ -2099,8 +2110,8 @@ function footer(){
     <div class="btns"><button class="btn" data-a="go" data-v="book">이 동선대로 예약하기</button></div></div>`; }
   if (S.scr === 'book'){ const c = chosen(); return `<div class="foot"><div class="row"><span class="sub">예약 ${c.length}건 · 2인</span><b style="font-size:1.2em">${won(sum(c))}</b></div><button class="btn" data-a="pay">한 번에 결제 (샘플)</button></div>`; }
   if (S.scr === 'paid') return `<div class="foot"><button class="btn" data-a="go" data-v="trip">여행 중 화면 미리 보기</button></div>`;
-  if (['home','trip','make'].includes(S.scr)){
-    const t = [['home','동선 찾기','M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM21 21l-5-5'],['trip','여행 중','M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11zM12 8v4'],['make','동선 만들기','M12 5v14M5 12h14']];
+  if (['guide','home','trip','make'].includes(S.scr)){
+    const t = [['guide','도시 소개','M4 5a2 2 0 0 1 2-2h5v17H6a2 2 0 0 0-2 2zM20 5a2 2 0 0 0-2-2h-5v17h5a2 2 0 0 1 2 2zM4 5v17M20 5v17'],['home','동선 찾기','M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM21 21l-5-5'],['trip','여행 중','M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11zM12 8v4'],['make','동선 만들기','M12 5v14M5 12h14']];
     return `<nav>${t.map(x => `<button class="${S.scr === x[0] ? 'on' : ''}" data-a="go" data-v="${x[0]}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${x[2]}"/></svg>${x[1]}</button>`).join('')}</nav>`;
   }
   return '';
@@ -2480,7 +2491,7 @@ function render(){
   const full = S.scr === 'home' || (S.scr === 'detail' && S.edit);
   $('ft').innerHTML = footer();
   $('mn').className = full ? 'full' : S.scr === 'detail' ? 'dt' : '';
-  $('mn').innerHTML = ({ home, detail, book, paid, trip, make, src })[S.scr]();
+  $('mn').innerHTML = ({ guide, home, detail, book, paid, trip, make, src })[S.scr]();
   $('ft').innerHTML = footer();
   $('sh').innerHTML = sheet() || pickSheet();
   applyView();
@@ -2507,6 +2518,8 @@ document.addEventListener('scroll', e => { const c = e.target; if (!c || !c.clas
 function go(patch){ Object.assign(S, patch); render(); $('mn').scrollTop = 0; }
 const A = {
   go:v => go({ scr:v, ...(v === 'trip' ? {} : {}) }),
+  gcity:v => { S.gcity = v; render(); $('mn').scrollTop = 0; },
+  gtocity:v => { go({ scr:'home' }); setTimeout(() => A.city(v), 0); },
   big:() => go({ big:!S.big }),
   dateopen:() => { S.dateOpen = 1; render(); },
   dateclose:() => { S.dateOpen = 0; render(); },
