@@ -440,6 +440,16 @@ main.full>*{animation:none}
 .gde .toc{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
 .gde .toc button{flex-shrink:0;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 10px;font-size:.78em;min-height:30px;cursor:pointer;white-space:nowrap}
 .gde .toc button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tbox{border:2px solid #2563eb;background:#eff6ff;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.tbox>b{font-size:.95em}
+.tbox .tad{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tbox .tad button{min-height:34px;padding:0 12px;border-radius:999px;border:1px solid #bfdbfe;background:#fff;font-weight:700;font-size:.82em;cursor:pointer}
+.tbox .tad button.on{background:#1d4ed8;color:#fff;border-color:#1d4ed8}
+.tbox .tad .tdt{border-style:dashed;color:#1d4ed8}
+.tbox .tgo{text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center}
+.hcard .tlink{display:block;text-align:center;margin:6px 0 2px;padding:9px 10px;border-radius:10px;background:#eff6ff;color:#1d4ed8;font-weight:800;font-size:.86em;text-decoration:none;border:1px solid #bfdbfe}
+#tst{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:#111827;color:#fff;padding:10px 16px;border-radius:12px;font-size:.85em;max-width:min(90vw,420px);opacity:0;pointer-events:none;transition:.25s;z-index:6000;text-align:center;line-height:1.5}
+#tst.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .upd{z-index:5250}.upd .fkbox{max-width:520px}
 .upd .bh{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .upd .bb{overflow:auto}
@@ -1412,10 +1422,41 @@ function hotelsByAge(city, a){
   return b ? l.sort((x, y) => Math.abs(hRoom(x) - b) - Math.abs(hRoom(y) - b)) : l.sort((x, y) => hRoom(x) - hRoom(y));
 }
 const fitBud = (h, a) => a && AGEP[a] && Math.abs(hRoom(h) - AGEP[a].bud) <= AGEP[a].bud * 0.3;
+
+/* ---------- 트립닷컴 실시간 숙소 가격 링크 ---------- */
+const TCID = { '도쿄':228, '오사카':219, '교토':734, '나고야':360, '후쿠오카':248, '삿포로':641, '히로시마':262, '구마모토':4009, '마쓰야마':1698, '기타큐슈':3234 };
+S.tAd = (() => { try { const v = +localStorage.getItem('dongseon-adults'); return v >= 1 && v <= 6 ? v : 2; } catch (e) { return 2; } })();
+function tripDates(){
+  const a = pDate(S.tdate); if (!a) return null;
+  let b = pDate(S.tend); if (!b || b <= a) b = addD(a, 1);
+  const f = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return { in:f(a), out:f(b), n:Math.round((b - a) / 864e5) };
+}
+function tripUrl(city){
+  const id = TCID[city]; if (!id) return 'https://kr.trip.com/hotels/';
+  const d = tripDates();
+  return `https://kr.trip.com/hotels/list?city=${id}${d ? `&checkIn=${d.in}&checkOut=${d.out}` : ''}&adult=${S.tAd}&children=0&crn=1&curr=KRW&locale=ko-KR`;
+}
+function tripBox(city){
+  const d = tripDates();
+  return `<div class="tbox"><b>🔴 트립닷컴 실시간 가격</b>
+    <p class="xs" style="margin:0">${d ? `📅 ${dLab(pDate(d.in))} 체크인 · ${d.n}박` : '📅 여행 날짜를 넣으면 그 날짜의 가격으로 열려요.'} · 객실 1개</p>
+    <div class="tad" role="group" aria-label="인원"><span class="xs sub">인원</span>${[1, 2, 3, 4].map(n => `<button class="${S.tAd === n ? 'on' : ''}" data-a="tad" data-v="${n}" aria-pressed="${S.tAd === n}">${n}명</button>`).join('')}${d ? '' : `<button class="tdt" data-a="tdate">날짜 넣기</button>`}</div>
+    <a class="btn tgo" href="${tripUrl(city)}" target="_blank" rel="noopener">트립닷컴에서 ${esc(city)} 숙소 실시간 가격 보기 ↗</a>
+    <span class="xs sub">아래 요금은 가이드북 기준 참고가예요. 실제 가격과 빈방은 트립닷컴 화면이 정확해요.</span></div>`;
+}
+function toast(t){ let el = $('tst'); if (!el){ el = document.createElement('div'); el.id = 'tst'; el.setAttribute('role', 'status'); document.body.appendChild(el); } el.textContent = t; el.className = 'show'; clearTimeout(toast.tm); toast.tm = setTimeout(() => { el.className = ''; }, 3200); }
+document.addEventListener('click', async e => {
+  const a = e.target.closest('a.tlink'); if (!a) return;
+  const n = a.dataset.n || '';
+  try { await navigator.clipboard.writeText(n); toast(`"${n}" 이름을 복사했어요. 트립닷컴 검색창에 붙여 넣으면 바로 찾을 수 있어요.`); }
+  catch (err) { toast(`트립닷컴에서 "${n}"을 검색해 주세요.`); }
+});
 function cityHotelCard(h, city){
   return `<div class="hcard"><span><b>${esc(h.n)}</b>${fitBud(h, S.age) ? `<span class="hb">${S.age} 1박 예산대</span>` : ''}</span><span class="xs sub">${esc(h.area)}</span>
    <span class="hp">${esc(h.pt)}</span><span class="xs sub">2인 1실 1박 어림값 약 ${won(hRoom(h) * YEN)}${h.per ? ' (1인 요금 × 2)' : ''}</span>
    <ul>${h.pts.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+   <a class="tlink" href="${tripUrl(city)}" data-n="${esc(h.n)}" target="_blank" rel="noopener">🏨 트립닷컴에서 이 숙소 실시간 가격 보기 ↗</a>
    <span class="xs sub">요금 출처: <a href="${h.s[1]}" target="_blank" rel="noopener">${esc(h.s[0])}</a> · <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(h.n + ' ' + city)}" target="_blank" rel="noopener">구글 지도</a></span></div>`;
 }
 
@@ -1589,7 +1630,7 @@ function guide(){
 
 function cityHotels(city){
   const l = hotelsByAge(city, S.age), b = S.age ? AGEP[S.age].bud : 0;
-  return `<div class="chlist"><p class="xs sub" style="margin:0">${S.age ? `${S.age} 숙소 1박 평균 지출(${won(AGEP[S.age].krw)}${AGEP[S.age].est ? ', 추정' : ''})에 가까운 순이에요.` : '요금이 낮은 순이에요. 연령대를 고르면 그 나이대 1박 예산에 가까운 순으로 바뀌어요.'} 요금은 가이드북 기준 요금이라 날짜·시즌마다 달라요.</p>
+  return `<div class="chlist">${tripBox(city)}<p class="xs sub" style="margin:0">${S.age ? `${S.age} 숙소 1박 평균 지출(${won(AGEP[S.age].krw)}${AGEP[S.age].est ? ', 추정' : ''})에 가까운 순이에요.` : '요금이 낮은 순이에요. 연령대를 고르면 그 나이대 1박 예산에 가까운 순으로 바뀌어요.'} 요금은 가이드북 기준 요금이라 날짜·시즌마다 달라요.</p>
     ${l.map(h => cityHotelCard(h, city)).join('')}</div>`;
 }
 function ageView(){
@@ -2697,6 +2738,8 @@ const A = {
   datefix:v => { const p = pack(), r = route(p), o = v.split(',').map(Number); if (o.length !== r.length) return; setRoute(o.map(i => r[i].slice())); render(); },
   gohome:() => { Object.assign(S, { edit:false, place:null, tpick:0, ageOpen:0, onb:0, ins:null, rep:null, sel:null, dsel:null, cityOpen:false, cs:'peek' }); go({ scr:'home' }); if (typeof fitJapan === 'function') setTimeout(() => fitJapan(true), 0); },
   upd:() => updOpen(),
+  tad:v => { S.tAd = +v; try { localStorage.setItem('dongseon-adults', S.tAd); } catch (e) {} render(); },
+  tdate:() => { S.dateOpen = 1; render(); },
   prefs:() => prfRender(),
   fshare:() => { SH.msg = ''; shrRender(); setTimeout(() => { const f = $('shf'); f && f.focus({ preventScroll:true }); }, 50); },
   shdate:() => { const o = pack().shareIn; if (!o) return; S.tdate = o.a; S.tend = o.e || ''; try { localStorage.setItem(TD_KEY, S.tdate); localStorage.setItem(TE_KEY, S.tend); } catch (e) {} render(); },
@@ -3238,7 +3281,8 @@ const UPD = [
  ['11-19 20:50','동선팩을 가족들에게 링크로 공유할 수 있게 해 주세요','"가족에게 링크로 공유" 버튼: 보내는 사람·한마디·여행 날짜를 담은 링크를 카톡·문자로 보내기, 받은 사람은 지도와 함께 보고 내 동선으로 저장'],
  ['11-19 20:55','홈 지도 위 도시 버튼과 안내 문구를 지우고, 카테고리·연령대·여행 날짜를 새 소식 옆 한 칸으로 합쳐 주세요','지도 위 버튼 정리, 상단 "🎯 맞춤" 버튼 하나에 카테고리·연령대별 추천·여행 날짜 통합'],
  ['11-19 21:00','처음 공지에 닫기 옆 가이드 보기를 만들고, 사진과 함께 설명하는 이용 가이드를 만들어 주세요','첫 공지에 "📖 가이드 보기" 버튼, 실제 화면 사진 11장으로 단계별 이용 가이드 (새 소식 창에서도 열기)'],
- ['11-19 21:25','가이드 사진을 전체 화면이 아니라 필요한 부분만 나오게 해 주세요','가이드 사진 11장을 설명하는 부분만 잘라서 다시 찍기']
+ ['11-19 21:25','가이드 사진을 전체 화면이 아니라 필요한 부분만 나오게 해 주세요','가이드 사진 11장을 설명하는 부분만 잘라서 다시 찍기'],
+ ['11-19 21:30','실제 호텔 값을 실시간으로 볼 수 있게 해 주세요','숙소 목록에 트립닷컴 실시간 가격 버튼: 여행 날짜·인원을 채워 그 도시 숙소 검색을 열고, 숙소별 버튼은 이름을 복사해 바로 찾게']
 ];
 const UPD_KEY = 'dongseon-upd-seen', UPD_V = String(UPD.length);
 function updNew(){ try { return localStorage.getItem(UPD_KEY) !== UPD_V; } catch (e) { return false; } }
