@@ -422,6 +422,24 @@ main.full>*{animation:none}
 .prf .pr.on{border-color:var(--pri);background:#eef4ff}.prf .pr.on .tx span{color:var(--pri);font-weight:700}
 .prf .pr .ar{color:var(--sub);font-size:1.2em}
 @media (max-width:400px){header .pill{padding:0 10px;font-size:.8em}}
+.ntc .nbtns{display:flex;gap:8px;margin-top:4px}.ntc .nbtns .btn{flex:1}
+.gde{z-index:5270}.gde .fkbox{max-width:440px;border-radius:20px}
+.gde .bh{display:flex;align-items:center;justify-content:space-between}
+.gde .bb{display:flex;flex-direction:column;gap:10px;overflow:auto}
+.gde .shot{position:relative;background:#e2e8f0;border-radius:16px;overflow:hidden;height:min(46vh,400px);display:flex;justify-content:center}
+.gde .shot img{height:100%;width:auto;max-width:100%;object-fit:contain;display:block;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+.gde .stp{font-size:.78em;font-weight:800;color:var(--pri)}
+.gde h3{margin:0;font-size:1.08em}
+.gde .bb p{margin:0;line-height:1.6;font-size:.92em}
+.gde ul{margin:0;padding-left:18px;font-size:.88em;line-height:1.6}
+.gde .nav{display:flex;align-items:center;gap:8px;margin-top:4px}
+.gde .nav .btn{flex:1;min-height:46px}
+.gde .dots{display:flex;gap:5px;justify-content:center;flex-wrap:wrap}
+.gde .dots button{width:9px;height:9px;min-height:0;border-radius:50%;border:0;padding:0;background:#cbd5e1;cursor:pointer}
+.gde .dots button.on{background:var(--pri);width:22px;border-radius:5px}
+.gde .toc{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.gde .toc button{flex-shrink:0;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 10px;font-size:.78em;min-height:30px;cursor:pointer;white-space:nowrap}
+.gde .toc button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 .upd{z-index:5250}.upd .fkbox{max-width:520px}
 .upd .bh{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .upd .bb{overflow:auto}
@@ -688,6 +706,7 @@ main.dt .dl>*{order:2}
   <div id="ft"></div>
   <div id="sh"></div>
   <div id="ntc" class="fbk ntc" hidden role="dialog" aria-modal="true" aria-labelledby="ntct"></div>
+  <div id="gde" class="fbk ntc gde" hidden role="dialog" aria-modal="true" aria-labelledby="gdet"></div>
   <div id="prf" class="fbk ntc prf" hidden role="dialog" aria-modal="true" aria-labelledby="prft"></div>
   <div id="upd" class="fbk ntc upd" hidden role="dialog" aria-modal="true" aria-labelledby="updt"></div>
   <div id="shr" class="fbk ntc shr" hidden role="dialog" aria-modal="true" aria-labelledby="shrt"></div>
@@ -3121,6 +3140,49 @@ document.addEventListener('click', e => {
   A[act]();
 });
 document.addEventListener('keydown', e => { const el = $('prf'); if (e.key === 'Escape' && !el.hidden){ e.stopImmediatePropagation(); prfClose(); } }, true);
+
+/* ---------- 이용 가이드 (사진과 함께) ---------- */
+const GDB = /\/web\/(index\.html)?$/.test(location.pathname) ? '../guide/' : 'guide/';
+const GDE = [
+ ['도시 고르기', '홈 지도에서 가고 싶은 도시 핀을 눌러요.', ['핀마다 동선팩 개수와 최저 가격이 적혀 있어요.', '지도는 끌어서 움직이고, 두 손가락이나 + − 버튼으로 확대해요.', '⟲ 버튼을 누르면 처음 위치로 돌아와요.']],
+ ['🎯 맞춤 추천 정하기', '맨 위 🎯 맞춤 버튼에서 세 가지를 정하면 나에게 맞는 동선팩이 먼저 나와요.', ['카테고리: 성·온천·야경·라멘처럼 좋아하는 여행 취향', '연령대별 추천: 10대~70대 여행 트렌드 기준', '여행 날짜: 출발일·귀국일을 넣으면 휴무일과 일정 길이를 맞춰 줘요']],
+ ['동선팩 목록 보기', '도시를 고르면 아래에서 동선팩 목록이 올라와요.', ['"일정 딱 맞음", "날짜 OK" 배지로 내 일정에 맞는지 바로 보여요.', '태그(첫 해외여행·부모님과 등)로 걸러 볼 수 있어요.', '📖 도시 소개, 🏨 숙소 목록도 여기서 볼 수 있어요.']],
+ ['동선팩 자세히 보기', '동선팩을 누르면 며칠 동안 어디를 가는지 한눈에 보여요.', ['전체·1일차·2일차 탭으로 하루씩 나눠 봐요.', '여행 날짜를 넣었다면 휴무인 곳이 있는지 알려 줘요.', '아래 "이 동선대로 예약하기"로 숙소·교통·입장권을 한 번에 담아요(견본).']],
+ ['일차별 동선과 이동 방법', '장소 사이 이동 방법과 시간이 함께 나와요.', ['도보·전철·버스 등 이동 수단과 소요 시간', '"구글 지도에서 경로 열기"로 실제 길찾기', '+ 버튼으로 장소를 넣고, ✕로 빼고, ⇄로 바꿀 수 있어요.']],
+ ['동선 편집', '"지도 크게 보기"나 편집 버튼을 누르면 지도를 보면서 동선을 고쳐요.', ['관광·거리·체험·맛집 필터로 근처 장소를 골라 넣어요.', '구간마다 이동 방법을 직접 고르고, 경로를 색깔별로 비교해요.', '다 고쳤으면 오른쪽 위 "완료"를 눌러요.']],
+ ['장소 정보와 맛집 메뉴', '장소 이름이나 ⓘ를 누르면 사진·지도·요금이 나와요.', ['맛집은 메뉴판 가격과 메뉴 설명이 있어요.', '"이렇게 시켜 보세요"에서 혼자·둘이 먹기 좋은 추천 조합을 알려 줘요.', '실제 지도와 주변 장소, 길찾기 링크도 함께 있어요.']],
+ ['도시 소개와 추천 상품', '하단 맨 왼쪽 "도시 소개" 탭에서 도시를 가이드북처럼 둘러봐요.', ['볼거리·먹을거리·마츠리와 축제를 사진과 함께 소개해요.', '추천 상품: 오사카 주유패스처럼 그 도시에서 쓰기 좋은 교통·관광 패스', '"함께 가기 좋은 곳" 버튼으로 그 장소 정보로 바로 가요.']],
+ ['가족에게 링크로 공유', '동선팩 화면의 "👨‍👩‍👧 가족에게 링크로 공유"를 눌러요.', ['보내는 사람과 한마디, 여행 날짜를 함께 담을 수 있어요.', '카카오톡·문자로 보내면 가족은 앱 없이 링크만 눌러 봐요.', '받은 가족은 "내 동선으로 저장"으로 따로 고칠 수 있어요.']],
+ ['여행 중', '하단 "여행 중" 탭은 여행 당일에 쓰는 화면이에요(샘플 상황).', ['오늘 일차의 장소를 순서대로 보여 줘요.', '갑자기 휴관하면 순서 바꾸기·대체 장소를 추천해 줘요.', '"동선 바꾸기"로 다른 동선팩이나 날짜로 바꿀 수 있어요.']],
+ ['피드백 남기기', '맨 위 "피드백"을 누르면 짧은 설문과 후기 게시판이 열려요.', ['"이 기능이 출시되면 사용하시겠습니까?"에 답해 주세요.', '평가글을 남기고 다른 사람 글에 답글도 달 수 있어요.', '남긴 의견은 마케팅 전략론 과제 보고서에만 쓰여요.']]
+];
+const GD = { i:0 };
+function gdeRender(){
+  const el = $('gde'), i = GD.i, [t, d, l] = GDE[i];
+  el.innerHTML = `<div class="fkbox"><div class="bh"><h2 id="gdet">📖 이용 가이드</h2><button class="ib" data-gd="x" aria-label="닫기">✕</button></div><div class="bb">
+    <div class="toc">${GDE.map((g, k) => `<button class="${k === i ? 'on' : ''}" data-gd="${k}">${k + 1}. ${g[0].replace(/^[^가-힣A-Za-z]+/, '')}</button>`).join('')}</div>
+    <div class="shot"><img src="${GDB}${i + 1}.jpg" alt="${esc(t)} 화면" loading="eager" onerror="this.parentNode.style.display='none'"></div>
+    <span class="stp">${i + 1} / ${GDE.length}</span><h3>${t}</h3><p>${d}</p><ul>${l.map(x => `<li>${x}</li>`).join('')}</ul>
+    <div class="dots">${GDE.map((g, k) => `<button class="${k === i ? 'on' : ''}" data-gd="${k}" aria-label="${k + 1}번째 단계"></button>`).join('')}</div>
+    <div class="nav"><button class="btn" data-gd="prev" ${i ? '' : 'disabled style="opacity:.4"'}>‹ 이전</button>${i < GDE.length - 1 ? `<button class="btn dark" data-gd="next">다음 ›</button>` : `<button class="btn dark" data-gd="x">시작하기</button>`}</div>
+  </div></div>`;
+  el.hidden = false;
+  const on = el.querySelector('.toc .on'); if (on) on.scrollIntoView({ block:'nearest', inline:'center' });
+  const n = GDE[i + 1] && new Image(); if (n) n.src = GDB + (i + 2) + '.jpg';
+}
+function gdeOpen(k){ GD.i = +k || 0; gdeRender(); setTimeout(() => { const b = $('gde').querySelector('[data-gd="next"]'); b && b.focus({ preventScroll:true }); }, 50); }
+function gdeClose(){ const el = $('gde'); el.hidden = true; el.innerHTML = ''; }
+document.addEventListener('click', e => {
+  const el = $('gde'); if (el.hidden) return; const b = e.target.closest('[data-gd]');
+  if (e.target === el || (b && b.dataset.gd === 'x')) return gdeClose();
+  if (!b) return; const v = b.dataset.gd;
+  GD.i = v === 'next' ? Math.min(GD.i + 1, GDE.length - 1) : v === 'prev' ? Math.max(GD.i - 1, 0) : +v; gdeRender();
+});
+document.addEventListener('keydown', e => { const el = $('gde'); if (el.hidden) return;
+  if (e.key === 'Escape'){ e.stopImmediatePropagation(); gdeClose(); }
+  else if (e.key === 'ArrowRight' && GD.i < GDE.length - 1){ GD.i++; gdeRender(); } else if (e.key === 'ArrowLeft' && GD.i > 0){ GD.i--; gdeRender(); } }, true);
+(function(){ let x0 = null; document.addEventListener('touchstart', e => { if (e.target.closest && e.target.closest('#gde .shot')) x0 = e.touches[0].clientX; }, { passive:true });
+  document.addEventListener('touchend', e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) < 40) return; GD.i = Math.max(0, Math.min(GDE.length - 1, GD.i + (dx < 0 ? 1 : -1))); gdeRender(); }, { passive:true }); })();
 /* ---------- 업데이트 내역 ---------- */
 const UPD = [
  ['11-16 23:10','동선팩 앱을 실제 지도로 만들어 주세요','무료 실제 지도를 쓰는 동선팩 앱 첫 공개'],
@@ -3174,7 +3236,8 @@ const UPD = [
  ['11-19 19:28','업데이트된 리스트를 볼 수 있게 해 주세요','상단 "새 소식" 버튼과 업데이트 내역'],
  ['11-19 19:40','업데이트 내역을 요청한 순간마다 하나씩 리스트로 만들어 주세요','요청 하나당 한 줄로 정리한 지금 이 목록'],
  ['11-19 21:05','동선팩을 가족들에게 링크로 공유할 수 있게 해 주세요','"가족에게 링크로 공유" 버튼: 보내는 사람·한마디·여행 날짜를 담은 링크를 카톡·문자로 보내기, 받은 사람은 지도와 함께 보고 내 동선으로 저장'],
- ['11-19 21:15','홈 지도 위 도시 버튼과 안내 문구를 지우고, 카테고리·연령대·여행 날짜를 새 소식 옆 한 칸으로 합쳐 주세요','지도 위 버튼 정리, 상단 "🎯 맞춤" 버튼 하나에 카테고리·연령대별 추천·여행 날짜 통합']
+ ['11-19 21:15','홈 지도 위 도시 버튼과 안내 문구를 지우고, 카테고리·연령대·여행 날짜를 새 소식 옆 한 칸으로 합쳐 주세요','지도 위 버튼 정리, 상단 "🎯 맞춤" 버튼 하나에 카테고리·연령대별 추천·여행 날짜 통합'],
+ ['11-19 21:30','처음 공지에 닫기 옆 가이드 보기를 만들고, 사진과 함께 설명하는 이용 가이드를 만들어 주세요','첫 공지에 "📖 가이드 보기" 버튼, 실제 화면 사진 11장으로 단계별 이용 가이드 (새 소식 창에서도 열기)']
 ];
 const UPD_KEY = 'dongseon-upd-seen', UPD_V = String(UPD.length);
 function updNew(){ try { return localStorage.getItem(UPD_KEY) !== UPD_V; } catch (e) { return false; } }
@@ -3183,7 +3246,7 @@ function updOpen(){
   const days = {}; UPD.forEach((u, i) => { const d = u[0].slice(0, 5); (days[d] = days[d] || []).push([i + 1, u]); });
   const md = d => { const [m, dd] = d.split('-'); return `${+m}월 ${+dd}일`; };
   el.innerHTML = `<div class="fkbox"><div class="bh"><h2 id="updt">🆕 업데이트 내역</h2><button class="ib" data-u="x" aria-label="닫기">✕</button></div><div class="bb">
-    <p class="xs sub" style="margin:0 0 12px">요청이 들어온 순간마다 한 줄씩, 최근 순서로 적었어요. 모두 ${UPD.length}번 업데이트했어요.</p>
+    <button class="lnk" data-u="gde" style="border:0;background:#eef4ff;color:var(--pri);font-weight:800;border-radius:12px;min-height:44px;width:100%;margin-bottom:10px">📖 이용 가이드 보기 ›</button><p class="xs sub" style="margin:0 0 12px">요청이 들어온 순간마다 한 줄씩, 최근 순서로 적었어요. 모두 ${UPD.length}번 업데이트했어요.</p>
     ${Object.keys(days).reverse().map(d => `<section class="uv"><h3>${md(d)} <span class="xs sub" style="font-weight:500">${days[d].length}건</span></h3><ol class="ul">${days[d].slice().reverse().map(([n, u]) => `<li><div class="hd"><span class="no">#${n}</span><span class="tm">${u[0].slice(6)}</span>${seen && n > seen ? '<span class="nw">NEW</span>' : ''}</div><p class="q">💬 ${esc(u[1])}</p><p class="a">✅ ${esc(u[2])}</p></li>`).join('')}</ol></section>`).join('')}
     <button class="btn" data-u="x">확인했어요</button></div></div>`;
   el.hidden = false;
@@ -3191,7 +3254,7 @@ function updOpen(){
   setTimeout(() => { const b = el.querySelector('.bh [data-u]'); b && b.focus({ preventScroll:true }); const bb = el.querySelector('.bb'); if (bb) bb.scrollTop = 0; }, 50);
 }
 function updClose(){ const el = $('upd'); el.hidden = true; el.innerHTML = ''; render(); const b = document.querySelector('[data-a="upd"]'); b && b.focus(); }
-document.addEventListener('click', e => { const el = $('upd'); if (el.hidden) return; if (e.target.closest('[data-u="x"]') || e.target === el) updClose(); });
+document.addEventListener('click', e => { const el = $('upd'); if (el.hidden) return; if (e.target.closest('[data-u="gde"]')){ el.hidden = true; el.innerHTML = ''; gdeOpen(); return; } if (e.target.closest('[data-u="x"]') || e.target === el) updClose(); });
 document.addEventListener('keydown', e => { const el = $('upd'); if (e.key === 'Escape' && !el.hidden){ e.stopImmediatePropagation(); updClose(); } }, true);
 /* ---------- 첫 화면 공지: 테스트용 시제품 ---------- */
 (function(){
@@ -3204,10 +3267,10 @@ document.addEventListener('keydown', e => { const el = $('upd'); if (e.key === '
     <li>예약·결제 화면은 흐름을 보여 주는 견본이라 실제로 예약되거나 돈이 나가지 않아요.</li>
     <li>요금·영업시간은 조사 시점 기준이라 실제와 다를 수 있어요.</li>
     <li>남겨 주신 리뷰·피드백·설문은 마케팅 전략론 과제 보고서에만 쓰여요.</li></ul>
-    <button class="btn" data-ntc="ok">확인했어요</button><button class="lnk" data-ntc="upd" style="border:0;background:none;color:var(--pri);font-weight:700;min-height:40px;width:100%">🆕 업데이트 내역 보기 ›</button></div></div>`;
+    <div class="nbtns"><button class="btn dark" data-ntc="gde">📖 가이드 보기</button><button class="btn" data-ntc="ok">닫기</button></div><button class="lnk" data-ntc="upd" style="border:0;background:none;color:var(--pri);font-weight:700;min-height:40px;width:100%">🆕 업데이트 내역 보기 ›</button></div></div>`;
   el.hidden = false;
   const close = () => { el.hidden = true; el.innerHTML = ''; try { sessionStorage.setItem('dongseon-notice-v1', '1'); } catch (e) {} };
-  el.addEventListener('click', e => { const t = e.target.closest('[data-ntc]'); if (t){ close(); if (t.dataset.ntc === 'upd') updOpen(); } });
+  el.addEventListener('click', e => { const t = e.target.closest('[data-ntc]'); if (t){ close(); if (t.dataset.ntc === 'upd') updOpen(); if (t.dataset.ntc === 'gde') gdeOpen(); } });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !el.hidden){ e.stopImmediatePropagation(); close(); } }, true);
   setTimeout(() => { const b = el.querySelector('[data-ntc]'); b && b.focus(); }, 50);
 })();
