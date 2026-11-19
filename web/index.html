@@ -396,6 +396,21 @@ main.full>*{animation:none}
 .upd .ul .no{font-weight:800;color:#3f7d20}.upd .ul .tm{color:#777}
 .upd .ul .nw{background:#e53935;color:#fff;border-radius:999px;font-size:.85em;padding:0 7px}
 .upd .ul p{margin:3px 0 0;font-size:.88em;line-height:1.5}.upd .ul p.q{font-weight:700}.upd .ul p.a{color:#444}
+.shbtn{margin-top:10px;width:100%;background:#fff7e6;color:#9a3412;border:1.5px solid #fdba74;font-weight:800}
+.shin{margin-top:10px;background:#fffbeb;border:1.5px solid #fcd34d;border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.shin b{font-size:.95em}.shin p{margin:0;font-size:.88em;line-height:1.5}
+.shin .memo{background:#fff;border-radius:10px;padding:6px 10px;border:1px dashed #fcd34d}
+.shin .row{display:flex;gap:6px;flex-wrap:wrap}.shin .row button{flex:1;min-height:40px}
+.shr{z-index:5260}.shr .fkbox{max-width:460px}
+.shr .bh{display:flex;align-items:center;justify-content:space-between}
+.shr .bb{display:flex;flex-direction:column;gap:10px}
+.shr label{font-size:.85em;font-weight:700;display:flex;flex-direction:column;gap:4px}
+.shr input,.shr textarea{font:inherit;border:1px solid #cfd8e3;border-radius:10px;padding:9px 10px;font-size:.95em}
+.shr textarea{min-height:64px;resize:vertical}
+.shr .lk{font-size:.75em;word-break:break-all;background:#f1f5f9;border-radius:8px;padding:8px;color:#334155;max-height:72px;overflow:auto}
+.shr .pv{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px;font-size:.85em;line-height:1.55;white-space:pre-line}
+.shr .ok{color:#166534;font-weight:800;font-size:.88em;margin:0}
+.shr .cb{display:flex;align-items:center;gap:8px;flex-direction:row;font-weight:500}
 .upd{z-index:5250}.upd .fkbox{max-width:520px}
 .upd .bh{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .upd .bb{overflow:auto}
@@ -663,6 +678,7 @@ main.dt .dl>*{order:2}
   <div id="sh"></div>
   <div id="ntc" class="fbk ntc" hidden role="dialog" aria-modal="true" aria-labelledby="ntct"></div>
   <div id="upd" class="fbk ntc upd" hidden role="dialog" aria-modal="true" aria-labelledby="updt"></div>
+  <div id="shr" class="fbk ntc shr" hidden role="dialog" aria-modal="true" aria-labelledby="shrt"></div>
   <div id="srv" class="fbk srv" hidden role="dialog" aria-modal="true" aria-labelledby="svq"></div>
   <div id="fbk" class="fbk" hidden role="dialog" aria-modal="true" aria-labelledby="fkt"></div>
 </div>
@@ -2110,7 +2126,9 @@ function detail(){
   const p = pack(), r = route(p), all = S.day === -1, d = all ? 0 : Math.min(S.day, r.length - 1);
   const groups = all ? r.map((ids, k) => ({ ids, color:COLORS[k % 5], label:k + 1 })).filter(g => g.ids.length) : [{ ids:r[d], color:COLORS[d % 5] }];
   return `<div class="dcol"><div class="dh"><div><h2>${esc(p.title)}</h2><p class="sub" style="margin-top:6px">${esc(p.sub)}</p>
-    <p style="margin-top:8px">${p.user ? `<span class="badge ub">${p.draft ? '작성 중' : '여행자 등록'}</span> <span class="xs sub">${esc(p.who)}${p.by ? ' · 만든 사람 ' + esc(p.by) : ''}</span>` : `<span class="badge">예약 인증</span> <span class="xs sub">예약 내역과 함께 올라온 동선이라는 설정의 샘플 · ${esc(p.who)}</span>`}</p>
+    ${p.shareIn ? shareInBox(p) : ''}
+    <p style="margin-top:8px">${p.shareIn ? `<span class="badge ub" style="background:#fde68a;color:#7c2d12">가족 공유</span> <span class="xs sub">${esc(p.who)}</span>` : p.user ? `<span class="badge ub">${p.draft ? '작성 중' : '여행자 등록'}</span> <span class="xs sub">${esc(p.who)}${p.by ? ' · 만든 사람 ' + esc(p.by) : ''}</span>` : `<span class="badge">예약 인증</span> <span class="xs sub">예약 내역과 함께 올라온 동선이라는 설정의 샘플 · ${esc(p.who)}</span>`}</p>
+    ${p.draft ? '' : `<button class="btn shbtn" data-a="fshare">👨‍👩‍👧 가족에게 링크로 공유</button>`}
     ${p.draft ? `<div class="pubbox"><b>아직 등록 전이에요</b><span class="xs sub">편집에서 장소를 담은 뒤 등록하면 ${PDB ? '모든 사람이 볼 수 있어요' : '이 브라우저의 동선팩 목록에 올라가요'}.</span><div class="row" style="gap:8px;margin-top:8px"><button class="btn" style="flex:1" data-a="edit">장소 담기·편집</button><button class="btn dark" style="flex:1" data-a="publish">동선팩 등록하기</button></div>${S.pubMsg ? `<p class="xs" style="margin-top:6px;color:var(--pri);font-weight:700">${esc(S.pubMsg)}</p>` : ''}</div>` : S.pubMsg && p.mine ? `<p class="xs" style="margin-top:6px;color:#166534;font-weight:700">${esc(S.pubMsg)}</p>` : ''}</div>
   <div class="tabs" role="tablist"><button role="tab" class="${all ? 'on' : ''}" data-a="day" data-v="-1">전체</button>${r.map((x, i) => `<button role="tab" class="${!all && i === d ? 'on' : ''}" data-a="day" data-v="${i}">${i + 1}일차${S.tdate ? `<small>${dLab(addD(pDate(S.tdate), i))}</small>` : ''}</button>`).join('')}</div>${dateWarn(p)}</div>
   <div class="dl">${MOVE_NOTE}${(all ? r.map((ids, k) => ({ ids, k })) : [{ ids:r[d], k:d }]).map(g => `<h3>${g.k + 1}일차 ${g.ids.length ? (g.ids.length > 1 ? `<span class="xs sub">· 이동 약 ${minT(dayMove(g.ids))}</span>` : '') : '· 귀국·자유 일정'}</h3><button class="lplus dplus" data-a="insat" data-v="${g.k}:0"><span>+</span>${g.ids.length ? '맨 앞에 추가' : '이 날 장소 추가'}</button>${g.ids.length ? `<div class="tl">${g.ids.map((id, i) => stopRow(id, g.k, i, g.ids, S.edit, r.length)).join('')}</div><button class="lplus dplus" data-a="insat" data-v="${g.k}:${g.ids.length}"><span>+</span>맨 뒤에 추가</button>` : ''}`).join('')}
@@ -2650,6 +2668,11 @@ const A = {
   datefix:v => { const p = pack(), r = route(p), o = v.split(',').map(Number); if (o.length !== r.length) return; setRoute(o.map(i => r[i].slice())); render(); },
   gohome:() => { Object.assign(S, { edit:false, place:null, tpick:0, ageOpen:0, onb:0, ins:null, rep:null, sel:null, dsel:null, cityOpen:false, cs:'peek' }); go({ scr:'home' }); if (typeof fitJapan === 'function') setTimeout(() => fitJapan(true), 0); },
   upd:() => updOpen(),
+  fshare:() => { SH.msg = ''; shrRender(); setTimeout(() => { const f = $('shf'); f && f.focus({ preventScroll:true }); }, 50); },
+  shdate:() => { const o = pack().shareIn; if (!o) return; S.tdate = o.a; S.tend = o.e || ''; try { localStorage.setItem(TD_KEY, S.tdate); localStorage.setItem(TE_KEY, S.tend); } catch (e) {} render(); },
+  shsave:() => { const p = pack(); if (!p || !p.shareIn) return; const id = 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const d = { id, city:p.city, title:p.title, sub:p.sub, who:p.who, tags:p.tags, by:p.shareIn.f, days:route(p).map(x => x.slice()), draft:false, at:Date.now() };
+    MYP.push(d); saveMyp(); addUserPack(Object.assign({}, d, { mine:true })); S.shSaved = p.id; render(); },
   fbk:() => { if (SV.done) return fkOpen(); SV.from = 'feedback'; SV.next = 'fbk'; SV.step = 1; svRender(); },
   hjp:() => fitJapan(true),
   city:v => { if (S.city !== v) S.tf = '전체'; S.city = v; S.cityOpen = true; S.cs = 'peek'; render();
@@ -2985,6 +3008,81 @@ function svLockHTML(){
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.tpick && S.scr === 'trip'){ S.tpick = 0; render(); } });
 
+
+/* ---------- 가족에게 링크로 공유 ---------- */
+const SHARE_BASE = 'https://unknowns-babari.github.io/dongseon/';
+const b64e = o => btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(o)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const b64d = t => JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(t.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0))));
+const SH = { from:(() => { try { return localStorage.getItem('dongseon-share-from') || ''; } catch (e) { return ''; } })(), memo:'', date:true, msg:'' };
+function shareData(){
+  const p = pack(), o = { v:1, i:p.id, c:p.city, t:p.title, s:p.sub, w:p.who, g:p.tags || [], r:route(p).map(x => x.slice()) };
+  if (SH.from) o.f = SH.from.slice(0, 20); if (SH.memo) o.m = SH.memo.slice(0, 200);
+  if (SH.date && S.tdate){ o.a = S.tdate; if (S.tend) o.e = S.tend; }
+  return o;
+}
+function shareUrl(){
+  const base = (window.claude && window.claude.use) || !/^https?:/.test(location.protocol) ? SHARE_BASE : location.origin + location.pathname.replace(/web\/(index\.html)?$/, '');
+  return base + '#share=' + b64e(shareData());
+}
+function shareText(){
+  const p = pack(), r = route(p), o = shareData();
+  const dt = o.a ? `\n📅 ${dLab(pDate(o.a))}${o.e ? ' ~ ' + dLab(pDate(o.e)) : ' 출발'}` : '';
+  const days = r.map((ids, k) => `${k + 1}일차: ${ids.length ? ids.map(id => PL[id].k || PL[id].n).join(' → ') : '자유 일정'}`).join('\n');
+  return `[동선팩] ${p.city} · ${p.title}${dt}${o.f ? `\n보낸 사람: ${o.f}` : ''}${o.m ? `\n💬 ${o.m}` : ''}\n\n${days}\n\n링크를 누르면 지도와 함께 볼 수 있어요 👇`;
+}
+function shrRender(){
+  const el = $('shr'), p = pack(); if (!p){ el.hidden = true; return; }
+  const url = shareUrl();
+  el.innerHTML = `<div class="fkbox"><div class="bh"><h2 id="shrt">👨‍👩‍👧 가족에게 공유</h2><button class="ib" data-sh="x" aria-label="닫기">✕</button></div><div class="bb">
+    <p class="xs sub" style="margin:0">링크를 받은 가족은 앱을 깔지 않아도 지금 고친 동선 그대로 지도와 함께 볼 수 있어요. 로그인도 필요 없어요.</p>
+    <label>보내는 사람 (선택)<input id="shf" maxlength="20" placeholder="예: 큰딸 지민" value="${esc(SH.from)}"></label>
+    <label>한마디 (선택)<textarea id="shm" maxlength="200" placeholder="예: 엄마 아빠, 둘째 날은 천천히 걷는 코스로 짰어요!">${esc(SH.memo)}</textarea></label>
+    ${S.tdate ? `<label class="cb"><input type="checkbox" id="shd" ${SH.date ? 'checked' : ''}> 여행 날짜(${dLab(pDate(S.tdate))}${tripLen() ? ' ~ ' + dLab(pDate(S.tend)) : ''})도 같이 보내기</label>` : ''}
+    <div class="pv">${esc(shareText())}</div>
+    <div class="lk">${esc(url)}</div>
+    <button class="btn" data-sh="send">📤 카카오톡·문자 등으로 보내기</button>
+    <button class="btn dark" data-sh="copy">🔗 링크 복사</button>
+    ${SH.msg ? `<p class="ok">${esc(SH.msg)}</p>` : ''}
+    </div></div>`;
+  el.hidden = false;
+}
+function shrRead(){ const f = $('shf'), m = $('shm'), d = $('shd'); if (f){ SH.from = f.value.trim(); try { localStorage.setItem('dongseon-share-from', SH.from); } catch (e) {} } if (m) SH.memo = m.value.trim(); if (d) SH.date = d.checked; }
+async function shrCopy(t){
+  try { await navigator.clipboard.writeText(t); return true; } catch (e) {}
+  try { const ta = document.createElement('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); const ok = document.execCommand('copy'); ta.remove(); return ok; } catch (e) { return false; }
+}
+document.addEventListener('click', async e => {
+  const el = $('shr'); if (el.hidden) return; const b = e.target.closest('[data-sh]');
+  if (e.target === el || (b && b.dataset.sh === 'x')){ el.hidden = true; el.innerHTML = ''; SH.msg = ''; return; }
+  if (!b) return; shrRead(); const url = shareUrl(), txt = shareText();
+  if (b.dataset.sh === 'send'){
+    if (navigator.share){ try { await navigator.share({ title:'동선팩 · ' + pack().title, text:txt, url }); SH.msg = '보냈어요!'; } catch (err) { if (err && err.name === 'AbortError'){ return; } SH.msg = (await shrCopy(txt + '\n' + url)) ? '이 기기에서는 바로 보내기가 안 돼서 내용과 링크를 복사했어요. 카톡에 붙여 넣어 주세요.' : '보내지 못했어요. 아래 링크를 길게 눌러 복사해 주세요.'; } }
+    else SH.msg = (await shrCopy(txt + '\n' + url)) ? '내용과 링크를 복사했어요. 카카오톡이나 문자에 붙여 넣어 주세요.' : '복사하지 못했어요. 위 링크를 길게 눌러 복사해 주세요.';
+  } else if (b.dataset.sh === 'copy') SH.msg = (await shrCopy(url)) ? '링크를 복사했어요. 가족 대화방에 붙여 넣어 주세요.' : '복사하지 못했어요. 위 링크를 길게 눌러 복사해 주세요.';
+  shrRender();
+});
+document.addEventListener('input', e => { if (e.target.closest && e.target.closest('#shr') && e.target.id !== 'shd'){ clearTimeout(SH.tm); SH.tm = setTimeout(() => { shrRead(); const pv = document.querySelector('#shr .pv'), lk = document.querySelector('#shr .lk'); if (pv) pv.textContent = shareText(); if (lk) lk.textContent = shareUrl(); }, 200); } });
+document.addEventListener('change', e => { if (e.target.id === 'shd'){ shrRead(); shrRender(); } });
+document.addEventListener('keydown', e => { const el = $('shr'); if (e.key === 'Escape' && !el.hidden){ e.stopImmediatePropagation(); el.hidden = true; el.innerHTML = ''; SH.msg = ''; } }, true);
+
+function shareInBox(p){
+  const o = p.shareIn, dt = o.a ? `${dLab(pDate(o.a))}${o.e ? ' ~ ' + dLab(pDate(o.e)) : ' 출발'}` : '';
+  const same = o.a && S.tdate === o.a && (S.tend || '') === (o.e || '');
+  return `<div class="shin"><b>💌 ${o.f ? esc(o.f) + '님이' : '가족이'} 공유한 동선이에요</b>
+    ${o.m ? `<p class="memo">${esc(o.m)}</p>` : ''}${dt ? `<p>📅 여행 날짜: <b>${dt}</b></p>` : ''}
+    <div class="row">${dt && !same ? `<button class="btn" data-a="shdate">이 날짜로 보기</button>` : ''}${S.shSaved === p.id ? `<span class="xs" style="color:#166534;font-weight:800;align-self:center">내 동선 만들기 목록에 저장했어요</span>` : `<button class="btn dark" data-a="shsave">내 동선으로 저장</button>`}</div></div>`;
+}
+(function(){
+  const m = location.hash.match(/share=([A-Za-z0-9_-]+)/); if (!m) return;
+  let o; try { o = b64d(m[1]); } catch (e) { return; }
+  if (!o || !CITY[o.c] || !Array.isArray(o.r)) return;
+  let h = 0; for (const ch of m[1]) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const base = PACKS.find(x => x.id === o.i);
+  const d = { id:'ush' + h.toString(36), city:o.c, title:(base && base.title) || o.t, sub:(base && base.sub) || o.s || '', who:(base && base.who) || o.w || '', tags:(base && base.tags) || o.g || [], days:o.r, by:o.f || '' };
+  const p = addUserPack(d); if (!p) return;
+  p.shareIn = { f:String(o.f || '').slice(0, 20), m:String(o.m || '').slice(0, 200), a:pDate(o.a) ? o.a : '', e:pDate(o.e) ? o.e : '' };
+  Object.assign(S, { scr:'detail', pid:p.id, city:p.city, day:-1, edit:false, cityOpen:false });
+})();
 /* ---------- 업데이트 내역 ---------- */
 const UPD = [
  ['11-16 23:10','동선팩 앱을 실제 지도로 만들어 주세요','무료 실제 지도를 쓰는 동선팩 앱 첫 공개'],
@@ -3036,7 +3134,8 @@ const UPD = [
  ['11-19 17:29','사진처럼 그림이랑 같이 보이게 해 주세요','사진 중심 레이아웃'],
  ['11-19 17:45','실제 사진을 올리고 도시마다 추천 상품(주유패스 등)을 넣어 주세요','실제 사진 189곳 저장, 도시별 교통·관광 패스 14종'],
  ['11-19 19:28','업데이트된 리스트를 볼 수 있게 해 주세요','상단 "새 소식" 버튼과 업데이트 내역'],
- ['11-19 19:40','업데이트 내역을 요청한 순간마다 하나씩 리스트로 만들어 주세요','요청 하나당 한 줄로 정리한 지금 이 목록']
+ ['11-19 19:40','업데이트 내역을 요청한 순간마다 하나씩 리스트로 만들어 주세요','요청 하나당 한 줄로 정리한 지금 이 목록'],
+ ['11-19 21:05','동선팩을 가족들에게 링크로 공유할 수 있게 해 주세요','"가족에게 링크로 공유" 버튼: 보내는 사람·한마디·여행 날짜를 담은 링크를 카톡·문자로 보내기, 받은 사람은 지도와 함께 보고 내 동선으로 저장']
 ];
 const UPD_KEY = 'dongseon-upd-seen', UPD_V = String(UPD.length);
 function updNew(){ try { return localStorage.getItem(UPD_KEY) !== UPD_V; } catch (e) { return false; } }
