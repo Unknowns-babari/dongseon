@@ -411,6 +411,17 @@ main.full>*{animation:none}
 .shr .pv{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px;font-size:.85em;line-height:1.55;white-space:pre-line}
 .shr .ok{color:#166534;font-weight:800;font-size:.88em;margin:0}
 .shr .cb{display:flex;align-items:center;gap:8px;flex-direction:row;font-weight:500}
+.pill.upb .cnt{display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:var(--pri);color:#fff;font-size:.72em;font-style:normal;margin-left:4px;padding:0 4px;vertical-align:1px}
+.prf{z-index:5240}.prf .fkbox{max-width:420px}
+.prf .bh{display:flex;align-items:center;justify-content:space-between}
+.prf .bb{display:flex;flex-direction:column;gap:10px}
+.prf .pr{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1.5px solid var(--line);background:var(--card);border-radius:16px;padding:12px 14px;min-height:64px;cursor:pointer;font:inherit;color:inherit}
+.prf .pr .ic{font-size:1.5em;width:36px;text-align:center}
+.prf .pr .tx{flex:1;display:flex;flex-direction:column;gap:2px}
+.prf .pr .tx b{font-size:.98em}.prf .pr .tx span{font-size:.8em;color:var(--sub)}
+.prf .pr.on{border-color:var(--pri);background:#eef4ff}.prf .pr.on .tx span{color:var(--pri);font-weight:700}
+.prf .pr .ar{color:var(--sub);font-size:1.2em}
+@media (max-width:400px){header .pill{padding:0 10px;font-size:.8em}}
 .upd{z-index:5250}.upd .fkbox{max-width:520px}
 .upd .bh{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .upd .bb{overflow:auto}
@@ -677,6 +688,7 @@ main.dt .dl>*{order:2}
   <div id="ft"></div>
   <div id="sh"></div>
   <div id="ntc" class="fbk ntc" hidden role="dialog" aria-modal="true" aria-labelledby="ntct"></div>
+  <div id="prf" class="fbk ntc prf" hidden role="dialog" aria-modal="true" aria-labelledby="prft"></div>
   <div id="upd" class="fbk ntc upd" hidden role="dialog" aria-modal="true" aria-labelledby="updt"></div>
   <div id="shr" class="fbk ntc shr" hidden role="dialog" aria-modal="true" aria-labelledby="shrt"></div>
   <div id="srv" class="fbk srv" hidden role="dialog" aria-modal="true" aria-labelledby="svq"></div>
@@ -1135,7 +1147,7 @@ function header(){
   const titles = { guide:'도시 소개', home:'동선팩 · 일본', detail:S.edit ? '동선 편집 · ' + p.city : p.city + ' · ' + p.nights, book:'예약 내용', paid:'예약 완료', trip:'여행 중', make:'동선 만들기', src:'참고한 자료' };
   const back = S.scr === 'detail' && S.edit ? null : { detail:'home', book:'detail', paid:'home', src:'home' }[S.scr];
   return (back ? `<button class="ib" aria-label="뒤로 가기" data-a="go" data-v="${back}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>` : '')
-    + `<h1>${isWeb() && S.scr === 'home' ? '<span class="brand">동선팩</span> <span class="xs sub" style="font-weight:500">일본 여행 동선을 예약까지 한 번에</span>' : esc(titles[S.scr])}</h1>${isWeb() ? `<div class="wnav">${[['guide', '도시 소개'], ['home', '동선 찾기'], ['trip', '여행 중'], ['make', '동선 만들기']].map(x => `<button class="${S.scr === x[0] ? 'on' : ''}" data-a="go" data-v="${x[0]}">${x[1]}</button>`).join('')}</div>` : ''}${S.scr !== 'home' || S.cityOpen ? '<button class="ib hmb" data-a="gohome" aria-label="홈으로" title="홈으로"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></button>' : ''}<button class="pill upb" data-a="upd" aria-haspopup="dialog">새 소식${updNew() ? '<i class="dot" aria-label="새 업데이트 있음"></i>' : ''}</button><button class="pill" data-a="fbk" aria-haspopup="dialog">피드백</button><button class="pill ${S.big ? 'on' : ''}" aria-pressed="${S.big}" data-a="big">가 큰 글씨</button>`;
+    + `<h1>${isWeb() && S.scr === 'home' ? '<span class="brand">동선팩</span> <span class="xs sub" style="font-weight:500">일본 여행 동선을 예약까지 한 번에</span>' : esc(titles[S.scr])}</h1>${isWeb() ? `<div class="wnav">${[['guide', '도시 소개'], ['home', '동선 찾기'], ['trip', '여행 중'], ['make', '동선 만들기']].map(x => `<button class="${S.scr === x[0] ? 'on' : ''}" data-a="go" data-v="${x[0]}">${x[1]}</button>`).join('')}</div>` : ''}${S.scr !== 'home' || S.cityOpen ? '<button class="ib hmb" data-a="gohome" aria-label="홈으로" title="홈으로"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></button>' : ''}<button class="pill upb" data-a="prefs" aria-haspopup="dialog">🎯 맞춤${prefCount() ? `<i class="cnt">${prefCount()}</i>` : ''}</button><button class="pill upb" data-a="upd" aria-haspopup="dialog">새 소식${updNew() ? '<i class="dot" aria-label="새 업데이트 있음"></i>' : ''}</button><button class="pill" data-a="fbk" aria-haspopup="dialog">피드백</button><button class="pill ${S.big ? 'on' : ''}" aria-pressed="${S.big}" data-a="big">가 큰 글씨</button>`;
 }
 
 /* 일본 해안선: 대략적인 윤곽선 (위·경도) */
@@ -1175,8 +1187,6 @@ function home(){
   const tagRow = `<div class="tagrow">${['전체'].concat(tags).map(t => `<button class="chip ${tf === t ? 'on' : ''}" data-a="tf" data-v="${t}">${t}${t === '전체' ? ` ${allList.length}` : ''}</button>${t === '전체' ? `<button class="chip ${showG ? 'on' : ''}" data-a="tf" data-v="소개">📖 도시 소개</button>` : ''}${t === '전체' && nH ? `<button class="chip ${showH ? 'on' : ''}" data-a="tf" data-v="숙소">🏨 숙소 ${nH}</button>` : ''}`).join('')}</div>`;
   return `<div class="stage">
     ${OM.ok ? '<div class="hslot"></div>' : `<div class="pan" data-key="home"><svg aria-hidden="true"><g class="world">${land}</g></svg>${pins}</div>`}
-    <div class="ovl col"><div class="daychips">${Object.keys(CITY).map(x => `<button class="chip ${open && S.city === x ? 'on' : ''}" data-a="city" data-v="${x}">${x}</button>`).join('')}</div>
-      <span class="hint">지도를 끌어서 움직이고, 두 손가락·휠로 확대해 보세요</span>${open || S.onb || S.ageOpen || S.dateOpen ? '' : `<span class="fabs"><button class="likefab" data-a="likes">${S.likes.length ? `🏷 내 카테고리 ${S.likes.length}개 · 바꾸기` : '🏷 카테고리 고르기'}</button><button class="likefab age" data-a="ages">${S.age ? `👥 ${S.age} 추천 · 바꾸기` : '👥 연령대별 추천'}</button><button class="likefab age" data-a="dateopen">${S.tdate ? `📅 ${dLab(pDate(S.tdate))}${tripLen() ? ` ~ ${dLab(pDate(S.tend))}` : ' 출발'}` : '📅 여행 날짜'}</button></span>`}</div>
     <div class="zoom" style="bottom:${open ? (full ? H * 0.78 + 12 : 274) : 16}px">${OM.ok ? '' : '<button data-a="zin" aria-label="확대">+</button><button data-a="zout" aria-label="축소">−</button>'}<button data-a="${OM.ok ? 'hjp' : 'zreset'}" aria-label="일본 전체 보기">⟲</button></div>
     ${open ? `<div class="bsheet ${full ? 'full' : ''}" role="region" aria-label="${S.city} 동선팩 목록">
       <button class="grab" data-a="cs" aria-label="${full ? '목록 접기' : '목록 펼치기'}"><i></i></button>
@@ -2668,6 +2678,7 @@ const A = {
   datefix:v => { const p = pack(), r = route(p), o = v.split(',').map(Number); if (o.length !== r.length) return; setRoute(o.map(i => r[i].slice())); render(); },
   gohome:() => { Object.assign(S, { edit:false, place:null, tpick:0, ageOpen:0, onb:0, ins:null, rep:null, sel:null, dsel:null, cityOpen:false, cs:'peek' }); go({ scr:'home' }); if (typeof fitJapan === 'function') setTimeout(() => fitJapan(true), 0); },
   upd:() => updOpen(),
+  prefs:() => prfRender(),
   fshare:() => { SH.msg = ''; shrRender(); setTimeout(() => { const f = $('shf'); f && f.focus({ preventScroll:true }); }, 50); },
   shdate:() => { const o = pack().shareIn; if (!o) return; S.tdate = o.a; S.tend = o.e || ''; try { localStorage.setItem(TD_KEY, S.tdate); localStorage.setItem(TE_KEY, S.tend); } catch (e) {} render(); },
   shsave:() => { const p = pack(); if (!p || !p.shareIn) return; const id = 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -3083,6 +3094,33 @@ function shareInBox(p){
   p.shareIn = { f:String(o.f || '').slice(0, 20), m:String(o.m || '').slice(0, 200), a:pDate(o.a) ? o.a : '', e:pDate(o.e) ? o.e : '' };
   Object.assign(S, { scr:'detail', pid:p.id, city:p.city, day:-1, edit:false, cityOpen:false });
 })();
+
+/* ---------- 맞춤 추천 메뉴 (카테고리·연령대·여행 날짜) ---------- */
+function prefCount(){ return (S.likes.length ? 1 : 0) + (S.age ? 1 : 0) + (S.tdate ? 1 : 0); }
+function prfRender(){
+  const el = $('prf');
+  const rows = [
+    ['likes', '🏷', '카테고리 고르기', S.likes.length ? `${S.likes.slice(0, 3).join('·')}${S.likes.length > 3 ? ` 외 ${S.likes.length - 3}개` : ''} · 바꾸기` : '좋아하는 여행 취향을 고르면 맞는 동선팩을 먼저 보여 줘요', S.likes.length],
+    ['ages', '👥', '연령대별 추천', S.age ? `${S.age} 추천 중 · 바꾸기` : '연령대 여행 트렌드에 맞춰 동선팩을 추천해요', S.age],
+    ['dateopen', '📅', '여행 날짜', S.tdate ? `${dLab(pDate(S.tdate))}${tripLen() ? ` ~ ${dLab(pDate(S.tend))} (${tripLen()}일)` : ' 출발'} · 바꾸기` : '날짜를 넣으면 휴무일을 피하고 일정 길이에 맞춰 추천해요', S.tdate]
+  ];
+  el.innerHTML = `<div class="fkbox"><div class="bh"><h2 id="prft">🎯 맞춤 추천</h2><button class="ib" data-pf="x" aria-label="닫기">✕</button></div><div class="bb">
+    <p class="xs sub" style="margin:0">세 가지를 정하면 동선팩 목록이 나에게 맞는 순서로 바뀌어요.</p>
+    ${rows.map(([a, ic, t, d, on]) => `<button class="pr ${on ? 'on' : ''}" data-pf="${a}"><span class="ic" aria-hidden="true">${ic}</span><span class="tx"><b>${t}</b><span>${esc(d)}</span></span><span class="ar" aria-hidden="true">›</span></button>`).join('')}
+  </div></div>`;
+  el.hidden = false;
+  setTimeout(() => { const b = el.querySelector('[data-pf="likes"]'); b && b.focus({ preventScroll:true }); }, 50);
+}
+function prfClose(){ const el = $('prf'); el.hidden = true; el.innerHTML = ''; }
+document.addEventListener('click', e => {
+  const el = $('prf'); if (el.hidden) return; const b = e.target.closest('[data-pf]');
+  if (e.target === el || (b && b.dataset.pf === 'x')){ prfClose(); const h = document.querySelector('[data-a="prefs"]'); h && h.focus(); return; }
+  if (!b) return; const act = b.dataset.pf; prfClose();
+  if (S.scr !== 'home'){ S.scr = 'home'; S.edit = false; S.place = null; }
+  S.onb = 0; S.ageOpen = 0; S.dateOpen = 0;
+  A[act]();
+});
+document.addEventListener('keydown', e => { const el = $('prf'); if (e.key === 'Escape' && !el.hidden){ e.stopImmediatePropagation(); prfClose(); } }, true);
 /* ---------- 업데이트 내역 ---------- */
 const UPD = [
  ['11-16 23:10','동선팩 앱을 실제 지도로 만들어 주세요','무료 실제 지도를 쓰는 동선팩 앱 첫 공개'],
@@ -3135,7 +3173,8 @@ const UPD = [
  ['11-19 17:45','실제 사진을 올리고 도시마다 추천 상품(주유패스 등)을 넣어 주세요','실제 사진 189곳 저장, 도시별 교통·관광 패스 14종'],
  ['11-19 19:28','업데이트된 리스트를 볼 수 있게 해 주세요','상단 "새 소식" 버튼과 업데이트 내역'],
  ['11-19 19:40','업데이트 내역을 요청한 순간마다 하나씩 리스트로 만들어 주세요','요청 하나당 한 줄로 정리한 지금 이 목록'],
- ['11-19 21:05','동선팩을 가족들에게 링크로 공유할 수 있게 해 주세요','"가족에게 링크로 공유" 버튼: 보내는 사람·한마디·여행 날짜를 담은 링크를 카톡·문자로 보내기, 받은 사람은 지도와 함께 보고 내 동선으로 저장']
+ ['11-19 21:05','동선팩을 가족들에게 링크로 공유할 수 있게 해 주세요','"가족에게 링크로 공유" 버튼: 보내는 사람·한마디·여행 날짜를 담은 링크를 카톡·문자로 보내기, 받은 사람은 지도와 함께 보고 내 동선으로 저장'],
+ ['11-19 21:15','홈 지도 위 도시 버튼과 안내 문구를 지우고, 카테고리·연령대·여행 날짜를 새 소식 옆 한 칸으로 합쳐 주세요','지도 위 버튼 정리, 상단 "🎯 맞춤" 버튼 하나에 카테고리·연령대별 추천·여행 날짜 통합']
 ];
 const UPD_KEY = 'dongseon-upd-seen', UPD_V = String(UPD.length);
 function updNew(){ try { return localStorage.getItem(UPD_KEY) !== UPD_V; } catch (e) { return false; } }
