@@ -456,6 +456,16 @@ main.full>*{animation:none}
 .cg2 .hero .tx{position:relative;color:#fff;padding:14px 16px;text-shadow:0 1px 4px rgba(0,0,0,.7)}
 .cg2 .hero .tx b{display:block;font-size:1.2em;margin-bottom:4px}
 .cg2 .hero .tx p{margin:0;font-size:.88em;line-height:1.55;opacity:.95}
+.cg2 .gps{display:flex;flex-direction:column;gap:10px}
+.cg2 .gp{border:1px solid #d6e4c8;border-left:5px solid #f59e0b;border-radius:14px;padding:12px 14px;background:#fffdf6;display:flex;flex-direction:column;gap:6px}
+.cg2 .gp .top{display:flex;flex-direction:column;gap:2px}
+.cg2 .gp .k{font-size:.72em;font-weight:700;color:#b45309;letter-spacing:.02em}
+.cg2 .gp b{font-size:1em}
+.cg2 .gp .p{font-weight:700;color:#1e3a5f;font-size:.9em}
+.cg2 .gp p{margin:0;font-size:.86em;line-height:1.55}
+.cg2 .gp p.t{color:#555;background:#fff4d6;border-radius:8px;padding:6px 8px}
+.cg2 .gp .r{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.cg2 .gp .r button{border:1px solid #c9dcb5;background:#fff;border-radius:999px;padding:4px 10px;font-size:.8em;min-height:30px;color:#3f7d20;cursor:pointer}
 .cg2 h3{margin:6px 0 0;font-size:1.02em;color:#3f7d20;display:flex;align-items:center;gap:8px}
 .cg2 h3::before{content:'';width:26px;height:3px;border-radius:2px;background:#7cb342}
 .gi{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:center}
@@ -1190,8 +1200,12 @@ const JA = {"senso": "浅草寺", "culture": "浅草文化観光センター", "
 const WM = {};
 const WM_OK = /^(cc0|cc[ -]by(-sa)?( \d(\.\d)?)?|public domain|pd\b|attribution)/i;
 const stripH = h => { const d = document.createElement('div'); d.innerHTML = h || ''; return (d.textContent || '').replace(/\s+/g, ' ').trim(); };
+const PHB = /\/web\/(index\.html)?$/.test(location.pathname) ? '../photos/' : 'photos/';
+const MANP = (window.claude && window.claude.use) ? Promise.resolve() :
+  fetch(PHB + 'manifest.json', { cache:'no-cache' }).then(r => r.ok ? r.json() : {}).then(m => { Object.entries(m || {}).forEach(([k, v]) => { if (v && v.l && v.l.length && !(WM[k] && WM[k].st === 'ok')) WM[k] = { st:'ok', local:true, l:v.l.map(x => ({ src:PHB + x.f, page:x.page, lic:x.lic, by:x.by })) }; }); }).catch(() => {});
 async function wmLoad(id){
-  if (WM[id] || !JA[id]) return; WM[id] = { st:'loading', l:[] };
+  await MANP;
+  if (WM[id] || !JA[id]) return wmFill(id); WM[id] = { st:'loading', l:[] };
   try { const c = JSON.parse(sessionStorage.getItem('wm-' + id) || 'null'); if (c){ WM[id] = c; return wmFill(id); } } catch (e) {}
   const q = encodeURIComponent(JA[id] + ' filetype:bitmap');
   const url = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=8&gsrsearch=' + q + '&prop=imageinfo&iiprop=url|extmetadata|mime&iiurlwidth=500';
@@ -1449,6 +1463,48 @@ function gPicFill(){
     wmWait(k).then(() => { const w = WM[k]; if (!w || w.st !== 'ok' || el.querySelector('img')) return; const im = new Image(); im.alt = ''; im.referrerPolicy = 'no-referrer'; im.onerror = () => im.remove(); im.src = w.l[0].src; el.appendChild(im); const sm = document.createElement('small'); sm.textContent = '사진: ' + w.l[0].by + ' · ' + w.l[0].lic; el.appendChild(sm); }); });
   const hero = document.querySelector('.cg2 .hero .bg[data-wk]'); if (hero){ const k = hero.dataset.wk; wmWait(k).then(() => { const w = WM[k]; if (w && w.st === 'ok') hero.style.backgroundImage = `url("${w.l[Math.min(1, w.l.length - 1)].src}")`; }); }
 }
+
+const CPR = {
+ '도쿄': [
+  { n:'도쿄 서브웨이 티켓 (24·48·72시간)', k:'교통 패스', p:'성인 1,000엔 / 1,500엔 / 2,000엔 (어린이 반값)', d:'도쿄메트로와 도에이 지하철 전 노선을 처음 개찰한 시각부터 24·48·72시간 동안 무제한으로 탈 수 있어요.', t:'JR선(야마노테선 등)은 포함되지 않아요. 해외 관광객 등 구매 대상이 정해져 있어 여권을 준비하세요.', ids:['senso','skytree','meiji','uenopark'], src:[['도쿄메트로 공식','https://www.tokyometro.jp/en/ticket/travel/index.html'],['도쿄도 교통국','https://www.kotsu.metro.tokyo.jp/eng/tickets/index.html']] }
+ ],
+ '오사카': [
+  { n:'오사카 주유패스 (OSAKA AMAZING PASS)', k:'교통 + 관광지 패스', p:'1일권 3,500엔 / 2일권 5,000엔 (2026년도, 성인 전용)', d:'Osaka Metro 전 노선·시내버스와 시내 사철 지정 구간을 자유롭게 타고, 오사카성 천수각·우메다 스카이빌딩 공중정원·쓰텐카쿠 등 약 40곳에 무료로 들어가요.', t:'2026년도부터 스마트폰 QR 디지털 승차권으로 바뀌었고 신용카드 결제만 돼요. 하루에 유료 시설 3곳 이상 갈 때 이득이에요.', ids:['castle','sky','tsutenkaku'], src:[['2026 주유패스 정리 (monomoney)','https://monomoney-living.com/osaka-amazing-pass-2026/']] },
+  { n:'유니버설 스튜디오 재팬 1데이 스튜디오 패스', k:'테마파크 입장권', p:'날짜별 6단계 가격, 성인 약 8,400~11,900엔', d:'입장일 혼잡도에 따라 가격이 달라지는 지정일 입장권이에요. 닌텐도 월드는 별도 입장 확약권이나 정리권이 필요할 수 있어요.', t:'파크 앞 티켓 판매소는 2025년 5월 7일부터 운영하지 않아 미리 온라인으로 사야 해요.', ids:['usj'], src:[['가격 단계표 (castel)','https://castel.jp/p/2591'],['구매 방법 (happyell)','https://happyell.co.jp/ticket']] }
+ ],
+ '교토': [
+  { n:'교토 지하철·버스 1일권', k:'교통 패스', p:'성인 1,100엔 / 어린이 550엔', d:'교토 시영 지하철·시버스 전 노선과 교토버스·게이한버스·서일본JR버스 일부를 하루 동안 타요. 토·휴일에 다니는 관광특급버스(교토역↔기요미즈데라·긴카쿠지)도 포함돼요.', t:'시버스 1회 요금 기준으로 하루 4~5번 타면 본전이에요. 약 50곳 시설 우대 혜택도 있어요.', ids:['kiyomizu','ginkaku','kinkaku','nijo'], src:[['교토시 교통국 감수 안내 (GLTJP)','https://www.gltjp.com/ja/directory/item/12172/']] },
+  { n:'지하철 & 에이덴 구라마·기부네 당일 티켓', k:'근교 교통 패스', p:'2,100엔 (성인 전용)', d:'교토 시영 지하철 전 노선, 게이한 산조~데마치야나기, 에이잔 전철 전 노선을 하루 자유롭게 타고 구라마·기부네까지 다녀와요.', t:'버스는 포함되지 않아요. 2026년 4월 1일~2027년 3월 31일 중 하루 사용.', ids:[], src:[['게이한 전철 공식','https://www.keihan.co.jp/traffic/valueticket/ticket/kuramakifune/']] }
+ ],
+ '나고야': [
+  { n:'도니치 에코 킷푸 (주말 1일 승차권)', k:'교통 패스', p:'성인 620엔 / 어린이 310엔', d:'토·일·공휴일과 매월 8일에 나고야 시영 지하철·시버스·관광 루트버스 메구루를 하루 종일 타요. 보여 주면 관광시설 입장 할인도 받아요.', t:'평일에는 일반 1일 승차권(지하철·버스 870엔)을 써요.', ids:['ncastle','osu','atsuta','tokugawa'], src:[['나고야시 공식 관광 안내','https://www.nagoya-info.jp/access/traffic/']] }
+ ],
+ '후쿠오카': [
+  { n:'후쿠오카 투어리스트 시티 패스', k:'교통 패스 (외국인 전용)', p:'시내판 2,500엔 / 다자이후 포함 2,800엔 (1일)', d:'지하철·니시테쓰 버스·쇼와 버스·JR·니시테쓰 전철·페리를 하루 동안 타고, 관광시설 특전도 받아요.', t:'단기 체류 외국인만 살 수 있어 여권이 필요해요. 다자이후 직행버스 "다비토"는 쓸 수 없어요.', ids:['dazaifu','fktower','ohori','canal'], src:[['후쿠오카시 공식 관광 (gofukuoka)','https://gofukuoka.jp/citypass.html']] }
+ ],
+ '삿포로': [
+  { n:'지하철 전용 1일 승차권 / 도니치카 킷푸', k:'교통 패스', p:'평일 830엔 / 토·일·공휴일 520엔 (성인)', d:'삿포로 시영 지하철을 하루 동안 마음대로 타요. 도니치카 킷푸는 주말·공휴일과 연말연시에 쓰는 할인판이에요.', t:'지하철 1구간이 210엔이라 주말에는 세 번만 타도 본전이에요. 노면전차(시덴)는 따로예요.', ids:['tvtower','clock','jingu','shiroi'], src:[['삿포로 공식 관광 (sapporo.travel)','https://www.sapporo.travel/?p=70237'],['삿포로시 교통국 요금','https://www.city.sapporo.jp/st/josyaken/ryokin/ryoukin.html']] }
+ ],
+ '히로시마': [
+  { n:'히로덴 1일 승차승선권 (노면전차 + 미야지마 페리)', k:'교통 패스', p:'성인 1,000엔 / 어린이 550엔', d:'히로시마 노면전차 전 노선과 미야지마 마쓰다이 페리를 하루 동안 타요. 노면전차만 쓰면 1일 승차권 700엔이에요.', t:'미야지마에 내릴 때 방문세 100엔이 따로 붙어요. 이 승차권을 사면 시내 가게·시설 할인 쿠폰(HOP)도 받을 수 있어요.', ids:['peace','miyajima','hcastle','shukkeien'], src:[['히로시마 공식 관광 (Dive! Hiroshima)','https://dive-hiroshima.com/feature/feature-109755/'],['히로시마시 HOP 안내','https://www.city.hiroshima.lg.jp/tourism-culture/tourism/1021464/1044509.html']] },
+  { n:'히로시마 메이푸루프 관광버스 1일권', k:'관광 순환버스', p:'성인 600엔 / 어린이 300엔', d:'히로시마역 신칸센 출구에서 출발해 평화기념공원·히로시마성 등 시내 명소를 도는 관광 루프 버스를 하루 동안 타요.', t:'노면전차로 가기 애매한 히로시마성 쪽에 가기 편해요.', ids:['hcastle','orizuru'], src:[['중국JR버스 공지(PDF)','https://chugoku-jrbus.co.jp/news/pdf/20240420onedayticket_pricechange.pdf']] }
+ ],
+ '구마모토': [
+  { n:'구마모토 시덴 1일 승차권', k:'교통 패스', p:'모바일 500엔 / 종이 700엔 (성인)', d:'구마모토 노면전차 전 노선을 하루 동안 타요. 보여 주면 구마모토성·조사이엔·스이젠지 조주엔 등 20곳이 단체 요금이 돼요.', t:'같은 1일권이라도 앱(모바일)이 200엔 싸요. 버스까지 타려면 와쿠와쿠 1day 패스를 봐요.', ids:['kcastle','josaien','suizenji'], src:[['구마모토시 교통국 기준 정리 (monomoney)','https://monomoney-living.com/kumamoto-shiden-1day-2026/']] },
+  { n:'구마모토성 주유버스 1일 승차권', k:'관광 순환버스', p:'성인 500엔 / 어린이 250엔', d:'구마모토성 주변 명소를 도는 순환버스를 발매 당일 자유롭게 타요. 시덴 1일권과 달리 성 바로 앞까지 데려다줘요.', t:'와쿠와쿠 1day 패스·SUNQ 패스로도 탈 수 있어요.', ids:['kcastle','sakuramachi'], src:[['구마모토시 공식','https://www.city.kumamoto.jp/kiji0036349/index.html']] }
+ ],
+ '마쓰야마': [
+  { n:'이요테쓰 시내전차·교외전차 1Day 티켓', k:'교통 패스', p:'성인 2,000엔 / 어린이 1,000엔', d:'마쓰야마 시내 노면전차(봇짱 열차 제외)와 교외 전철을 하루 동안 타요. 도고온센·마쓰야마성·바닷가 미쓰항까지 한 번에 이어요.', t:'종이표는 없어지고 "미캉 앱" 등 앱에서만 팔아요. 다카시마야 대관람차 구루린 500엔 할인 혜택이 있어요.', ids:['dogo','mcastle','haikara'], src:[['이요테쓰 1Day 안내 (Funliday)','https://www.funliday.com/posts/japan-matsuyamap-iyotetsu-1day-pass/']] }
+ ],
+ '기타큐슈': [
+  { n:'간몬해협 클로버 킷푸', k:'해협 일주 티켓', p:'성인 1,000엔 / 어린이 500엔 (2026년 1월 10일 개정)', d:'관광열차 시오카제호, 산덴 버스(미모스소가와~가라토), 간몬 기선(시모노세키 가라토~모지항)을 각 1번씩 타고 간몬해협을 한 바퀴 돌아요.', t:'시오카제호는 주로 토·일·공휴일에 다녀요. 디지털판(RYDE PASS)에는 식당·관광시설 특전이 붙어요.', ids:['mojiko','mekari','tetsudo'], src:[['개정 내용 (iwafu)','https://www.iwafu.com/jp/events/1060696'],['후쿠오카현 공식 관광 (시오카제호)','https://www.crossroadfukuoka.jp/spot/10798']] }
+ ]
+};
+function cityProducts(c){
+  const l = CPR[c] || []; if (!l.length) return '';
+  return `<h3>추천 상품</h3><div class="gps">${l.map(x => `<div class="gp"><div class="top"><span class="k">${esc(x.k)}</span><b>${esc(x.n)}</b><span class="p">💴 ${esc(x.p)}</span></div><p>${esc(x.d)}</p><p class="t">💡 ${esc(x.t)}</p>${x.ids.filter(id => PL[id]).length ? `<div class="r"><span class="xs sub">함께 가기 좋은 곳</span>${x.ids.filter(id => PL[id]).map(id => `<button data-a="place" data-v="${id}">${esc(PL[id].k || PL[id].n)} ›</button>`).join('')}</div>` : ''}<span class="xs sub">출처: ${x.src.map(([n, u]) => `<a href="${u}" target="_blank" rel="noopener">${esc(n)}</a>`).join(' · ')}</span></div>`).join('')}</div>
+   <p class="xs sub" style="margin:0">가격은 2026년 기준 공개 자료를 옮긴 것이고 바뀔 수 있어요. 실제 서비스에서는 이 자리에 트립닷컴 판매 상품이 연결된다고 가정한 예시예요.</p>`;
+}
 function cityGuide(c){
   const g = CG[c]; if (!g) return '<div class="cg2"><p class="sub">준비 중이에요.</p></div>';
   setTimeout(gPicFill, 0);
@@ -1457,8 +1513,9 @@ function cityGuide(c){
    <div class="hero"><div class="bg" data-wk="${hk}"${WM[hk] && WM[hk].st === 'ok' ? ` style="background-image:url('${esc(WM[hk].l[Math.min(1, WM[hk].l.length - 1)].src)}')"` : ''}></div><div class="tx"><b>${esc(c)} · ${esc(g.t)}</b><p>${esc(g.d)}</p></div></div>
    <h3>볼거리</h3>${g.h.map(([id, sub, d], i) => { const x = PL[id]; return `<div class="gi ${i % 2 ? 'flip' : ''}">${gPic(id, null, gEmoji(id), x.n)}<div><span class="sub2">${esc(sub)}</span><b>${esc(x.n)}</b><p>${esc(d)}</p><div class="meta"><strong>추천</strong>${esc(x.when)} · <strong>요금</strong>${esc(x.feeT)}</div><button class="lnk" style="border:0;background:none;color:var(--pri);font-weight:700;padding:4px 0;min-height:32px" data-a="place" data-v="${id}">자세히 보기 ›</button></div></div>`; }).join('')}
    <h3>먹을거리</h3><div class="gfs">${g.f.map(([n, d, r]) => `<div class="gf">${gPic('f:' + n, FJA[n], fEmoji(n), n)}<b>${esc(n)}</b><span class="xs">${esc(d)}</span>${r.length ? `<span class="r">${r.filter(id => PL[id]).map(id => `<button data-a="place" data-v="${id}">${esc(PL[id].k)} ›</button>`).join('')}</span>` : ''}</div>`).join('')}</div>
+   ${cityProducts(c)}
    <h3>마츠리·축제</h3>${g.m.map(([n, w, d, u]) => { const jq0 = (n.match(/\(([^)]+)\)/) || [])[1], jq = MJA[n] || (jq0 && /[\u3040-\u30ff\u4e00-\u9fff]/.test(jq0) ? jq0 : null); return `<div class="gm">${gPic('m:' + n, jq || null, mEmoji(n), n)}<div><span class="when">📅 ${esc(w)}</span><b>${esc(n)}</b><span class="xs">${esc(d)}</span>${u ? `<span class="xs sub" style="display:block;margin-top:4px">출처: <a href="${u}" target="_blank" rel="noopener">${esc(u.replace(/^https?:\/\/(www\.)?/, '').split('/')[0])}</a></span>` : ''}</div></div>`; }).join('')}
-   <p class="xs sub" style="margin:0">사진은 위키미디어 공용의 자유 이용 사진을 이름으로 찾아 보여 줘요(사진 아래 촬영자·라이선스 표기). 사진을 못 불러오면 그림 아이콘이 대신 보여요. 축제 날짜는 해마다 달라질 수 있어요.</p></div>`;
+   <p class="xs sub" style="margin:0">사진은 위키미디어 공용의 자유 이용 사진을 저장소에 받아 둔 것이에요(사진 아래 촬영자·라이선스 표기). 사진을 못 불러오면 그림 아이콘이 대신 보여요. 축제 날짜는 해마다 달라질 수 있어요.</p></div>`;
 }
 
 function guide(){
