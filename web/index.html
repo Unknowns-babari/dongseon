@@ -429,6 +429,25 @@ main.full>*{animation:none}
 .dpair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .dpair label{display:flex;flex-direction:column;gap:4px;font-size:.9em}
 .dbad.fit{background:#e0f2fe;color:#075985}
+.cg{display:flex;flex-direction:column;gap:14px;padding:0 16px 18px;overflow:auto}
+.cg .lead{background:var(--soft);border-radius:14px;padding:12px 14px}
+.cg .lead b{display:block;font-size:1.08em;margin-bottom:4px}
+.cg .lead p{margin:0;font-size:.92em;line-height:1.6}
+.cg h3{margin:4px 0 0;font-size:1em;color:#3f7d20;display:flex;align-items:center;gap:8px}
+.cg h3::before{content:'';width:22px;height:3px;border-radius:2px;background:#7cb342}
+.cgi{display:grid;grid-template-columns:96px 1fr;gap:10px;align-items:start;border-bottom:1px dashed var(--line);padding-bottom:10px}
+.cgi:last-child{border-bottom:0}
+.cgi .ph{width:96px;height:72px;border-radius:12px;background:var(--soft) center/cover no-repeat}
+.cgi .sub2{display:block;font-size:.78em;font-weight:700;color:#3f7d20}
+.cgi b{display:block;font-size:.98em}
+.cgi p{margin:3px 0 0;font-size:.86em;line-height:1.55}
+.cgi .meta{margin-top:4px;font-size:.74em;color:var(--sub);letter-spacing:.01em}
+.cgi .meta strong{color:var(--ink);font-weight:800;margin-right:2px}
+.cgi.nophoto{grid-template-columns:1fr}
+.cgf{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:12px;background:var(--card);border:1px solid var(--line)}
+.cgf .when{font-size:.78em;font-weight:800;color:#b45309}
+.cgf .r{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.cgf .r button{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;min-height:30px;padding:0 10px;font-size:.78em;font-weight:700}
 .likebar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 16px 8px;padding:10px 14px;border-radius:12px;border:1px dashed var(--pri);background:transparent;color:var(--pri);font-weight:700;text-align:left;min-height:44px;flex-shrink:0}
 .likebar.set{border-style:solid;background:rgba(31,79,191,.07)}
 .likebar .lb2{font-size:.8em;font-weight:600;white-space:nowrap}
@@ -1075,9 +1094,9 @@ function home(){
   const land = JP.map(poly => `<polygon points="${poly.map(([lo, la]) => P(lo, la).map(v => v.toFixed(1)).join(',')).join(' ')}" fill="var(--land)" stroke="var(--coast)" stroke-width="1.2" vector-effect="non-scaling-stroke"/>`).join('');
   const pins = Object.entries(CITY).map(([name, c]) => { const [x, y] = P(c.lo, c.la), on = open && S.city === name, l = PACKS.filter(p => p.city === name), min = Math.min(...l.map(p => sum(items(p))));
     return `<span class="cdot" data-bx="${x.toFixed(1)}" data-by="${y.toFixed(1)}"></span><button class="tagpin ${on ? 'on' : ''} ${c.dy > 0 ? 'down' : ''}" data-a="city" data-v="${name}" data-bx="${x.toFixed(1)}" data-by="${y.toFixed(1)}" style="--dx:${c.dx < 0 ? -30 : c.dx > 0 ? 30 : 0}%" aria-pressed="${on}" aria-label="${name} 동선팩 ${l.length}개, ${priceMan(min)}원부터"><b>${name}</b><span>${l.length}개 · ₩${priceMan(min)}~</span></button>`; }).join('');
-  const allList = PACKS.filter(p => p.city === S.city), tags = [...new Set(allList.flatMap(p => p.tags))], tf = tags.includes(S.tf) || S.tf === '숙소' ? S.tf : '전체', showH = tf === '숙소', nH = (HT[S.city] || []).length;
+  const allList = PACKS.filter(p => p.city === S.city), tags = [...new Set(allList.flatMap(p => p.tags))], tf = tags.includes(S.tf) || S.tf === '숙소' || S.tf === '소개' ? S.tf : '전체', showH = tf === '숙소', showG = tf === '소개', nH = (HT[S.city] || []).length;
   const list0 = tf === '전체' ? allList : allList.filter(p => p.tags.includes(tf)), list = dsort(S.likes.length ? list0.slice().sort(byMatch) : S.age ? list0.slice().sort(byAge) : list0);
-  const tagRow = `<div class="tagrow">${['전체'].concat(tags).map(t => `<button class="chip ${tf === t ? 'on' : ''}" data-a="tf" data-v="${t}">${t}${t === '전체' ? ` ${allList.length}` : ''}</button>${t === '전체' && nH ? `<button class="chip ${showH ? 'on' : ''}" data-a="tf" data-v="숙소">🏨 숙소 ${nH}</button>` : ''}`).join('')}</div>`;
+  const tagRow = `<div class="tagrow">${['전체'].concat(tags).map(t => `<button class="chip ${tf === t ? 'on' : ''}" data-a="tf" data-v="${t}">${t}${t === '전체' ? ` ${allList.length}` : ''}</button>${t === '전체' ? `<button class="chip ${showG ? 'on' : ''}" data-a="tf" data-v="소개">📖 도시 소개</button>` : ''}${t === '전체' && nH ? `<button class="chip ${showH ? 'on' : ''}" data-a="tf" data-v="숙소">🏨 숙소 ${nH}</button>` : ''}`).join('')}</div>`;
   return `<div class="stage">
     ${OM.ok ? '<div class="hslot"></div>' : `<div class="pan" data-key="home"><svg aria-hidden="true"><g class="world">${land}</g></svg>${pins}</div>`}
     <div class="ovl col"><div class="daychips">${Object.keys(CITY).map(x => `<button class="chip ${open && S.city === x ? 'on' : ''}" data-a="city" data-v="${x}">${x}</button>`).join('')}</div>
@@ -1089,7 +1108,7 @@ function home(){
         <button class="pill" data-a="cs">${full ? '지도 보기' : '목록 보기'}</button><button class="ib" data-a="cclose" aria-label="닫기"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
       ${likeBar()}
       ${tagRow}
-      ${showH ? cityHotels(S.city) : full ? `<div class="blist">${list.map(packCard).join('')}<p class="note">동선과 후기 요약은 여행 블로그·가이드를 참고한 샘플이에요. 작성자와 숙소 요금은 예시예요. <a href="#" data-a="go" data-v="src">참고한 자료 보기</a></p></div>`
+      ${showG ? cityGuide(S.city) : showH ? cityHotels(S.city) : full ? `<div class="blist">${list.map(packCard).join('')}<p class="note">동선과 후기 요약은 여행 블로그·가이드를 참고한 샘플이에요. 작성자와 숙소 요금은 예시예요. <a href="#" data-a="go" data-v="src">참고한 자료 보기</a></p></div>`
         : `<div class="carousel">${list.map(p => { const r = route(p).flat(); return `<button class="ccard" data-a="open" data-v="${p.id}"><span class="cstrip" style="background:${p.color}">${p.nights}</span>${mBadge(p)}<b>${esc(p.title)}</b><span class="xs sub">${esc(p.who)} · ${r.length}곳 · ${r.slice(0, 3).map(id => esc(PL[id].k)).join(' → ')}${r.length > 3 ? ' …' : ''}</span><span class="price">${won(sum(items(p)))}~</span></button>`; }).join('')}</div>`}
     </div>` : ''}
     ${onbView()}${ageView()}${dateView()}
@@ -1290,6 +1309,106 @@ function cityHotelCard(h, city){
    <ul>${h.pts.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
    <span class="xs sub">요금 출처: <a href="${h.s[1]}" target="_blank" rel="noopener">${esc(h.s[0])}</a> · <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(h.n + ' ' + city)}" target="_blank" rel="noopener">구글 지도</a></span></div>`;
 }
+
+/* ---------- 도시 소개: 볼거리 · 먹을거리 · 마츠리 ---------- */
+/* h: 볼거리 [장소 id, 한 줄 부제, 설명] · f: 먹을거리 [이름, 설명, 앱 속 가게 id] · m: 축제 [이름, 시기, 설명, 출처 URL] */
+const CG = {
+ '도쿄':{ t:'옛 에도와 초고층 도시가 한 화면에', d:'아사쿠사의 골목과 시부야·신주쿠의 마천루가 지하철 몇 정거장 거리에 붙어 있어요. 전망대만 골라 다녀도 하루가 모자라고, 시장과 노포 맛집이 동네마다 있어요.',
+  h:[['senso', '도쿄에서 가장 오래된 절', '천둥문(가미나리몬)을 지나 상점 골목 나카미세를 걸어 본당까지 가는 길이 아사쿠사 여행의 시작이에요.'],
+     ['skytree', '634m, 도시를 내려다보는 탑', '맑은 날엔 후지산까지 보이는 전망대. 해 질 무렵 올라가면 낮 풍경과 야경을 한 번에 봐요.'],
+     ['tokyotower', '붉은 탑이 주인공인 야경', '1958년에 세워진 도쿄의 상징. 탑에 올라가도 좋고, 주변 공원이나 다른 전망대에서 탑을 바라보는 것도 인기예요.'],
+     ['shibuya', '스크램블 교차로 위 옥상 전망대', '야외 옥상에서 시부야 교차로와 도심을 360도로 볼 수 있어요. 일몰 시간대는 예약이 빨리 차요.']],
+  f:[['스시·가이센동', '쓰키지 장외시장과 도요스 시장 주변에서 아침 해산물 덮밥으로 하루를 시작해요.', ['tsukiji', 'toyosu']], ['몬자야키', '쓰키시마 명물. 묽은 반죽을 철판에서 눌러 가며 작은 주걱으로 떠먹어요.', ['monkichi']], ['텐동', '아사쿠사 노포의 진한 소스 튀김덮밥.', ['daikokuya']], ['소바', '간다의 오래된 소바집에서 차가운 모리소바를 쓰유에 찍어 먹어요.', ['kandamatsuya']]],
+  m:[['산자 마쓰리 (三社祭)', '5월 셋째 주말', '아사쿠사 신사의 예대제. 동네마다 메고 나온 가마(미코시) 100여 기가 아사쿠사 거리를 누벼요.', 'https://www.timeout.jp/tokyo/ja/news/four-downtown-festivals-to-visit-in-may-050825'],
+     ['간다 마쓰리 (神田祭)', '5월 중순 · 본제는 홀수 해', '간다묘진의 대제. 가마와 수레 행렬이 간다·아키하바라 일대를 돌아요. 짝수 해는 규모를 줄인 해예요.', 'https://www.gotokyo.org/tc/story/guide/the-best-festivals-in-tokyo-and-japan/index.html'],
+     ['스미다강 불꽃놀이', '7월 마지막 토요일', '에도 시대부터 이어진 일본 최대 규모 불꽃놀이 중 하나. 아사쿠사·스카이트리 쪽 강변이 명당이에요.', 'https://www.gltjp.com/ja/directory/item/14423/']] },
+ '오사카':{ t:'먹다가 망한다는 부엌의 도시', d:'"구이다오레(먹다 망한다)"라는 말이 있을 만큼 길거리 음식이 강한 도시예요. 낮엔 성과 수족관, 밤엔 도톤보리 네온과 신세카이 골목이 기다려요.',
+  h:[['castle', '도요토미 히데요시의 성', '금박 장식의 천수각과 넓은 해자 공원. 봄 벚꽃과 가을 단풍 때 특히 붐벼요.'],
+     ['dotonbori', '네온 간판 아래 먹자 거리', '글리코 간판 앞 다리가 기념사진 명소. 강 위를 도는 리버크루즈로도 거리를 볼 수 있어요.'],
+     ['sky', '두 빌딩을 잇는 공중 정원', '173m 높이 옥상을 한 바퀴 걸으며 오사카 시내를 내려다봐요. 야경이 특히 유명해요.'],
+     ['kaiyukan', '고래상어가 사는 대형 수족관', '건물 꼭대기부터 나선형으로 내려오며 태평양의 수심별 생물을 봐요.']],
+  f:[['쿠시카츠', '꼬치 튀김. 공용 소스에는 한 번만 찍는 게 규칙이에요.', ['kushi']], ['오코노미야키·네기야키', '철판에서 굽는 오사카식 지짐. 파를 듬뿍 넣은 네기야키도 있어요.', ['ajinoya', 'mizuno']], ['부타만', '돼지고기 찐빵. 551 호라이 앞 줄이 오사카의 풍경이에요.', ['horai551']], ['오므라이스·양식', '오사카에서 시작된 오므라이스와 노포 카레.', ['hokkyokusei', 'jiyuken']]],
+  m:[['덴진 마쓰리 (天神祭)', '7월 24~25일', '일본 3대 마쓰리 중 하나. 25일 밤 강 위의 배 행렬(후나토교)과 봉납 불꽃이 하이라이트예요.', 'https://matcha-jp.com/jp/5946']] },
+ '교토':{ t:'천 년 수도의 절과 골목', d:'천 년 넘게 일본의 수도였던 도시라 절과 신사가 셀 수 없이 많아요. 이른 아침에 움직이면 붐비는 명소도 조용하게 볼 수 있고, 두부·말차·채식 요리 같은 담백한 음식이 많아요.',
+  h:[['fushimi', '산을 덮은 붉은 도리이', '수천 개의 도리이가 터널처럼 이어진 길. 24시간 열려 있어 아침 일찍 가면 한산해요.'],
+     ['kiyomizu', '절벽 위 나무 무대', '못 하나 쓰지 않고 지은 본당 무대에서 교토 시내를 내려다봐요. 니넨자카·산넨자카 골목과 이어져요.'],
+     ['bamboo', '하늘을 가리는 대나무 길', '아라시야마 대나무숲은 바람 소리까지 좋은 산책로. 아침 7~8시가 가장 조용해요.'],
+     ['kinkaku', '연못에 비친 금빛 누각', '금박을 입힌 사리전이 연못에 비치는 모습이 교토 대표 풍경이에요.']],
+  f:[['유도후', '다시마 국물에 데운 두부. 난젠지 주변이 유명해요.', ['okabeya', 'nanzenjunsei']], ['니신소바', '달게 조린 청어를 올린 교토식 소바.', ['matsuba']], ['말차 디저트', '우지 말차로 만든 파르페와 화과자.', ['itokyuemon', 'kagizen']], ['교토 라멘·규카쓰', '진한 간장 라멘과 겉만 익힌 소고기 커틀릿.', ['daiichiasahi', 'katsugyu']]],
+  m:[['아오이 마쓰리 (葵祭)', '5월 15일', '평안 시대 귀족 차림의 500여 명이 교토고쇼에서 시모가모·가미가모 신사까지 걸어요.', 'https://ja.kyoto.travel/event/major/'],
+     ['기온 마쓰리 (祇園祭)', '7월 한 달 · 야마보코 행렬 7/17·7/24', '일본 3대 마쓰리. 장식 수레 34기가 교토 시내를 도는 행렬이 백미예요.', 'https://ja.kyoto.travel/event/major/'],
+     ['고잔 오쿠리비 (五山送り火)', '8월 16일', '교토를 둘러싼 다섯 산에 큰 대(大)자 등 불 글씨가 차례로 켜져요.', 'https://ja.kyoto.travel/event/major/'],
+     ['지다이 마쓰리 (時代祭)', '10월 22일', '시대별 의상을 입은 약 2,000명이 천 년 교토의 역사를 행렬로 보여 줘요.', 'https://kyoto.travel/tw/news/events_in_kyoto.html']] },
+ '나고야':{ t:'성과 산업, 진한 맛의 도시', d:'도쿠가와 가문의 나고야성과 도요타의 산업 유산이 함께 있는 도시예요. 된장·장어·닭날개처럼 진한 "나고야 메시"가 여행의 절반이에요.',
+  h:[['ncastle', '금 범고래가 지키는 성', '천수각 지붕의 황금 샤치호코가 상징. 복원된 혼마루 어전의 화려한 내부도 꼭 보세요.'],
+     ['atsuta', '삼종신기를 모신 신궁', '큰 녹나무 숲 속 참배길이 조용하고, 주변에 장어덮밥 노포가 있어요.'],
+     ['osu', '절 앞 상점가 탐방', '오스칸논 앞으로 길게 이어진 상점가에 먹거리·중고 상점이 빼곡해요.'],
+     ['toyota', '방직기에서 자동차까지', '도요타의 출발점인 방직 공장 터를 박물관으로 꾸몄어요. 기계 시연이 볼만해요.']],
+  f:[['히쓰마부시', '장어덮밥을 세 가지 방법으로 나눠 먹는 나고야식.', ['horai']], ['미소카츠', '붉은 된장 소스를 끼얹은 돈카츠.', ['yabaton']], ['데바사키', '달고 짭짤한 양념에 후추를 입힌 닭 날개 튀김.', ['yamachan']], ['미소니코미 우동', '된장 국물에 단단한 면을 뚝배기째 끓여 내요.', ['misonikomi']]],
+  m:[['나고야 마쓰리', '10월 셋째 주말 무렵', '오다 노부나가·도요토미 히데요시·도쿠가와 이에야스로 분장한 "향토 영걸 행렬"이 시내를 행진해요.', 'https://www.city.nagoya.jp/kankou/kankouinfo/1014028/1014045/1014052.html'],
+     ['아쓰타 마쓰리', '6월 5일', '아쓰타 신궁의 가장 중요한 예대제. 경내에 봉납 행사와 노점이 이어져요.', 'https://www.mapple.net/region/a0403020100_g07010000/spot/']] },
+ '후쿠오카':{ t:'공항에서 20분, 라멘과 포장마차', d:'공항과 도심이 가까워 짧은 일정에도 알차게 돌 수 있어요. 돈코츠 라멘의 본고장이고, 밤이면 나카스 강변에 포장마차(야타이)가 줄지어 열려요.',
+  h:[['dazaifu', '학문의 신을 모신 신사', '수험생 참배로 유명한 텐만구. 참배길의 우메가에모치(매화떡)를 꼭 맛보세요.'],
+     ['canal', '물길이 흐르는 쇼핑몰', '건물 사이로 운하가 흐르고 분수 쇼가 열려요. 라멘 스타디움도 이 안에 있어요.'],
+     ['ohori', '도심 속 커다란 호수 공원', '호수 가운데 섬을 잇는 다리를 따라 한 바퀴 산책하기 좋아요.'],
+     ['fktower', '바다 앞 234m 전망 타워', '모모치 해변과 함께 노을을 보기 좋은 곳이에요.']],
+  f:[['돈코츠 라멘', '돼지뼈 국물 라멘의 본고장. 면을 다 먹으면 가에다마(면 추가)를 시켜요.', ['ichiran', 'ikkousha']], ['모쓰나베', '곱창·양배추·부추를 끓이는 전골.', ['yamanaka']], ['미즈타키', '뽀얀 닭 국물 전골.', ['hanamidori']], ['야타이 음식·한입 교자', '강변 포장마차의 꼬치와 철냄비 교자.', ['yatai', 'tetsunabe']]],
+  m:[['하카타 기온 야마카사 (博多祇園山笠)', '7월 1~15일', '마지막 날 새벽 "오이야마"에서 약 1톤짜리 가마를 멘 사람들이 하카타 거리를 달려요.', 'https://tabi-mag.jp/kokura-gion/'],
+     ['하카타 돈타쿠', '5월 3~4일', '골든위크에 열리는 시민 퍼레이드. 샤모지(주걱)를 두드리며 거리를 행진해요.', '']] },
+ '삿포로':{ t:'눈과 해산물, 계절이 확실한 도시', d:'바둑판처럼 반듯한 거리와 넓은 공원이 특징이에요. 겨울엔 눈 축제, 여름엔 시원한 공원 축제가 열리고, 라멘·징기스칸·해산물이 1년 내내 맛있어요.',
+  h:[['tvtower', '도시 한가운데 긴 공원', '오도리공원은 눈 축제·맥주 축제의 주 무대. 끝에 선 TV타워 전망대에서 공원 전체가 보여요.'],
+     ['otaru', '석조 창고가 늘어선 운하', '삿포로에서 기차로 40분. 저녁에 가스등이 켜질 때가 가장 예뻐요.'],
+     ['clock', '삿포로의 오래된 얼굴', '1878년에 지은 목조 시계탑. 도심 산책 중에 잠깐 들르기 좋아요.'],
+     ['moiwa', '일본 신 3대 야경', '로프웨이와 미니 케이블카로 올라가 삿포로 시내 불빛을 내려다봐요.']],
+  f:[['미소 라멘', '진한 된장 국물에 버터·옥수수를 올리기도 해요.', ['ichiryuan']], ['징기스칸', '양고기를 볼록한 철판에 구워 먹는 홋카이도 요리.', ['daruma', 'matsuo']], ['수프카레', '맑은 카레 국물에 큼직한 채소를 넣은 삿포로 명물.', ['garaku']], ['해산물 덮밥·회전초밥', '니조시장·장외시장의 성게·연어알 덮밥.', ['nijoichi', 'jogai', 'hanamaru']]],
+  m:[['삿포로 눈 축제 (さっぽろ雪まつり)', '2월 상순~중순', '세 곳의 회장에 눈·얼음 조각 약 200개가 늘어서고, 밤에는 조명이 켜져요.', 'https://www.mapple.net/region/a0100000000_g07010000/spot/'],
+     ['YOSAKOI 소란 마쓰리', '6월 상순', '300팀 이상이 소란부시 리듬에 맞춰 춤추며 도심을 누비는 축제예요.', 'https://www.mapple.net/region/a0102000000_g07010000/spot/'],
+     ['삿포로 여름 축제·오텀 페스트', '7월 하순~8월 · 9월', '오도리공원 맥주 정원(여름)과 홋카이도 먹거리 축제(가을).', 'https://www.mapple.net/region/g07010000/spot/']] },
+ '히로시마':{ t:'평화를 생각하는 도시와 바다 위 신사', d:'원폭의 기억을 간직한 평화기념공원과, 배로 건너가는 미야지마의 바다 위 도리이가 대표 풍경이에요. 겹겹이 쌓아 굽는 오코노미야키와 굴이 이 도시의 맛이에요.',
+  h:[['peace', '기억의 공원', '원폭돔과 평화기념자료관을 차분히 둘러보는 반나절이 필요해요.'],
+     ['miyajima', '바다에 선 붉은 도리이', '밀물 때는 물 위에, 썰물 때는 걸어서 도리이 아래까지 갈 수 있어요.'],
+     ['shukkeien', '풍경을 줄여 놓은 정원', '연못과 다리, 다실이 어우러진 다이묘 정원이에요.'],
+     ['orizuru', '종이학 타워 전망대', '원폭돔 바로 옆 전망대에서 평화공원을 위에서 내려다봐요.']],
+  f:[['히로시마 오코노미야키', '반죽·양배추·면·달걀을 겹겹이 쌓아 굽는 방식.', ['okonomimura', 'hassho', 'okonomi']], ['굴 요리', '일본 최대 굴 산지. 구이·튀김·생굴을 비교해 먹어요.', ['kakiya', 'hayashi', 'kakigoya']], ['모미지 만주', '단풍잎 모양 과자. 튀긴 아게모미지도 있어요.', ['momijido']]],
+  m:[['히로시마 플라워 페스티벌', '5월 3~5일', '평화대로와 평화기념공원에서 꽃 퍼레이드와 무대 공연이 열리는 골든위크 축제예요.', 'https://tabi-mag.jp/hiroshima-flowerfes/'],
+     ['도카상 대제 (とうかさん大祭)', '6월 초', '400년 넘게 이어진 축제. 이날 처음 유카타를 입는 "유카타 개시 축제"로도 불려요.', 'https://dive-hiroshima.com/feature/feature-89559']] },
+ '구마모토':{ t:'명성(名城)과 화산의 땅', d:'일본 3대 명성으로 꼽히는 구마모토성과, 차로 1시간 거리의 아소 화산이 대표 볼거리예요. 말고기 회와 마늘 향 진한 라멘 같은 개성 강한 음식이 많아요.',
+  h:[['kcastle', '돌담이 아름다운 명성', '2016년 지진 피해를 딛고 복구 중인 성. 높이 솟은 돌담과 천수각을 함께 봐요.'],
+     ['josaien', '성 아래 먹거리 거리', '에도 시대 거리처럼 꾸민 곳에서 구마모토 향토 음식을 맛봐요.'],
+     ['suizenji', '작은 후지산이 있는 정원', '도카이도 53역참을 본떴다는 회유식 정원. 연못가 다실에서 말차를 마셔요.'],
+     ['aso', '살아 있는 화산 분화구', '활동 상황에 따라 화구 접근이 제한될 수 있으니 당일 상황을 확인하세요.']],
+  f:[['구마모토 라멘', '돈코츠 국물에 구운 마늘 기름(마유)을 더해요.', ['kokutei', 'komurasaki']], ['바사시', '말고기 회. 생강·마늘 간장에 찍어 먹어요.', ['basashi']], ['타이피엔', '당면 수프에 해산물·채소를 넣은 구마모토식 중화 요리.', ['taipien']]],
+  m:[['히노쿠니 마쓰리 (火の国まつり)', '8월 첫째 주 금~일', '메인 행사 "오테모얀 총춤"에서 약 5,000명이 시청 주변 거리를 춤추며 지나가요.', 'https://www.gltjp.com/ja/directory/item/18707/']] },
+ '마쓰야마':{ t:'3,000년 온천과 소설 속 거리', d:'일본에서 가장 오래된 온천 중 하나인 도고온천과 산 위의 마쓰야마성이 중심이에요. 나쓰메 소세키의 소설 『봇짱』 속 풍경이 거리 곳곳에 남아 있어요.',
+  h:[['dogo', '소설 속 그 온천', '1894년에 지은 목조 공중목욕탕. 저녁에 유카타 차림으로 거리를 걷는 사람이 많아요.'],
+     ['mcastle', '산 위에 남은 옛 천수각', '로프웨이·리프트로 올라가면 세토 내해까지 보여요.'],
+     ['bocchan', '소설 속 증기기관차', '봇짱 열차를 복원한 관광 열차가 시내를 달려요.'],
+     ['ishiteji', '오헨로 순례길의 절', '시코쿠 88개소 중 하나. 독특한 동굴 참배길이 있어요.']],
+  f:[['타이메시 (도미밥)', '도미회를 양념에 비벼 올리거나 솥밥으로 지어요.', ['taimeshi']], ['자코텐', '작은 생선을 뼈째 갈아 튀긴 어묵.', []], ['귤 주스·귤 디저트', '에히메는 귤의 고장. 수도꼭지에서 귤 주스가 나오는 가게도 있어요.', ['tenfactory']], ['봇짱 당고', '세 가지 색 당고. 도고 하이카라 거리에서 팔아요.', ['haikara']]],
+  m:[['마쓰야마 봄 축제 (도고온천 축제)', '3월 중순~하순', '쇼토쿠 태자·마사오카 시키 등 도고온천 인연 인물이 행진하는 시대 퍼레이드가 열려요.', 'https://www.yukoyuko.net/onsen/spot/s0002485'],
+     ['마쓰야마 야큐켄 오도리', '8월 초', '1966년 시작된 여름 축제. 시민들이 "야큐켄 춤"을 추며 상점가를 행진해요.', 'https://www.walkerplus.com/event/ar0938e04760/image1.html'],
+     ['마쓰야마 도고 가을 축제', '10월 5~7일', '7일 새벽 도고온천역 앞에서 큰 가마끼리 부딪치는 "하치아와세(싸움 가마)"가 열려요.', 'https://report.iko-yo.net/articles/21701']] },
+ '기타큐슈':{ t:'항구의 레트로와 철의 도시', d:'메이지·다이쇼 시대 건물이 남은 모지코 항구와 야경 명소 사라쿠라산이 대표 볼거리예요. 고쿠라에서 처음 만들어졌다는 야키우동과 모지코 야키카레가 유명해요.',
+  h:[['mojiko', '100년 전 항구 거리', '서양식 옛 건물과 간몬 해협 풍경. 저녁 조명이 켜지면 분위기가 더 좋아요.'],
+     ['kokura', '도심 속 성', '시내 한복판의 성과 정원. 성 주변이 여름 기온 다이코 축제의 무대예요.'],
+     ['sarakura', '일본 신 3대 야경', '케이블카로 올라가 기타큐슈 시내와 바다의 야경을 봐요.'],
+     ['kawachi', '등나무 터널', '봄(4~5월) 등나무 시즌에는 사전 예매가 필요해요.']],
+  f:[['야키우동', '고쿠라에서 시작됐다는 볶음 우동.', ['ishin']], ['모지코 야키카레', '카레와 치즈를 올려 오븐에 구운 밥.', ['yakicurry', 'karihonpo']], ['단가 시장 먹거리', '"기타큐슈의 부엌" 시장에서 어묵·반찬을 골라 먹어요.', ['tanga']], ['스케상 우동', '기타큐슈 사람들이 즐겨 찾는 우동 체인.', ['sukesan']]],
+  m:[['고쿠라 기온 다이코 (小倉祇園太鼓)', '7월 셋째 토요일 전후 3일', '앞뒤 양면을 치며 걷는 북 축제. 국가 중요무형민속문화재예요.', 'https://www.crossroadfukuoka.jp/event/13137'],
+     ['왓쇼이 햐쿠만 나쓰마쓰리', '8월 초', '매년 150만 명 넘게 찾는 기타큐슈 대표 여름 축제. 전야제 불꽃놀이가 열려요.', 'https://www.city.kitakyushu.lg.jp/page/dayori/190715/special/special.html']] }
+};
+function cityGuide(c){
+  const g = CG[c]; if (!g) return '<div class="cg"><p class="sub">준비 중이에요.</p></div>';
+  setTimeout(() => g.h.forEach(([id]) => { if (JA[id] && EXTMAP){ wmLoad(id).then(() => { const el = document.getElementById('cgp-' + id), w = WM[id]; if (el && w && w.st === 'ok'){ el.style.backgroundImage = `url("${w.l[0].src}")`; el.title = '사진: ' + w.l[0].by + ' · ' + w.l[0].lic; el.parentElement.classList.remove('nophoto'); el.hidden = false; } }); } }), 0);
+  const photo = id => { const w = WM[id]; return w && w.st === 'ok' ? `<span class="ph" id="cgp-${id}" style="background-image:url('${esc(w.l[0].src)}')" title="사진: ${esc(w.l[0].by)} · ${esc(w.l[0].lic)}"></span>` : `<span class="ph" id="cgp-${id}" hidden></span>`; };
+  return `<div class="cg">
+   <div class="lead"><b>${esc(c)} · ${esc(g.t)}</b><p>${esc(g.d)}</p></div>
+   <h3>볼거리</h3>${g.h.map(([id, sub, d]) => { const x = PL[id]; return `<div class="cgi ${WM[id] && WM[id].st === 'ok' ? '' : 'nophoto'}">${photo(id)}<div><span class="sub2">${esc(sub)}</span><b>${esc(x.n)}</b><p>${esc(d)}</p><div class="meta"><strong>추천 시간</strong>${esc(x.when)} · <strong>요금</strong>${esc(x.feeT)} · <button class="lnk" style="border:0;background:none;color:var(--pri);font-weight:700;padding:0" data-a="place" data-v="${id}">자세히 ›</button></div></div></div>`; }).join('')}
+   <h3>먹을거리</h3>${g.f.map(([n, d, r]) => `<div class="cgf"><b>${esc(n)}</b><span class="xs">${esc(d)}</span>${r.length ? `<span class="r">${r.filter(id => PL[id]).map(id => `<button data-a="place" data-v="${id}">${esc(PL[id].k)} ›</button>`).join('')}</span>` : ''}</div>`).join('')}
+   <h3>마츠리·축제</h3>${g.m.map(([n, w, d, u]) => `<div class="cgf"><span class="when">📅 ${esc(w)}</span><b>${esc(n)}</b><span class="xs">${esc(d)}</span>${u ? `<span class="xs sub">출처: <a href="${u}" target="_blank" rel="noopener">${esc(u.replace(/^https?:\/\/(www\.)?/, '').split('/')[0])}</a></span>` : ''}</div>`).join('')}
+   <p class="xs sub" style="margin:0">축제 날짜는 해마다 조금씩 달라질 수 있어요. 가기 전에 공식 안내를 확인해 주세요. 볼거리·먹을거리 설명은 동선팩이 직접 정리한 글이에요.</p></div>`;
+}
+
 function cityHotels(city){
   const l = hotelsByAge(city, S.age), b = S.age ? AGEP[S.age].bud : 0;
   return `<div class="chlist"><p class="xs sub" style="margin:0">${S.age ? `${S.age} 숙소 1박 평균 지출(${won(AGEP[S.age].krw)}${AGEP[S.age].est ? ', 추정' : ''})에 가까운 순이에요.` : '요금이 낮은 순이에요. 연령대를 고르면 그 나이대 1박 예산에 가까운 순으로 바뀌어요.'} 요금은 가이드북 기준 요금이라 날짜·시즌마다 달라요.</p>
