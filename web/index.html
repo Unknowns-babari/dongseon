@@ -390,6 +390,16 @@ main.full>*{animation:none}
 .wmg figcaption{font-size:.68em;color:var(--sub);line-height:1.35;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .wmg figcaption a{color:inherit}
 .ntc{z-index:5200;align-items:center;padding:16px}
+.upd{z-index:5250}.upd .fkbox{max-width:520px}
+.upd .bh{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.upd .bb{overflow:auto}
+.upd .uv{border-left:3px solid #7cb342;padding:2px 0 2px 12px;margin:0 0 14px}
+.upd .uv h3{margin:0 0 6px;font-size:.98em;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.upd .uv h3 .nw{background:#e53935;color:#fff;border-radius:999px;font-size:.7em;padding:1px 8px}
+.upd .uv li b{color:#3f7d20}
+.upd .tg{display:inline-block;font-size:.72em;font-weight:700;border-radius:6px;padding:0 6px;margin-right:4px;vertical-align:1px}
+.upd .tg.n{background:#e8f5e9;color:#2e7d32}.upd .tg.i{background:#e3f2fd;color:#1565c0}.upd .tg.f{background:#fff3e0;color:#e65100}
+.pill.upb{position:relative}.pill.upb .dot{position:absolute;top:2px;right:2px;width:8px;height:8px;border-radius:50%;background:#e53935}
 .ntc .fkbox{max-width:440px;border-radius:20px}
 .ntc .bb p{margin:0;line-height:1.55}
 .ntc ul{margin:0;padding-left:18px;line-height:1.6;font-size:.92em}
@@ -646,6 +656,7 @@ main.dt .dl>*{order:2}
   <div id="ft"></div>
   <div id="sh"></div>
   <div id="ntc" class="fbk ntc" hidden role="dialog" aria-modal="true" aria-labelledby="ntct"></div>
+  <div id="upd" class="fbk ntc upd" hidden role="dialog" aria-modal="true" aria-labelledby="updt"></div>
   <div id="srv" class="fbk srv" hidden role="dialog" aria-modal="true" aria-labelledby="svq"></div>
   <div id="fbk" class="fbk" hidden role="dialog" aria-modal="true" aria-labelledby="fkt"></div>
 </div>
@@ -1102,7 +1113,7 @@ function header(){
   const titles = { guide:'도시 소개', home:'동선팩 · 일본', detail:S.edit ? '동선 편집 · ' + p.city : p.city + ' · ' + p.nights, book:'예약 내용', paid:'예약 완료', trip:'여행 중', make:'동선 만들기', src:'참고한 자료' };
   const back = S.scr === 'detail' && S.edit ? null : { detail:'home', book:'detail', paid:'home', src:'home' }[S.scr];
   return (back ? `<button class="ib" aria-label="뒤로 가기" data-a="go" data-v="${back}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>` : '')
-    + `<h1>${isWeb() && S.scr === 'home' ? '<span class="brand">동선팩</span> <span class="xs sub" style="font-weight:500">일본 여행 동선을 예약까지 한 번에</span>' : esc(titles[S.scr])}</h1>${isWeb() ? `<div class="wnav">${[['guide', '도시 소개'], ['home', '동선 찾기'], ['trip', '여행 중'], ['make', '동선 만들기']].map(x => `<button class="${S.scr === x[0] ? 'on' : ''}" data-a="go" data-v="${x[0]}">${x[1]}</button>`).join('')}</div>` : ''}${S.scr !== 'home' || S.cityOpen ? '<button class="ib hmb" data-a="gohome" aria-label="홈으로" title="홈으로"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></button>' : ''}<button class="pill" data-a="fbk" aria-haspopup="dialog">피드백</button><button class="pill ${S.big ? 'on' : ''}" aria-pressed="${S.big}" data-a="big">가 큰 글씨</button>`;
+    + `<h1>${isWeb() && S.scr === 'home' ? '<span class="brand">동선팩</span> <span class="xs sub" style="font-weight:500">일본 여행 동선을 예약까지 한 번에</span>' : esc(titles[S.scr])}</h1>${isWeb() ? `<div class="wnav">${[['guide', '도시 소개'], ['home', '동선 찾기'], ['trip', '여행 중'], ['make', '동선 만들기']].map(x => `<button class="${S.scr === x[0] ? 'on' : ''}" data-a="go" data-v="${x[0]}">${x[1]}</button>`).join('')}</div>` : ''}${S.scr !== 'home' || S.cityOpen ? '<button class="ib hmb" data-a="gohome" aria-label="홈으로" title="홈으로"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></button>' : ''}<button class="pill upb" data-a="upd" aria-haspopup="dialog">새 소식${updNew() ? '<i class="dot" aria-label="새 업데이트 있음"></i>' : ''}</button><button class="pill" data-a="fbk" aria-haspopup="dialog">피드백</button><button class="pill ${S.big ? 'on' : ''}" aria-pressed="${S.big}" data-a="big">가 큰 글씨</button>`;
 }
 
 /* 일본 해안선: 대략적인 윤곽선 (위·경도) */
@@ -2632,6 +2643,7 @@ const A = {
   dateopenp:v => { S.dateOpen = 0; A.open(v); },
   datefix:v => { const p = pack(), r = route(p), o = v.split(',').map(Number); if (o.length !== r.length) return; setRoute(o.map(i => r[i].slice())); render(); },
   gohome:() => { Object.assign(S, { edit:false, place:null, tpick:0, ageOpen:0, onb:0, ins:null, rep:null, sel:null, dsel:null, cityOpen:false, cs:'peek' }); go({ scr:'home' }); if (typeof fitJapan === 'function') setTimeout(() => fitJapan(true), 0); },
+  upd:() => updOpen(),
   fbk:() => { if (SV.done) return fkOpen(); SV.from = 'feedback'; SV.next = 'fbk'; SV.step = 1; svRender(); },
   hjp:() => fitJapan(true),
   city:v => { if (S.city !== v) S.tf = '전체'; S.city = v; S.cityOpen = true; S.cs = 'peek'; render();
@@ -2966,6 +2978,52 @@ function svLockHTML(){
 }
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.tpick && S.scr === 'trip'){ S.tpick = 0; render(); } });
+
+/* ---------- 업데이트 내역 ---------- */
+const UPD = [
+ { v:'0.9', d:'2026-11-19', t:'도시 소개·추천 상품', l:[
+  ['n','<b>도시별 추천 상품</b>: 오사카 주유패스·USJ 입장권·도쿄 서브웨이 티켓 등 10개 도시 교통·관광 패스 14종 (가격·포함 내용·이용 팁·출처)'],
+  ['n','<b>도시 소개 탭</b>: 도시별 볼거리·먹을거리·마츠리·축제를 사진과 함께 소개, 하단 탭 맨 왼쪽에 배치'],
+  ['i','도시 소개 사진 189곳을 위키미디어 공용 자유 이용 사진으로 채움 (촬영자·라이선스 표기)'],
+  ['n','여행 날짜에 <b>귀국일</b> 입력: 일정 길이에 맞는 동선팩을 먼저 보여 주고 "딱 맞음·여유·넘침" 배지 표시'],
+  ['n','<b>새 소식</b> 버튼: 지금 보고 있는 업데이트 내역']] },
+ { v:'0.8', d:'2026-11-18', t:'사진·지도·맛집 메뉴', l:[
+  ['n','장소 정보에 실제 사진과 실제 지도(주변 장소 핀, 구글 지도 길찾기 링크)'],
+  ['n','<b>구간 경로 비교</b>: 동선 편집에서 경로를 색깔별로 비교·선택, 경로 길이·지나는 길·주변 풍경 사진'],
+  ['n','맛집 메뉴 설명과 메뉴판 가격으로 만든 <b>추천 조합·인기 조합</b>'],
+  ['i','동선팩 내용 보강: 하루 3~5곳으로 근처 관광·거리·체험·맛집을 섞음 (부모님 동선팩은 하루 3곳)'],
+  ['i','첫 화면에 테스트 버전 안내 공지, 피드백 버튼을 누르면 출시 의향 설문 → 후기 순서로 진행'],
+  ['f','설문 결과를 못 불러올 때 안내 문구 표시']] },
+ { v:'0.7', d:'2026-11-17', t:'추천·설문·공유', l:[
+  ['n','기타큐슈 추가로 <b>10개 도시 동선팩 100개</b>, 장소 214곳, 모든 동선팩 2박 3일 이상'],
+  ['n','<b>취향 매칭</b>: 관심사 20개를 고르면 맞는 동선팩 추천, <b>연령대별 추천</b>(10~70대 여행 트렌드 기반)'],
+  ['n','구간마다 이동 방법 고르기 (도보·전철·노면전차·버스·택시·페리)'],
+  ['n','여행 날짜 입력 시 정기 휴무·일본 공휴일·연말연시를 반영해 추천'],
+  ['n','여행 중 <b>동선 바꾸기</b>, 동선 편집에 거리·골목·체험 필터, 지도 핀 모양 구분과 홈 버튼'],
+  ['n','맛집 메뉴·가격, 체험 요금, 도시별 숙소 50곳 (출처 표기)'],
+  ['n','리뷰·동선팩 공유, <b>피드백 게시판</b>(평가글·답글), 출시 의향 설문과 결과 표·엑셀 저장(비밀번호 잠금)'],
+  ['i','PC에서도 앱과 같은 화면으로 보기']] },
+ { v:'0.6', d:'2026-11-16', t:'첫 공개', l:[
+  ['n','실제 지도 홈 화면(한국어 지명), 도시를 누르면 동선팩 목록'],
+  ['n','동선 장소 사이 이동 방법과 시간, 전체 일정 한 줄 보기'],
+  ['n','동선 편집: 장소 넣기·빼기·다른 장소로 바꾸기, 지도 아이콘으로 고르기']] }
+];
+const UPD_KEY = 'dongseon-upd-seen';
+function updNew(){ try { return localStorage.getItem(UPD_KEY) !== UPD[0].v; } catch (e) { return false; } }
+function updOpen(){
+  const el = $('upd'), seenV = (() => { try { return localStorage.getItem(UPD_KEY); } catch (e) { return null; } })();
+  const TG = { n:['n', '새 기능'], i:['i', '개선'], f:['f', '수정'] };
+  el.innerHTML = `<div class="fkbox"><div class="bh"><h2 id="updt">🆕 업데이트 내역</h2><button class="ib" data-u="x" aria-label="닫기">✕</button></div><div class="bb">
+    <p class="xs sub" style="margin:0 0 12px">테스트 버전이 바뀔 때마다 여기에 기록해요. 최근 순서예요.</p>
+    ${UPD.map((u, i) => `<section class="uv"><h3>v${u.v} · ${u.t} <span class="xs sub" style="font-weight:500">${u.d}</span>${i === 0 && seenV !== u.v ? '<span class="nw">NEW</span>' : ''}</h3><ul>${u.l.map(([k, h]) => `<li><span class="tg ${TG[k][0]}">${TG[k][1]}</span>${h}</li>`).join('')}</ul></section>`).join('')}
+    <button class="btn" data-u="x">확인했어요</button></div></div>`;
+  el.hidden = false;
+  try { localStorage.setItem(UPD_KEY, UPD[0].v); } catch (e) {}
+  setTimeout(() => { const b = el.querySelector('.bh [data-u]'); b && b.focus({ preventScroll:true }); const bb = el.querySelector('.bb'); if (bb) bb.scrollTop = 0; }, 50);
+}
+function updClose(){ const el = $('upd'); el.hidden = true; el.innerHTML = ''; render(); const b = document.querySelector('[data-a="upd"]'); b && b.focus(); }
+document.addEventListener('click', e => { const el = $('upd'); if (el.hidden) return; if (e.target.closest('[data-u="x"]') || e.target === el) updClose(); });
+document.addEventListener('keydown', e => { const el = $('upd'); if (e.key === 'Escape' && !el.hidden){ e.stopImmediatePropagation(); updClose(); } }, true);
 /* ---------- 첫 화면 공지: 테스트용 시제품 ---------- */
 (function(){
   const el = $('ntc'); let seen = false;
@@ -2977,10 +3035,10 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.tpick &&
     <li>예약·결제 화면은 흐름을 보여 주는 견본이라 실제로 예약되거나 돈이 나가지 않아요.</li>
     <li>요금·영업시간은 조사 시점 기준이라 실제와 다를 수 있어요.</li>
     <li>남겨 주신 리뷰·피드백·설문은 마케팅 전략론 과제 보고서에만 쓰여요.</li></ul>
-    <button class="btn" data-ntc="ok">확인했어요</button></div></div>`;
+    <button class="btn" data-ntc="ok">확인했어요</button><button class="lnk" data-ntc="upd" style="border:0;background:none;color:var(--pri);font-weight:700;min-height:40px;width:100%">🆕 업데이트 내역 보기 ›</button></div></div>`;
   el.hidden = false;
   const close = () => { el.hidden = true; el.innerHTML = ''; try { sessionStorage.setItem('dongseon-notice-v1', '1'); } catch (e) {} };
-  el.addEventListener('click', e => { if (e.target.closest('[data-ntc]')) close(); });
+  el.addEventListener('click', e => { const t = e.target.closest('[data-ntc]'); if (t){ close(); if (t.dataset.ntc === 'upd') updOpen(); } });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !el.hidden){ e.stopImmediatePropagation(); close(); } }, true);
   setTimeout(() => { const b = el.querySelector('[data-ntc]'); b && b.focus(); }, 50);
 })();
