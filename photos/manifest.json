@@ -4228,8 +4228,15 @@
   ]
  },
  "kgs_ajimori": {
-  "q": "黒豚 しゃぶしゃぶ",
-  "l": []
+  "q": "しゃぶしゃぶ 豚",
+  "l": [
+   {
+    "f": "img/9e352c251e7d9f1a.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Koisurubuta_shabu-shabu.jpg",
+    "lic": "CC BY-SA 4.0",
+    "by": "アリオト"
+   }
+  ]
  },
  "kgs_kawakyu": {
   "q": "黒豚 とんかつ",
@@ -4430,8 +4437,21 @@
   ]
  },
  "f:흑돼지 요리": {
-  "q": "黒豚 しゃぶしゃぶ",
-  "l": []
+  "q": "黒豚",
+  "l": [
+   {
+    "f": "img/a459aa4a01c601bd.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:%E9%BB%92%E8%B1%9A%E3%82%BD%E3%83%BC%E3%82%B9_(14185099193).jpg",
+    "lic": "CC BY 2.0",
+    "by": "City Foodsters"
+   },
+   {
+    "f": "img/5d977111641a5b57.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:%E9%BB%92%E8%B1%9A%E3%82%B7%E3%83%A5%E3%82%A6%E3%83%9E%E3%82%A4_(24984015725).jpg",
+    "lic": "CC BY 2.0",
+    "by": "Raita Futo from Tokyo, Japan"
+   }
+  ]
  },
  "f:가고시마 라멘": {
   "q": "鹿児島ラーメン",
