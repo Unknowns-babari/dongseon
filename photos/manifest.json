@@ -3610,5 +3610,30 @@
     "by": "lienyuan lee"
    }
   ]
+ },
+ "h:h_sutton": {
+  "q": "intitle:\"Sutton Hotel Hakata\"",
+  "l": []
+ },
+ "h:h_tsubakikan": {
+  "q": "intitle:Tsubakikan intitle:Dogo",
+  "l": []
+ },
+ "h:h_hilton_seahawk": {
+  "q": "intitle:\"Hilton Fukuoka Sea Hawk\"",
+  "l": [
+   {
+    "f": "img/6d34f4ab1d524e5f.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Hilton_Fukuoka_Sea_Hawk_the_view_from_the_W_end_of_Fureai_Bashi_Jigy%C5%8D-hama_2-ch%C5%8Dme_Ch%C5%AB%C5%8D-ku_Fukuoka_20240729.jpg",
+    "lic": "CC BY-SA 4.0",
+    "by": "Hirho"
+   },
+   {
+    "f": "img/4353706ce91281c7.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:View_of_Fukuoka_Dome_and_Hilton_Fukuoka_Sea_Hawk_Hotel.JPG",
+    "lic": "CC BY-SA 4.0",
+    "by": "そらみみ (Soramimi)"
+   }
+  ]
  }
 }
