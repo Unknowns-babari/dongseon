@@ -733,6 +733,7 @@ main.dt .dl>*{order:2}
 .web .stage.edit>.legend{left:436px!important;bottom:14px!important}
 .web .stage.edit>.zoom{bottom:16px!important}
 .web .stage.edit>.keybar{left:436px}
+.jy{font-size:.74em;color:var(--sub);font-weight:500;white-space:nowrap}.wy{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -751,8 +752,47 @@ main.dt .dl>*{order:2}
 </div>
 <script>
 {
-const YEN = 8.5; // 원/엔 어림값 (100엔≈850원, 2026년 10월 기준)
+const YEN = 8.37; // 원/엔 어림값 (100엔≈837원, 하나은행 2026-11-12 재정환율 836.90원 기준)
 const won = n => '₩' + Math.round(n).toLocaleString('ko-KR');
+/* 가격 표시: 원화 먼저, 엔은 작게 괄호 */
+(function(){
+  const PRX = /¥\s?(\d[\d,]*)(?:\s?~\s?¥?\s?(\d[\d,]*))?(~)?|(\d[\d,]*)(?:~(\d[\d,]*))?\s?엔(?!화)|₩\s?(\d[\d,]*)(?:\s?~\s?₩?\s?(\d[\d,]*))?(~)?|(\d[\d,]*)(?:~(\d[\d,]*))?원/g;
+  const nn = t => +String(t).replace(/,/g, '');
+  const f = n => Math.round(n).toLocaleString('ko-KR');
+  const k = y => { const w = y * YEN; return w >= 10000 ? Math.round(w / 100) * 100 : Math.round(w / 10) * 10; };
+  const y = w => { const v = w / YEN; return v >= 1000 ? Math.round(v / 10) * 10 : Math.round(v); };
+  const ex = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  function conv(m, a, b, o, c, d, e, g, o2, h, i){
+    let W, J;
+    if (a != null || c != null){ const lo = nn(a != null ? a : c), hi = (a != null ? b : d); const op = a != null && o;
+      W = '₩' + f(k(lo)) + (hi ? '~' + f(k(nn(hi))) : op ? '~' : ''); J = '¥' + f(lo) + (hi ? '~' + f(nn(hi)) : op ? '~' : ''); }
+    else { const lo = nn(e != null ? e : h), hi = (e != null ? g : i); const op = e != null && o2;
+      W = '₩' + f(lo) + (hi ? '~' + f(nn(hi)) : op ? '~' : ''); J = '¥' + f(y(lo)) + (hi ? '~' + f(y(nn(hi))) : op ? '~' : ''); }
+    return '<span class="wy">' + W + ' <small class="jy">(' + J + ')</small></span>';
+  }
+  const SKIP = '.wy,script,style,textarea,input,select,#upd,[data-noyen]';
+  function scan(root){
+    if (!root) return;
+    if (root.nodeType === 3){ one(root); return; }
+    if (root.nodeType !== 1 || root.closest && root.closest(SKIP)) return;
+    const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); const L = [];
+    while (tw.nextNode()) L.push(tw.currentNode);
+    L.forEach(one);
+  }
+  function one(t){
+    const v = t.nodeValue; if (!v || !/[¥₩엔원]/.test(v)) return;
+    const p = t.parentElement; if (!p || p.closest(SKIP)) return;
+    PRX.lastIndex = 0; if (!PRX.test(v)) return; PRX.lastIndex = 0;
+    let out = '', last = 0, mm;
+    while ((mm = PRX.exec(v))){ out += ex(v.slice(last, mm.index)) + conv(...mm); last = PRX.lastIndex; }
+    out += ex(v.slice(last));
+    const tp = document.createElement('template'); tp.innerHTML = out; t.replaceWith(tp.content);
+  }
+  window.__yenScan = scan;
+  const go = () => { scan(document.body); new MutationObserver(ms => { ms.forEach(m => m.addedNodes.forEach(scan)); }).observe(document.body, { childList: true, subtree: true }); };
+  if (document.body) go(); else document.addEventListener('DOMContentLoaded', go);
+})();
+
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const COLORS = ['#1f4fbf','#d9821a','#14795a','#8a3fb5','#b42318'];
 
@@ -1105,7 +1145,7 @@ Object.assign(PL, {"nara_park": {"n": "나라공원·사슴", "k": "나라공원
 const FARL = {"오사카|나라": ["긴테쓰 오사카난바 ↔ 긴테쓰나라 (급행·쾌속급행 약 40분, 환승 없음, 편도 ¥680)", 55], "오사카|고베": ["오사카역 ↔ 고베 산노미야 (전철 약 30분, 환승 없음)", 45], "교토|나라": ["JR 교토 ↔ JR 나라 (미야코지 쾌속 약 45분, ¥720) · 긴테쓰 특급 약 37분 ¥1,280", 60], "도쿄|가마쿠라": ["JR 도쿄역 ↔ 가마쿠라역 (요코스카선 약 1시간, IC ¥945)", 75], "도쿄|하코네": ["신주쿠 ↔ 하코네유모토 (로망스카 최단 약 75분, 운임+특급 ¥2,470)", 95], "나고야|이누야마": ["메이테쓰 나고야 ↔ 이누야마역 (약 25~30분) + 걸어서 약 20분", 55]}, FARIN = {"하코네": "하코네 등산전차·케이블카·로프웨이·해적선 (하코네 프리패스로 자유 승하차)"};
 const RAWADD = [["os_nara", "오사카", "오사카 2박 3일 + 나라 사슴공원 당일치기", "둘째 날은 긴테쓰로 40분, 사슴공원·도다이지·나라마치", "친구와 2인", ["근교 당일치기"], [["castle", "kuromon", "dotonbori"], ["nara_park", "todaiji", "naramachi"], ["shinsaibashi", "horai551"]]], ["os_kobe", "오사카", "오사카 2박 3일 + 고베 항구 반나절", "오후엔 고베로 30분, 밤엔 아베노 하루카스 야경", "연인과 2인", ["근교 당일치기"], [["dotonbori", "ebisu", "kushi"], ["kobe_meriken", "harukas"], ["castle", "tenjinbashi"]]], ["os_kntour", "오사카", "오사카 3박 4일, 교토·나라는 버스투어로", "나라공원 → 후시미 이나리 → 아라시야마를 버스 하나로", "부모님과 2인", ["버스투어", "근교 당일치기"], [["dotonbori", "kuromon", "shinsaibashi"], ["ot_nara", "ot_fushimi", "ot_arashi"], ["castle", "sky"], []]], ["kt_nara", "교토", "교토 2박 3일 + 나라 당일치기", "교토역에서 JR로 45분, 사슴 보고 돌아와 후시미 이나리", "친구와 2인", ["근교 당일치기"], [["kiyomizu", "hanami", "nishiki"], ["nara_k"], ["fushimi", "byodoin"]]], ["tk_kamakura", "도쿄", "도쿄 3박 4일 + 가마쿠라 바다 마을", "도쿄역에서 갈아타지 않고 1시간, 대불과 하치만구", "친구와 2인", ["근교 당일치기"], [["senso", "skytree"], ["kamakura_daibutsu", "tsurugaoka"], ["meiji", "takeshita", "shibuya"], []]], ["tk_hakone", "도쿄", "도쿄 3박 4일 + 하코네 온천 한 바퀴", "로망스카로 75분, 프리패스로 로프웨이·해적선까지", "부모님과 2인", ["근교 당일치기"], [["shibuya", "tocho"], ["hakone_yumoto", "owakudani", "ashinoko"], ["senso", "ameyoko"], []]], ["tk_fuji", "도쿄", "도쿄 3박 4일, 후지산은 버스투어로", "신주쿠에서 한 번에, 아라쿠라야마·오시노 핫카이·가와구치코", "혼자 1인", ["버스투어", "근교 당일치기"], [["senso", "skytree"], ["fj_arakura", "fj_oshino", "fj_oishi"], ["meiji", "shibuya", "omoide"], []]], ["ng_inuyama", "나고야", "나고야 2박 3일 + 국보 이누야마성", "메이테쓰로 30분, 목조 천수각과 성하마을 먹거리", "친구와 2인", ["근교 당일치기"], [["ncastle", "osu"], ["inuyama"], ["atsuta", "oasis21"]]], ["ng_shirakawa", "나고야", "나고야 2박 3일, 시라카와고·다카야마 버스투어", "차 없이 하루에 세계유산 마을과 옛 거리", "부모님과 2인", ["버스투어", "근교 당일치기"], [["ncastle", "osu"], ["sk_takayama", "sk_shirakawa"], ["toyota", "oasis21"]]], ["fk_yufuin", "후쿠오카", "후쿠오카 2박 3일, 유후인·벳푸 버스투어", "다자이후 → 유후인 → 벳푸 가마도 지옥을 하루에", "친구와 2인", ["버스투어", "근교 당일치기"], [["canal", "ichiran", "yatai"], ["dazaifu", "yb_yufuin", "yb_beppu"], ["ohori", "fktower"]]], ["sp_biei", "삿포로", "삿포로 3박 4일, 비에이·후라노 버스투어", "흰수염 폭포·청의 호수·사계채 언덕을 버스로", "연인과 2인", ["버스투어", "근교 당일치기"], [["tvtower", "clock", "susukino"], ["bf_shirahige", "bf_aoike", "bf_shikisai"], ["otaru"], []]]];
 RAWADD.forEach(r => { RAW.push(r); PACKS.push(packObj(...r)); });
-const TOURS = {"오사카": [{"n": "교토 아라시야마 + 나라 사슴공원 + 후시미 이나리 1일 투어", "pf": "트립닷컴", "p": "최저 HKD 356 (트립닷컴 표시 통화, 1명당)", "r": "4.9/5 · 리뷰 746개 · 400+명 예약", "d": "나라공원(약 1시간) → 후시미 이나리(약 1시간 20분) → 아라시야마(약 2시간 50분), 18:00 신사이바시스지 복귀", "x": "조인 투어 · 사용일 1일 전까지 무료 취소", "u": "https://kr.trip.com/things-to-do/detail/74978446/", "pk": "os_kntour"}, {"n": "교토 & 나라 일일 투어 (오사카 또는 교토 출발)", "pf": "와그", "p": "가격은 상품 페이지에서 확인", "r": "최소 출발 인원 1명", "d": "출발지를 오사카·교토 중에서 골라요", "x": "포함: 버스·가이드(한국어/영어)·수하물 1개 / 불포함: 식사·입장료", "u": "https://www.waug.com/ko/activities/140894", "pk": "os_kntour"}, {"n": "오사카 → 고베: 컵라면 박물관·아리마온천·롯코산 전망대·메리켄 공원 일일투어", "pf": "트립닷컴", "p": "가격은 상품 페이지에서 확인", "r": "4.9/5 · 리뷰 18개", "d": "한국어 가이드, 1명도 출발", "x": "소요 약 9.5시간 · 무료 취소", "u": "https://kr.trip.com/things-to-do/cityname-1860137/", "pk": "os_kobe"}], "교토": [{"n": "나라공원 · 후시미 이나리 · 아라시야마 일일 투어 (교토역 출발 가능)", "pf": "와그", "p": "가격은 상품 페이지에서 확인", "r": "", "d": "나라공원(약 1시간) → 후시미 이나리(약 1시간 10분) → 아라시야마", "x": "교토역 하치조구치 또는 오사카 닛폰바시에서 출발 · 1일 전까지 취소 가능", "u": "https://www.waug.com/ko/activities/160886", "pk": "kt_nara"}], "도쿄": [{"n": "신주쿠 출발 후지산 버스투어 (한국인 가이드)", "pf": "여기어때 (방문 후기 기준)", "p": "1인 약 37,830원", "r": "", "d": "09:15 신주쿠 집합 → 아라쿠라야마 센겐공원 → 히카와 시계점 → 오시노 핫카이 → 가와구치코 로손 → 오이시공원, 약 11시간", "x": "고속버스 왕복(4,400엔)과 비슷한 값에 이동·안내·사진 촬영 포함", "u": "https://www.trvlogue.com/ko/mount-fuji-tokyo-bus-tour-2026", "pk": "tk_fuji"}, {"n": "하코네 + 후지산 당일치기 (케이블카 포함 상품 등)", "pf": "트립닷컴", "p": "가격은 상품 페이지에서 확인", "r": "", "d": "아시노코·오와쿠다니·야마나카호·오시노 핫카이 조합 상품이 여러 개 있어요", "x": "", "u": "https://kr.trip.com/things-to-do/detail/70956799/", "pk": "tk_hakone"}], "나고야": [{"n": "나고야 시라카와고 + 타카야마 투어 (쇼핑 없는 순수투어)", "pf": "트립닷컴", "p": "최저 56,660원 (1명당)", "r": "", "d": "히다 다카야마 옛 거리 → 시라카와고", "x": "조인 투어 · 사용일 1일 전까지 무료 취소", "u": "https://kr.trip.com/things-to-do/detail/52946199/", "pk": "ng_shirakawa"}, {"n": "[테라투어] 나고야 출발 다카야마 & 시라카와고 버스 일일투어 (4~11월)", "pf": "와그", "p": "가격은 상품 페이지에서 확인", "r": "", "d": "한국인 전문 가이드 또는 드라이빙 가이드", "x": "불포함: 중식, 다카야마 진야 440엔, 와다케 400엔", "u": "https://www.waug.com/favicon.ico/activities/150579", "pk": "ng_shirakawa"}], "후쿠오카": [{"n": "유후인 + 벳푸 가마도 지옥 + 다자이후 텐만구 일일 투어 (한국어, 1명도 출발)", "pf": "트립닷컴", "p": "최저 62,576원 (정가 89,395원에서 30% 할인 표시)", "r": "4.9/5 · 리뷰 104개 · 1,459명 예약", "d": "소요 약 9.1시간", "x": "무료 취소 · 바로 확정", "u": "https://kr.trip.com/things-to-do/cityname-1636875/", "pk": "fk_yufuin"}, {"n": "[유투어버스] 유후인 · 벳부 · 다자이후 1일 버스투어", "pf": "와그", "p": "¥5,497부터 (쿠폰가, 표시 통화)", "r": "", "d": "A코스 08:35 미팅, 약 10시간", "x": "포함: 버스·한국인 가이드·가마도 지옥 입장권·온천달걀·라무네·타올", "u": "https://www.waug.com/ja/activities/104874", "pk": "fk_yufuin"}], "삿포로": [{"n": "[아이트립] 비에이 & 후라노 일일 버스투어 (사계채 언덕 입장권 포함)", "pf": "와그", "p": "₩48,300 → 쿠폰가 ₩45,885부터", "r": "", "d": "약 10시간 30분, 한국인 가이드", "x": "사계채 언덕 입장권 포함 (현장 성인 800엔)", "u": "https://www.waug.com/ko/goods/148018", "pk": "sp_biei"}, {"n": "[엔데이트립] 삿포로 비에이 후라노 버스투어 (1인부터 출발 확정)", "pf": "와그", "p": "₩69,000 → ₩67,500", "r": "4.8 · 리뷰 38건", "d": "", "x": "", "u": "https://www.waug.com/themes/590", "pk": "sp_biei"}, {"n": "비에이 · 후라노 일일 버스투어 (오도리역 출발)", "pf": "와그", "p": "₩60,124 → 쿠폰가 ₩57,118부터", "r": "", "d": "오도리역 31번 출구 앞 09:30 출발, 약 9시간", "x": "한국어·영어 가이드", "u": "https://www.waug.com/favicon.ico/activities/151188", "pk": "sp_biei"}, {"n": "[유투어버스] 비에이 후라노 1일 버스투어 (삿포로역 출발)", "pf": "마이리얼트립", "p": "가격은 상품 페이지에서 확인", "r": "4.7 · 후기 460개", "d": "흰수염 폭포·청의 호수·사계채 언덕 (계절별 코스)", "x": "준페이 도시락 사전 예약 서비스, 오타루 카페 쿠폰", "u": "https://experiences.myrealtrip.com/products/3154187", "pk": "sp_biei"}], "구마모토": [{"n": "구마모토성 + 아소산 + 구사센리 당일 치기 (한국어 가이드, 아소 화산 셔틀 증정)", "pf": "트립닷컴", "p": "최저 DKK 284.81 (트립닷컴 표시 통화, 1명당)", "r": "4.7/5 · 리뷰 104개 · 1K+명 예약", "d": "조인 투어", "x": "사용일 1일 전까지 무료 취소", "u": "https://kr.trip.com/things-to-do/detail/88923325/", "pk": ""}, {"n": "[GOGODAY] 구마모토성 · 아소산 · 구사센리 투어 (후쿠오카 하카타 출발 가능)", "pf": "와그", "p": "가격은 상품 페이지에서 확인", "r": "", "d": "08:00 로손 오리엔탈 호텔 후쿠오카점 앞 미팅 → 구마모토성(약 1시간 30분) → 아소산 → 구사센리", "x": "불포함: 점심, 구마모토성 800엔, 아소 화산 박물관 1,100엔", "u": "https://www.waug.com/activities/148463", "pk": ""}]};
+const TOURS = {"오사카": [{"n": "교토 아라시야마 + 나라 사슴공원 + 후시미 이나리 1일 투어", "pf": "트립닷컴", "p": "최저 HKD 356 · 약 61,200원 (트립닷컴 표시 통화를 11월 환율 HKD≈172원으로 환산, 1명당)", "r": "4.9/5 · 리뷰 746개 · 400+명 예약", "d": "나라공원(약 1시간) → 후시미 이나리(약 1시간 20분) → 아라시야마(약 2시간 50분), 18:00 신사이바시스지 복귀", "x": "조인 투어 · 사용일 1일 전까지 무료 취소", "u": "https://kr.trip.com/things-to-do/detail/74978446/", "pk": "os_kntour"}, {"n": "교토 & 나라 일일 투어 (오사카 또는 교토 출발)", "pf": "와그", "p": "가격은 상품 페이지에서 확인", "r": "최소 출발 인원 1명", "d": "출발지를 오사카·교토 중에서 골라요", "x": "포함: 버스·가이드(한국어/영어)·수하물 1개 / 불포함: 식사·입장료", "u": "https://www.waug.com/ko/activities/140894", "pk": "os_kntour"}, {"n": "오사카 → 고베: 컵라면 박물관·아리마온천·롯코산 전망대·메리켄 공원 일일투어", "pf": "트립닷컴", "p": "가격은 상품 페이지에서 확인", "r": "4.9/5 · 리뷰 18개", "d": "한국어 가이드, 1명도 출발", "x": "소요 약 9.5시간 · 무료 취소", "u": "https://kr.trip.com/things-to-do/cityname-1860137/", "pk": "os_kobe"}], "교토": [{"n": "나라공원 · 후시미 이나리 · 아라시야마 일일 투어 (교토역 출발 가능)", "pf": "와그", "p": "가격은 상품 페이지에서 확인", "r": "", "d": "나라공원(약 1시간) → 후시미 이나리(약 1시간 10분) → 아라시야마", "x": "교토역 하치조구치 또는 오사카 닛폰바시에서 출발 · 1일 전까지 취소 가능", "u": "https://www.waug.com/ko/activities/160886", "pk": "kt_nara"}], "도쿄": [{"n": "신주쿠 출발 후지산 버스투어 (한국인 가이드)", "pf": "여기어때 (방문 후기 기준)", "p": "1인 약 37,830원", "r": "", "d": "09:15 신주쿠 집합 → 아라쿠라야마 센겐공원 → 히카와 시계점 → 오시노 핫카이 → 가와구치코 로손 → 오이시공원, 약 11시간", "x": "고속버스 왕복(4,400엔)과 비슷한 값에 이동·안내·사진 촬영 포함", "u": "https://www.trvlogue.com/ko/mount-fuji-tokyo-bus-tour-2026", "pk": "tk_fuji"}, {"n": "하코네 + 후지산 당일치기 (케이블카 포함 상품 등)", "pf": "트립닷컴", "p": "가격은 상품 페이지에서 확인", "r": "", "d": "아시노코·오와쿠다니·야마나카호·오시노 핫카이 조합 상품이 여러 개 있어요", "x": "", "u": "https://kr.trip.com/things-to-do/detail/70956799/", "pk": "tk_hakone"}], "나고야": [{"n": "나고야 시라카와고 + 타카야마 투어 (쇼핑 없는 순수투어)", "pf": "트립닷컴", "p": "최저 56,660원 (1명당)", "r": "", "d": "히다 다카야마 옛 거리 → 시라카와고", "x": "조인 투어 · 사용일 1일 전까지 무료 취소", "u": "https://kr.trip.com/things-to-do/detail/52946199/", "pk": "ng_shirakawa"}, {"n": "[테라투어] 나고야 출발 다카야마 & 시라카와고 버스 일일투어 (4~11월)", "pf": "와그", "p": "가격은 상품 페이지에서 확인", "r": "", "d": "한국인 전문 가이드 또는 드라이빙 가이드", "x": "불포함: 중식, 다카야마 진야 440엔, 와다케 400엔", "u": "https://www.waug.com/favicon.ico/activities/150579", "pk": "ng_shirakawa"}], "후쿠오카": [{"n": "유후인 + 벳푸 가마도 지옥 + 다자이후 텐만구 일일 투어 (한국어, 1명도 출발)", "pf": "트립닷컴", "p": "최저 62,576원 (정가 89,395원에서 30% 할인 표시)", "r": "4.9/5 · 리뷰 104개 · 1,459명 예약", "d": "소요 약 9.1시간", "x": "무료 취소 · 바로 확정", "u": "https://kr.trip.com/things-to-do/cityname-1636875/", "pk": "fk_yufuin"}, {"n": "[유투어버스] 유후인 · 벳부 · 다자이후 1일 버스투어", "pf": "와그", "p": "¥5,497부터 (쿠폰가, 표시 통화)", "r": "", "d": "A코스 08:35 미팅, 약 10시간", "x": "포함: 버스·한국인 가이드·가마도 지옥 입장권·온천달걀·라무네·타올", "u": "https://www.waug.com/ja/activities/104874", "pk": "fk_yufuin"}], "삿포로": [{"n": "[아이트립] 비에이 & 후라노 일일 버스투어 (사계채 언덕 입장권 포함)", "pf": "와그", "p": "₩48,300 → 쿠폰가 ₩45,885부터", "r": "", "d": "약 10시간 30분, 한국인 가이드", "x": "사계채 언덕 입장권 포함 (현장 성인 800엔)", "u": "https://www.waug.com/ko/goods/148018", "pk": "sp_biei"}, {"n": "[엔데이트립] 삿포로 비에이 후라노 버스투어 (1인부터 출발 확정)", "pf": "와그", "p": "₩69,000 → ₩67,500", "r": "4.8 · 리뷰 38건", "d": "", "x": "", "u": "https://www.waug.com/themes/590", "pk": "sp_biei"}, {"n": "비에이 · 후라노 일일 버스투어 (오도리역 출발)", "pf": "와그", "p": "₩60,124 → 쿠폰가 ₩57,118부터", "r": "", "d": "오도리역 31번 출구 앞 09:30 출발, 약 9시간", "x": "한국어·영어 가이드", "u": "https://www.waug.com/favicon.ico/activities/151188", "pk": "sp_biei"}, {"n": "[유투어버스] 비에이 후라노 1일 버스투어 (삿포로역 출발)", "pf": "마이리얼트립", "p": "가격은 상품 페이지에서 확인", "r": "4.7 · 후기 460개", "d": "흰수염 폭포·청의 호수·사계채 언덕 (계절별 코스)", "x": "준페이 도시락 사전 예약 서비스, 오타루 카페 쿠폰", "u": "https://experiences.myrealtrip.com/products/3154187", "pk": "sp_biei"}], "구마모토": [{"n": "구마모토성 + 아소산 + 구사센리 당일 치기 (한국어 가이드, 아소 화산 셔틀 증정)", "pf": "트립닷컴", "p": "최저 DKK 284.81 · 약 56,700원 (트립닷컴 표시 통화를 11월 환율 DKK≈199원으로 환산, 1명당)", "r": "4.7/5 · 리뷰 104개 · 1K+명 예약", "d": "조인 투어", "x": "사용일 1일 전까지 무료 취소", "u": "https://kr.trip.com/things-to-do/detail/88923325/", "pk": ""}, {"n": "[GOGODAY] 구마모토성 · 아소산 · 구사센리 투어 (후쿠오카 하카타 출발 가능)", "pf": "와그", "p": "가격은 상품 페이지에서 확인", "r": "", "d": "08:00 로손 오리엔탈 호텔 후쿠오카점 앞 미팅 → 구마모토성(약 1시간 30분) → 아소산 → 구사센리", "x": "불포함: 점심, 구마모토성 800엔, 아소 화산 박물관 1,100엔", "u": "https://www.waug.com/activities/148463", "pk": ""}]};
 function farLeg(a, b){
   const A = PL[a], B = PL[b]; if (!A || !B) return null;
   const d = km(A, B), r = d * 1.25;
@@ -2547,7 +2587,7 @@ function combosOf(id){
   const seen = new Set(), uniq = out.filter(o => { const k = o.l.map(x => x.n).join('|'); if (seen.has(k) || o.l.length < 2) return false; seen.add(k); return true; });
   return { combos:uniq.slice(0, 3), sets };
 }
-const yenT = (lo, hi) => lo == null ? '가격 일부 현장 확인' : '¥' + lo.toLocaleString() + (hi == null ? '~' : hi !== lo ? '~' + hi.toLocaleString() : '') + ' · 약 ' + won(Math.round(lo * YEN / 100) * 100) + (hi === lo ? '' : '~');
+const yenT = (lo, hi) => lo == null ? '가격 일부 현장 확인' : '¥' + lo.toLocaleString() + (hi == null ? '~' : hi !== lo ? '~' + hi.toLocaleString() : '');
 function foodGuide(id){
   const x = PL[id], m = MENU[id]; if (x.cat !== '맛집' || !m) return '';
   const hot = m.i.filter(e => /인기|명물/.test(e[0]));
@@ -3384,7 +3424,8 @@ const UPD = [
  ['11-19 21:30','실제 호텔 값을 실시간으로 볼 수 있게 해 주세요','숙소 목록에 트립닷컴 실시간 가격 버튼: 여행 날짜·인원을 채워 그 도시 숙소 검색을 열고, 숙소별 버튼은 이름을 복사해 바로 찾게'],
  ['11-20 12:30','숙소 리스트를 늘리고 숙소 정보·사진·주변 추천 상점도 넣어 주세요','숙소 50곳 → 91곳, 숙소마다 정보·사진(숙소·주변)·걸어서 갈 만한 맛집·쇼핑 거리·볼거리 추천'],
  ['11-20 14:50','가이드 중간중간에 사진이 글자를 가려요','가이드 사진 칸이 줄어들며 글자를 덮던 문제 수정'],
- ['11-20 15:40','근교 도시에 다녀오는 동선팩(나라공원, 버스투어로 교토 등)과 1일 버스투어 정보를 넣어 주세요','근교 당일치기·버스투어 동선팩 11개(나라·고베·가마쿠라·하코네·후지산·이누야마·시라카와고·유후인·비에이 등), 도시별 🚌 버스투어 목록 16개']
+ ['11-20 15:40','근교 도시에 다녀오는 동선팩(나라공원, 버스투어로 교토 등)과 1일 버스투어 정보를 넣어 주세요','근교 당일치기·버스투어 동선팩 11개(나라·고베·가마쿠라·하코네·후지산·이누야마·시라카와고·유후인·비에이 등), 도시별 🚌 버스투어 목록 16개'],
+ ['11-20 20:55','가격은 원화로, 엔은 작게 괄호로 적어 주세요','모든 가격을 ₩원화 먼저 + 작은 (¥엔) 표기로 통일 · 환율 100엔≈837원(11월 기준)으로 갱신 · 홍콩달러·덴마크 크로네 투어 가격도 원화 어림값 추가'],
 ];
 const UPD_KEY = 'dongseon-upd-seen', UPD_V = String(UPD.length);
 function updNew(){ try { return localStorage.getItem(UPD_KEY) !== UPD_V; } catch (e) { return false; } }
