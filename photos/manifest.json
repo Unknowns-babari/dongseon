@@ -3300,23 +3300,6 @@
    }
   ]
  },
- "h:h_sutton": {
-  "q": "intitle:\"Sutton Hotel\"",
-  "l": [
-   {
-    "f": "img/0c0211d8094927d3.jpg",
-    "page": "https://commons.wikimedia.org/wiki/File:Travelodge_Kings_Lynn_Long_Sutton_Hotel_-_geograph.org.uk_-_4717398.jpg",
-    "lic": "CC BY-SA 2.0",
-    "by": "JThomas"
-   },
-   {
-    "f": "img/7c1d9effa250bfa2.jpg",
-    "page": "https://commons.wikimedia.org/wiki/File:Glen_Sutton_Hotel.jpg",
-    "lic": "Public domain",
-    "by": "Unknown author Unknown author"
-   }
-  ]
- },
  "h:h_granvia_kyoto": {
   "q": "intitle:\"Granvia Kyoto\"",
   "l": [
@@ -3424,23 +3407,6 @@
    }
   ]
  },
- "h:h_cross_sapporo": {
-  "q": "intitle:\"Cross Hotel Sapporo\"",
-  "l": [
-   {
-    "f": "img/6721021c0971c635.jpg",
-    "page": "https://commons.wikimedia.org/wiki/File:Hiroshi_Itaya_Solo@Cross_Hotel,_Sapporo_City_Jazz_2009,_4th_Aug.jpg",
-    "lic": "CC BY 2.0",
-    "by": "MIKI Yoshihito from Sapporo City,Hokkaido., JAPAN"
-   },
-   {
-    "f": "img/a227903ac9f6b30c.jpg",
-    "page": "https://commons.wikimedia.org/wiki/File:Sekiro_Trio@Cross_Hotel,_Sapporo_City_Jazz_2009,_6th_Aug.jpg",
-    "lic": "CC BY 2.0",
-    "by": "MIKI Yoshihito from Sapporo City,Hokkaido., JAPAN"
-   }
-  ]
- },
  "h:h_mercure_sapporo": {
   "q": "intitle:\"Mercure Sapporo\"",
   "l": [
@@ -3537,23 +3503,6 @@
    }
   ]
  },
- "h:h_tsubakikan": {
-  "q": "intitle:Tsubakikan",
-  "l": [
-   {
-    "f": "img/df44d88217b468ec.jpg",
-    "page": "https://commons.wikimedia.org/wiki/File:Tsubakikan_(Aomori).JPG",
-    "lic": "Public domain",
-    "by": "Abasaa"
-   },
-   {
-    "f": "img/e9f4a519249dcc7d.jpg",
-    "page": "https://commons.wikimedia.org/wiki/File:The_two_monuments_of_Tarekawarewoshiran_and_Tsubakikan_in_Kozanji-temple.jpg",
-    "lic": "CC0",
-    "by": "Senbei6304"
-   }
-  ]
- },
  "h:h_ana_newsky": {
   "q": "intitle:\"New Sky\" intitle:Kumamoto",
   "l": []
@@ -3593,23 +3542,6 @@
  "h:h_hankyu_respire": {
   "q": "intitle:\"Hankyu Respire\"",
   "l": []
- },
- "h:h_hilton_seahawk": {
-  "q": "intitle:\"Sea Hawk\"",
-  "l": [
-   {
-    "f": "img/6d52f44d09b3a9ae.jpg",
-    "page": "https://commons.wikimedia.org/wiki/File:Armstrong-Whitworth_Sea_Hawk_Armstrong-Whitworth_Sea_Hawk_F.Mk.I_WV856_Fleet_Air_Air_Museum_Yeovilton_1984_(17145737261).jpg",
-    "lic": "Public domain",
-    "by": "San Diego Air & Space Museum Archives"
-   },
-   {
-    "f": "img/7834da4c99ec35ff.jpg",
-    "page": "https://commons.wikimedia.org/wiki/File:Hawker_Sea_Hawk_(458894035).jpg",
-    "lic": "CC BY-SA 2.0",
-    "by": "allen watkin from London, UK"
-   }
-  ]
  },
  "h:h_ana_fukuoka": {
   "q": "intitle:\"ANA Crowne Plaza Fukuoka\"",
