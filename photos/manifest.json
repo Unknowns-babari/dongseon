@@ -3211,5 +3211,472 @@
     "by": "Muyo"
    }
   ]
+ },
+ "h:h_keioplaza": {
+  "q": "intitle:\"Keio Plaza Hotel\" Shinjuku",
+  "l": [
+   {
+    "f": "img/2c0d164a8727f3b1.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Shinjuku_Sumitomo_Building,_Shinjuku_Mitsui_Building,_Yasuda_Kasai_Kaijo_Building,_Shinjuku_Centre_Building,_Mode_Gakuen_Cocoon_Tower,_Keio_Plaza_Hotel_-_panoramio.jpg",
+    "lic": "CC BY-SA 3.0",
+    "by": "dres2222"
+   },
+   {
+    "f": "img/19d71e0bbcd5583a.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Keio_plaza_hotel_bus_stop_shinjuku.jpg",
+    "lic": "CC0",
+    "by": "鋸香具師"
+   }
+  ]
+ },
+ "h:h_washington": {
+  "q": "intitle:\"Shinjuku Washington Hotel\"",
+  "l": [
+   {
+    "f": "img/564c724a4cfff356.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Shinjuku_Washington_Hotel,_2026.jpg",
+    "lic": "CC BY-SA 4.0",
+    "by": "Akonnchiroll"
+   },
+   {
+    "f": "img/66984aef54a3d17e.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Shinjuku-Washington-Hotel-01.jpg",
+    "lic": "CC BY-SA 3.0",
+    "by": "Rs1421"
+   }
+  ]
+ },
+ "h:h_sunroute_asakusa": {
+  "q": "intitle:\"Sunroute Asakusa\"",
+  "l": [
+   {
+    "f": "img/fcf2c0c650f27731.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Hotel_Sunroute_Asakusa.JPG",
+    "lic": "Public domain",
+    "by": "Abasaa"
+   }
+  ]
+ },
+ "h:h_granvia_osaka": {
+  "q": "intitle:\"Granvia Osaka\"",
+  "l": [
+   {
+    "f": "img/aae840460cd0b3cb.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Hotel_Granvia_Osaka.JPG",
+    "lic": "CC BY-SA 3.0",
+    "by": "Own work"
+   }
+  ]
+ },
+ "h:h_monterey_osaka": {
+  "q": "intitle:\"Monterey\" intitle:Osaka",
+  "l": [
+   {
+    "f": "img/0cf8e69cc08e822b.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Osaka_Umeda_Sky_Building_Blick_aufs_Hotel_Monterey_3.jpg",
+    "lic": "CC BY-SA 4.0",
+    "by": "Zairon"
+   },
+   {
+    "f": "img/ba39685052e2ad79.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Osaka_Hotel_Monterey.jpg",
+    "lic": "CC BY-SA 4.0",
+    "by": "Zairon"
+   }
+  ]
+ },
+ "h:h_fraser_namba": {
+  "q": "intitle:\"Fraser Residence Nankai\"",
+  "l": []
+ },
+ "h:h_canal_washington": {
+  "q": "intitle:\"Canal City\" intitle:Washington",
+  "l": [
+   {
+    "f": "img/2a36bda60657abca.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Canal_City_Fukuoka_Washington_Hotel_2-20_Sumiyoshi_1-ch%C5%8Dme_Hakata-ku_Fukuoka_20240520.jpg",
+    "lic": "CC BY-SA 4.0",
+    "by": "Hirho"
+   }
+  ]
+ },
+ "h:h_sutton": {
+  "q": "intitle:\"Sutton Hotel\"",
+  "l": [
+   {
+    "f": "img/0c0211d8094927d3.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Travelodge_Kings_Lynn_Long_Sutton_Hotel_-_geograph.org.uk_-_4717398.jpg",
+    "lic": "CC BY-SA 2.0",
+    "by": "JThomas"
+   },
+   {
+    "f": "img/7c1d9effa250bfa2.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Glen_Sutton_Hotel.jpg",
+    "lic": "Public domain",
+    "by": "Unknown author Unknown author"
+   }
+  ]
+ },
+ "h:h_granvia_kyoto": {
+  "q": "intitle:\"Granvia Kyoto\"",
+  "l": [
+   {
+    "f": "img/afc0e65364180eb2.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Hotel_Granvia_Kyoto_in_Kyoto,_Japan_(2019)_-_285.jpg",
+    "lic": "CC BY-SA 4.0",
+    "by": "Another Believer"
+   },
+   {
+    "f": "img/05932f8fe0fca106.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:View_of_Hotel_Granvia_Kyoto_from_Kyoto_Station_in_Kyoto,_Japan_(2019)_-_293.jpg",
+    "lic": "CC BY-SA 4.0",
+    "by": "Another Believer"
+   }
+  ]
+ },
+ "h:h_okura_kyoto": {
+  "q": "intitle:\"Hotel Okura\" intitle:Kyoto",
+  "l": [
+   {
+    "f": "img/bab5252bb752f071.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Kyoto_Hotel_Okura-2.jpg",
+    "lic": "CC BY-SA 4.0",
+    "by": "江戸村のとくぞう"
+   },
+   {
+    "f": "img/63842c7a71812977.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Kyoto_Hotel_Okura_20120901-001.jpg",
+    "lic": "CC BY-SA 3.0",
+    "by": "J o"
+   }
+  ]
+ },
+ "h:h_tokyu_kyoto": {
+  "q": "intitle:\"Kyoto Tokyu Hotel\"",
+  "l": [
+   {
+    "f": "img/5fc00bea61e184ed.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Kyoto_Tokyu_Hotel_20090419-001.jpg",
+    "lic": "CC BY-SA 4.0",
+    "by": "J o"
+   }
+  ]
+ },
+ "h:h_garden_palace": {
+  "q": "intitle:\"Garden Palace\" intitle:Nagoya",
+  "l": [
+   {
+    "f": "img/31a1adada99f4cf8.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Nagoya_Garden_Palace.JPG",
+    "lic": "Public domain",
+    "by": "Abasaa"
+   }
+  ]
+ },
+ "h:h_tokyu_nagoya": {
+  "q": "intitle:\"Nagoya Tokyu Hotel\"",
+  "l": [
+   {
+    "f": "img/a99fe95baae94f6c.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Nagoya-Tokyu-Hotel.jpg",
+    "lic": "CC BY-SA 4.0",
+    "by": "HQA02330"
+   },
+   {
+    "f": "img/b01db6635b5d7d6b.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Nagoya_Tokyu_Hotel_(6329159542).jpg",
+    "lic": "CC BY-SA 2.0",
+    "by": "shi.k"
+   }
+  ]
+ },
+ "h:h_century_royal": {
+  "q": "intitle:\"Century Royal Hotel\"",
+  "l": [
+   {
+    "f": "img/2aa7908ad5edc080.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Century_Royal_Hotel.JPG",
+    "lic": "Public domain",
+    "by": "Abasaa"
+   },
+   {
+    "f": "img/9a29287df5561267.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Century_Royal_Hotel,_Sapporo.jpg",
+    "lic": "CC BY-SA 4.0",
+    "by": "Braveheart"
+   }
+  ]
+ },
+ "h:h_mitsui_sapporo": {
+  "q": "intitle:\"Mitsui Garden Hotel Sapporo\"",
+  "l": [
+   {
+    "f": "img/81bf483450416624.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Mitsui_Garden_Hotel_Sapporo.jpg",
+    "lic": "CC BY-SA 3.0",
+    "by": "Vanbasten 23"
+   },
+   {
+    "f": "img/830369119425e7fb.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Mitsui_Garden_Hotel_Sapporo.JPG",
+    "lic": "Public domain",
+    "by": "Abasaa"
+   }
+  ]
+ },
+ "h:h_cross_sapporo": {
+  "q": "intitle:\"Cross Hotel Sapporo\"",
+  "l": [
+   {
+    "f": "img/6721021c0971c635.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Hiroshi_Itaya_Solo@Cross_Hotel,_Sapporo_City_Jazz_2009,_4th_Aug.jpg",
+    "lic": "CC BY 2.0",
+    "by": "MIKI Yoshihito from Sapporo City,Hokkaido., JAPAN"
+   },
+   {
+    "f": "img/a227903ac9f6b30c.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Sekiro_Trio@Cross_Hotel,_Sapporo_City_Jazz_2009,_6th_Aug.jpg",
+    "lic": "CC BY 2.0",
+    "by": "MIKI Yoshihito from Sapporo City,Hokkaido., JAPAN"
+   }
+  ]
+ },
+ "h:h_mercure_sapporo": {
+  "q": "intitle:\"Mercure Sapporo\"",
+  "l": [
+   {
+    "f": "img/ce2312e4b63b1233.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Mercure_Sapporo.JPG",
+    "lic": "Public domain",
+    "by": "Abasaa"
+   }
+  ]
+ },
+ "h:h_sheraton_hiroshima": {
+  "q": "intitle:\"Sheraton\" intitle:Hiroshima",
+  "l": [
+   {
+    "f": "img/4c98375655300cf2.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:%E3%82%B7%E3%82%A7%E3%83%A9%E3%83%88%E3%83%B3%E3%82%B0%E3%83%A9%E3%83%B3%E3%83%89%E3%83%9B%E3%83%86%E3%83%AB%E5%BA%83%E5%B3%B6_Sheraton_Grand_Hiroshima_Hotel_(49307523388).jpg",
+    "lic": "CC BY 2.0",
+    "by": "Kanesue from Japan"
+   },
+   {
+    "f": "img/d20984f98c253cd9.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:%E3%82%B7%E3%82%A7%E3%83%A9%E3%83%88%E3%83%B3%E3%82%B0%E3%83%A9%E3%83%B3%E3%83%89%E3%83%9B%E3%83%86%E3%83%AB%E5%BA%83%E5%B3%B6_Sheraton_Grand_Hiroshima_Hotel_(49308219312).jpg",
+    "lic": "CC BY 2.0",
+    "by": "Kanesue from Japan"
+   }
+  ]
+ },
+ "h:h_rihga_hiroshima": {
+  "q": "intitle:\"Rihga Royal Hotel Hiroshima\"",
+  "l": [
+   {
+    "f": "img/733e25a71185dfe8.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Rihga_Royal_Hotel_Hiroshima_%E5%BB%A3%E5%B3%B6%E9%BA%97%E5%98%89%E7%9A%87%E5%AE%B6%E9%A3%AF%E5%BA%97_-_panoramio.jpg",
+    "lic": "CC BY 3.0",
+    "by": "lienyuan lee"
+   },
+   {
+    "f": "img/981a6b6245cb85dc.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Rihga_Royal_Hotel_Hiroshima_20170311.jpg",
+    "lic": "CC BY-SA 4.0",
+    "by": "そらみみ"
+   }
+  ]
+ },
+ "h:h_ana_hiroshima": {
+  "q": "intitle:\"ANA Crowne Plaza Hiroshima\"",
+  "l": [
+   {
+    "f": "img/7fa344f5ac20e368.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:ANA_Crowne_Plaza_Hiroshima.JPG",
+    "lic": "Public domain",
+    "by": "Abasaa"
+   },
+   {
+    "f": "img/97a844cab55c2948.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:ANA_Crowne_Plaza,_Hiroshima_(7170066110).jpg",
+    "lic": "CC BY-SA 2.0",
+    "by": "BriYYZ from Toronto, Canada"
+   }
+  ]
+ },
+ "h:h_grandprince_hiroshima": {
+  "q": "intitle:\"Grand Prince Hotel Hiroshima\"",
+  "l": [
+   {
+    "f": "img/e27ff3eed87eec58.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Grand_Prince_Hotel_Hiroshima_20190614-002.jpg",
+    "lic": "CC BY-SA 4.0",
+    "by": "J o"
+   },
+   {
+    "f": "img/a9b51ed451eda9cc.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Grand_Prince_Hotel_Hiroshima.jpg",
+    "lic": "Public domain",
+    "by": "大江万里"
+   }
+  ]
+ },
+ "h:h_dogo_prince": {
+  "q": "intitle:\"Dogo Prince\"",
+  "l": [
+   {
+    "f": "img/35dd28257aac7fea.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Dogo_Prince_Hotel_20240820.jpg",
+    "lic": "CC0",
+    "by": "CT-May"
+   },
+   {
+    "f": "img/2f75a7628f9b4a6c.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Dogo_Prince_Hotel_20240514.jpg",
+    "lic": "CC0",
+    "by": "CT-May"
+   }
+  ]
+ },
+ "h:h_tsubakikan": {
+  "q": "intitle:Tsubakikan",
+  "l": [
+   {
+    "f": "img/df44d88217b468ec.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Tsubakikan_(Aomori).JPG",
+    "lic": "Public domain",
+    "by": "Abasaa"
+   },
+   {
+    "f": "img/e9f4a519249dcc7d.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:The_two_monuments_of_Tarekawarewoshiran_and_Tsubakikan_in_Kozanji-temple.jpg",
+    "lic": "CC0",
+    "by": "Senbei6304"
+   }
+  ]
+ },
+ "h:h_ana_newsky": {
+  "q": "intitle:\"New Sky\" intitle:Kumamoto",
+  "l": []
+ },
+ "h:h_station_kokura": {
+  "q": "intitle:\"Station Hotel Kokura\"",
+  "l": []
+ },
+ "h:h_rihga_kokura": {
+  "q": "intitle:\"Rihga Royal Hotel Kokura\"",
+  "l": [
+   {
+    "f": "img/f635c79f24f7b6d0.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Rihga_Royal_Hotel_Kokura_(52812111875).jpg",
+    "lic": "CC BY 2.0",
+    "by": "Kanesue"
+   },
+   {
+    "f": "img/271e91f708b53fa7.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:140721_RIHGA_Royal_Hotel_Kokura_Kitakyushu_Japan01s3.jpg",
+    "lic": "CC BY 2.5",
+    "by": "663highland"
+   }
+  ]
+ },
+ "h:h_premier_mojiko": {
+  "q": "intitle:\"Premier Hotel Mojiko\"",
+  "l": [
+   {
+    "f": "img/860edb8dda909bc0.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Premier_Hotel_Mojiko_Night_View_20200314.jpg",
+    "lic": "CC BY-SA 4.0",
+    "by": "Project Kei"
+   }
+  ]
+ },
+ "h:h_hankyu_respire": {
+  "q": "intitle:\"Hankyu Respire\"",
+  "l": []
+ },
+ "h:h_hilton_seahawk": {
+  "q": "intitle:\"Sea Hawk\"",
+  "l": [
+   {
+    "f": "img/6d52f44d09b3a9ae.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Armstrong-Whitworth_Sea_Hawk_Armstrong-Whitworth_Sea_Hawk_F.Mk.I_WV856_Fleet_Air_Air_Museum_Yeovilton_1984_(17145737261).jpg",
+    "lic": "Public domain",
+    "by": "San Diego Air & Space Museum Archives"
+   },
+   {
+    "f": "img/7834da4c99ec35ff.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Hawker_Sea_Hawk_(458894035).jpg",
+    "lic": "CC BY-SA 2.0",
+    "by": "allen watkin from London, UK"
+   }
+  ]
+ },
+ "h:h_ana_fukuoka": {
+  "q": "intitle:\"ANA Crowne Plaza Fukuoka\"",
+  "l": [
+   {
+    "f": "img/4a189ab139081087.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:ANA_Crowne_Plaza_Fukuoka.jpg",
+    "lic": "CC BY-SA 3.0",
+    "by": "STA3816"
+   },
+   {
+    "f": "img/375cafcd009371f0.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:ANA_Crowne_Plaza_Fukuoka_Hotel_at_night.JPG",
+    "lic": "CC BY-SA 4.0",
+    "by": "そらみみ"
+   }
+  ]
+ },
+ "h:h_jr_gatetower": {
+  "q": "intitle:\"Gate Tower\" intitle:Nagoya",
+  "l": [
+   {
+    "f": "img/42e35f01032ff7b4.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Nagoya_Station_JR_Central_Towers_and_JR_Gate_Tower.jpg",
+    "lic": "CC0",
+    "by": "FZHS"
+   },
+   {
+    "f": "img/14bb6a13a3e83840.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:JR_Gate_Tower_and_JP_Tower_Nagoya.jpg",
+    "lic": "CC BY-SA 4.0",
+    "by": "Alpsdake"
+   }
+  ]
+ },
+ "h:h_asakusa_view": {
+  "q": "intitle:\"Asakusa View Hotel\"",
+  "l": [
+   {
+    "f": "img/6bf3186d91eac518.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Asakusa-View-Hotel.JPG",
+    "lic": "CC BY-SA 3.0",
+    "by": "妖精書士"
+   },
+   {
+    "f": "img/4611010bc85cf16b.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Asakusa_View_Hotel_(9633952253).jpg",
+    "lic": "CC BY 2.0",
+    "by": "Guilhem Vellut from Annecy, France"
+   }
+  ]
+ },
+ "h:h_okudogo": {
+  "q": "intitle:Okudogo",
+  "l": [
+   {
+    "f": "img/ae06d0012da5cdd0.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Okudogo_Ichiyu_no_Mori_20251014.jpg",
+    "lic": "CC0",
+    "by": "CT-May"
+   },
+   {
+    "f": "img/386f695fc04f8322.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:%E5%A5%A7%E9%81%93%E5%BE%8C%E5%8A%87%E5%A0%B4_Okudogo_Theatre_-_panoramio.jpg",
+    "lic": "CC BY 3.0",
+    "by": "lienyuan lee"
+   }
+  ]
  }
 }
