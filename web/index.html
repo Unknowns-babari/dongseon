@@ -575,7 +575,7 @@ main.full>*{animation:none}
 .gi p{margin:0;font-size:.85em;line-height:1.55}
 .gi .meta{margin-top:5px;font-size:.74em;color:var(--sub)}
 .gi .meta strong{color:var(--ink);font-weight:800;margin-right:2px}
-.gfs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.gfs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.grs{display:flex;flex-direction:column;gap:10px}.gr{display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:start;border:1px solid var(--line,#e5e7eb);border-radius:14px;padding:10px;background:var(--card)}.gr .pic{position:relative;border-radius:12px;overflow:hidden;aspect-ratio:1;background:var(--soft);display:grid;place-items:center}.gr .pic .em{font-size:2em}.gr .pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.gr .pic small{display:none}.gr .gt b{display:block;font-size:.98em}.gr .gt .xs{display:block;line-height:1.5;margin-top:2px}.gr .meta{margin-top:4px;font-size:.74em;color:var(--sub)}.gr .meta strong{color:var(--ink);font-weight:800;margin-right:2px}.gr .lnk{border:0;background:none;color:var(--pri);font-weight:700;padding:4px 0;min-height:32px;font:inherit;font-size:.85em;font-weight:700;cursor:pointer}
 .gf{display:flex;flex-direction:column;gap:5px}
 .gf b{font-size:.95em}
 .gf .xs{line-height:1.45}
@@ -756,7 +756,7 @@ const YEN = 8.37; // 원/엔 어림값 (100엔≈837원, 하나은행 2026-11-12
 const won = n => '₩' + Math.round(n).toLocaleString('ko-KR');
 /* 가격 표시: 원화 먼저, 엔은 작게 괄호 */
 (function(){
-  const PRX = /¥\s?(\d[\d,]*)(?:\s?~\s?¥?\s?(\d[\d,]*))?(~)?|(\d[\d,]*)(?:~(\d[\d,]*))?\s?엔(?!화)|₩\s?(\d[\d,]*)(?:\s?~\s?₩?\s?(\d[\d,]*))?(~)?|(\d[\d,]*)(?:~(\d[\d,]*))?원/g;
+  const PRX = /¥\s?(?![\d,]*[만천억])(\d[\d,]*)(?:\s?~\s?¥?\s?(\d[\d,]*))?(~)?|(\d[\d,]*)(?:~(\d[\d,]*))?\s?엔(?!화)|₩\s?(?![\d,]*[만천억])(\d[\d,]*)(?:\s?~\s?₩?\s?(\d[\d,]*))?(~)?|(\d[\d,]*)(?:~(\d[\d,]*))?원/g;
   const nn = t => +String(t).replace(/,/g, '');
   const f = n => Math.round(n).toLocaleString('ko-KR');
   const k = y => { const w = y * YEN; return w >= 10000 ? Math.round(w / 100) * 100 : Math.round(w / 10) * 10; };
@@ -1315,7 +1315,7 @@ function home(){
   const P = fit([{ lo:129.4, la:30.9 }, { lo:141.4, la:40.8 }], W, H, 10, 96, 0); HP = P;
   const land = JP.map(poly => `<polygon points="${poly.map(([lo, la]) => P(lo, la).map(v => v.toFixed(1)).join(',')).join(' ')}" fill="var(--land)" stroke="var(--coast)" stroke-width="1.2" vector-effect="non-scaling-stroke"/>`).join('');
   const pins = Object.entries(CITY).map(([name, c]) => { const [x, y] = P(c.lo, c.la), on = open && S.city === name, l = PACKS.filter(p => p.city === name), min = Math.min(...l.map(p => sum(items(p))));
-    return `<span class="cdot" data-bx="${x.toFixed(1)}" data-by="${y.toFixed(1)}"></span><button class="tagpin ${on ? 'on' : ''} ${c.dy > 0 ? 'down' : ''}" data-a="city" data-v="${name}" data-bx="${x.toFixed(1)}" data-by="${y.toFixed(1)}" style="--dx:${c.dx < 0 ? -30 : c.dx > 0 ? 30 : 0}%" aria-pressed="${on}" aria-label="${name} 동선팩 ${l.length}개, ${priceMan(min)}원부터"><b>${name}</b><span>${l.length}개 · ₩${priceMan(min)}~</span></button>`; }).join('');
+    return `<span class="cdot" data-bx="${x.toFixed(1)}" data-by="${y.toFixed(1)}"></span><button class="tagpin ${on ? 'on' : ''} ${c.dy > 0 ? 'down' : ''}" data-a="city" data-v="${name}" data-bx="${x.toFixed(1)}" data-by="${y.toFixed(1)}" style="--dx:${c.dx < 0 ? -30 : c.dx > 0 ? 30 : 0}%" data-noyen aria-pressed="${on}" aria-label="${name} 동선팩 ${l.length}개, ${priceMan(min)}원부터"><b>${name}</b><span>${l.length}개 · ₩${priceMan(min)}~</span></button>`; }).join('');
   const allList = PACKS.filter(p => p.city === S.city), tags = [...new Set(allList.flatMap(p => p.tags))], tf = tags.includes(S.tf) || S.tf === '숙소' || S.tf === '소개' || S.tf === '투어' ? S.tf : '전체', showH = tf === '숙소', showG = tf === '소개', showT = tf === '투어', nT = (TOURS[S.city] || []).length, nH = (HT[S.city] || []).length;
   const list0 = tf === '전체' ? allList : allList.filter(p => p.tags.includes(tf)), list = dsort(S.likes.length ? list0.slice().sort(byMatch) : S.age ? list0.slice().sort(byAge) : list0);
   const tagRow = `<div class="tagrow">${['전체'].concat(tags).map(t => `<button class="chip ${tf === t ? 'on' : ''}" data-a="tf" data-v="${t}">${t}${t === '전체' ? ` ${allList.length}` : ''}</button>${t === '전체' ? `<button class="chip ${showG ? 'on' : ''}" data-a="tf" data-v="소개">📖 도시 소개</button>` : ''}${t === '전체' && nH ? `<button class="chip ${showH ? 'on' : ''}" data-a="tf" data-v="숙소">🏨 숙소 ${nH}</button>` : ''}${t === '전체' && nT ? `<button class="chip ${showT ? 'on' : ''}" data-a="tf" data-v="투어">🚌 버스투어 ${nT}</button>` : ''}`).join('')}</div>`;
@@ -1784,9 +1784,18 @@ function cityGuide(c){
    <div class="hero"><div class="bg" data-wk="${hk}"${WM[hk] && WM[hk].st === 'ok' ? ` style="background-image:url('${esc(WM[hk].l[Math.min(1, WM[hk].l.length - 1)].src)}')"` : ''}></div><div class="tx"><b>${esc(c)} · ${esc(g.t)}</b><p>${esc(g.d)}</p></div></div>
    <h3>볼거리</h3>${g.h.map(([id, sub, d], i) => { const x = PL[id]; return `<div class="gi ${i % 2 ? 'flip' : ''}">${gPic(id, null, gEmoji(id), x.n)}<div><span class="sub2">${esc(sub)}</span><b>${esc(x.n)}</b><p>${esc(d)}</p><div class="meta"><strong>추천</strong>${esc(x.when)} · <strong>요금</strong>${esc(x.feeT)}</div><button class="lnk" style="border:0;background:none;color:var(--pri);font-weight:700;padding:4px 0;min-height:32px" data-a="place" data-v="${id}">자세히 보기 ›</button></div></div>`; }).join('')}
    <h3>먹을거리</h3><div class="gfs">${g.f.map(([n, d, r]) => `<div class="gf">${gPic('f:' + n, FJA[n], fEmoji(n), n)}<b>${esc(n)}</b><span class="xs">${esc(d)}</span>${r.length ? `<span class="r">${r.filter(id => PL[id]).map(id => `<button data-a="place" data-v="${id}">${esc(PL[id].k)} ›</button>`).join('')}</span>` : ''}</div>`).join('')}</div>
+   ${cityFood(c)}
    ${cityProducts(c)}
    <h3>마츠리·축제</h3>${g.m.map(([n, w, d, u]) => { const jq0 = (n.match(/\(([^)]+)\)/) || [])[1], jq = MJA[n] || (jq0 && /[\u3040-\u30ff\u4e00-\u9fff]/.test(jq0) ? jq0 : null); return `<div class="gm">${gPic('m:' + n, jq || null, mEmoji(n), n)}<div><span class="when">📅 ${esc(w)}</span><b>${esc(n)}</b><span class="xs">${esc(d)}</span>${u ? `<span class="xs sub" style="display:block;margin-top:4px">출처: <a href="${u}" target="_blank" rel="noopener">${esc(u.replace(/^https?:\/\/(www\.)?/, '').split('/')[0])}</a></span>` : ''}</div></div>`; }).join('')}
    <p class="xs sub" style="margin:0">사진은 위키미디어 공용의 자유 이용 사진을 저장소에 받아 둔 것이에요(사진 아래 촬영자·라이선스 표기). 사진을 못 불러오면 그림 아이콘이 대신 보여요. 축제 날짜는 해마다 달라질 수 있어요.</p></div>`;
+}
+
+function cityFood(c){
+  const l = Object.keys(PL).filter(id => PL[id].c === c && PL[id].cat === '맛집' && !PL[id].tour);
+  if (!l.length) return '';
+  return `<h3>맛집 리스트 <span class="xs sub" style="font-weight:600">${l.length}곳</span></h3><div class="grs">${l.map(id => { const x = PL[id], p0 = (x.pts || [])[0] || '';
+    return `<div class="gr">${gPic(id, null, (e => e === '📍' ? '🍽️' : e)(gEmoji(id)), x.n)}<div class="gt"><b>${esc(x.n)}</b>${p0 ? `<span class="xs">${esc(p0)}</span>` : ''}<div class="meta"><strong>가격</strong>${esc(x.feeT || '현장 확인')}${x.when ? ` · <strong>추천</strong>${esc(x.when)}` : ''}${x.far ? ` · 근교(${esc(x.far)})` : ''}</div><button class="lnk" data-a="place" data-v="${id}">자세히 보기 ›</button></div></div>`; }).join('')}</div>
+   <p class="xs sub" style="margin:0">가격·영업시간은 각 장소의 출처 기사 기준이라 바뀌었을 수 있어요. 자세히 보기에서 출처를 확인하세요.</p>`;
 }
 
 function guide(){
@@ -3475,7 +3484,8 @@ const UPD = [
  ['11-20 15:40','근교 도시에 다녀오는 동선팩(나라공원, 버스투어로 교토 등)과 1일 버스투어 정보를 넣어 주세요','근교 당일치기·버스투어 동선팩 11개(나라·고베·가마쿠라·하코네·후지산·이누야마·시라카와고·유후인·비에이 등), 도시별 🚌 버스투어 목록 16개'],
  ['11-20 20:55','가격은 원화로, 엔은 작게 괄호로 적어 주세요','모든 가격을 ₩원화 먼저 + 작은 (¥엔) 표기로 통일 · 환율 100엔≈837원(11월 기준)으로 갱신 · 홍콩달러·덴마크 크로네 투어 가격도 원화 어림값 추가'],,
  ['11-20 21:00','도쿠시마, 가고시마, 나가사키도 추가해 주세요','새 도시 3곳 — 명소·맛집 23곳, 동선팩 8개(나루토 소용돌이 당일치기 포함), 숙소 6곳, 도시 가이드·축제·패스, 노면전차 정류장, 트립닷컴 실시간 요금 연결'],
- ['11-24 11:13','도시 소개 페이지 스크롤이 안 돼요','지도 위 도시 시트의 📖 도시 소개 탭이 스크롤되지 않던 문제 수정 (숙소·투어·동선팩 목록도 같은 방식으로 스크롤 보강)']
+ ['11-24 11:13','도시 소개 페이지 스크롤이 안 돼요','지도 위 도시 시트의 📖 도시 소개 탭이 스크롤되지 않던 문제 수정 (숙소·투어·동선팩 목록도 같은 방식으로 스크롤 보강)'],
+ ['11-24 13:01','도시 소개에 맛집 리스트도 넣어 주세요','도시 소개(하단 탭·지도 시트 둘 다)에 그 도시의 맛집 전체를 사진·가격·한 줄 소개와 함께 리스트로 추가']
 ];
 const UPD_KEY = 'dongseon-upd-seen', UPD_V = String(UPD.length);
 function updNew(){ try { return localStorage.getItem(UPD_KEY) !== UPD_V; } catch (e) { return false; } }
