@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>동선팩 관리자</title>
+<style>
+:root{--bg:#f4f4f2;--card:#fcfcfb;--ink:#0b0b0b;--sub:#52514e;--mute:#8a8984;--line:#e4e3df;--grid:#ecebe7;--pri:#2a78d6;--s1:#2a78d6;--s2:#eb6834;--danger:#d03b3b;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;background:var(--bg);color:var(--ink)}
+header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:10px 20px}
+header h1{font-size:1.05em;margin:0;flex:1}
+header .who{font-size:.85em;color:var(--sub)}
+button,.btn{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:7px 12px;cursor:pointer;min-height:36px}
+button.pri,a.btn.pri{background:var(--pri);border-color:var(--pri);color:#fff;font-weight:700}
+button:focus-visible,input:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+main{max-width:1120px;margin:0 auto;padding:20px;display:flex;flex-direction:column;gap:20px}
+.gate{max-width:460px;margin:12vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:12px}
+.gate h2{margin:0;font-size:1.2em}
+.gate p{margin:0;color:var(--sub);font-size:.92em}
+.gate code{background:var(--grid);padding:1px 6px;border-radius:6px;font-size:.9em;word-break:break-all}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.tile .l{font-size:.82em;color:var(--sub)}
+.tile .v{font-size:1.9em;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.tile .s{font-size:.8em;color:var(--sub)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.card h2{font-size:1em;margin:0 0 2px}
+.card .cap{font-size:.82em;color:var(--sub);margin:0 0 10px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;border-radius:0;min-height:32px;padding:5px 11px;font-size:.88em}
+.seg button[aria-pressed=true]{background:var(--ink);color:#fff}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+svg text{font-size:11px;fill:var(--sub);font-variant-numeric:tabular-nums}
+.legend{display:flex;gap:14px;font-size:.82em;color:var(--sub);margin:4px 0 6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.tip{position:fixed;pointer-events:none;background:#0b0b0b;color:#fff;font-size:.8em;padding:6px 9px;border-radius:8px;z-index:20;display:none;white-space:nowrap}
+.tbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.tbar input{font:inherit;flex:1;min-width:180px;border:1px solid var(--line);border-radius:10px;padding:7px 11px;min-height:36px;background:#fff}
+.tw{overflow:auto;max-height:560px;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:680px;font-size:.86em}td{min-width:56px}td.t{min-width:220px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--grid);vertical-align:top}
+th{position:sticky;top:0;background:#f7f7f5;font-weight:700;color:var(--sub);white-space:nowrap}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.t{max-width:460px;white-space:pre-wrap;word-break:break-word}
+td.d{white-space:nowrap;color:var(--sub);font-variant-numeric:tabular-nums}
+.pill{display:inline-block;font-size:.78em;border-radius:99px;padding:1px 8px;background:var(--grid);color:var(--sub)}
+.note{font-size:.8em;color:var(--mute);margin:0}
+.err{color:var(--danger)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (max-width:760px){.tiles{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}main{padding:14px}}
+</style>
+</head>
+<body>
+<header><h1>동선팩 관리자</h1><span class="who" id="who"></span><span id="hb"></span></header>
+<div id="root"></div>
+<div class="tip" id="tip" role="tooltip"></div>
+<script src="../firebase-config.js"></script>
+<script src="admins.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const fmtD = t => { if (!t) return ''; const d = new Date(t); const p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`; };
+const dayKey = t => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+const N = n => Number(n || 0).toLocaleString('ko-KR');
+const REPO_EDIT = 'https://github.com/Unknowns-babari/dongseon/edit/main/admin/admins.js';
+const D = { reviews:[], feedback:[], survey:[], packs:[] };
+const LBL = { reviews:'리뷰', feedback:'피드백', survey:'설문', packs:'사용자 동선팩' };
+const ST = { tab:'reviews', q:'', trend:'all', days:30, loaded:0, err:{} };
+let fs = null, auth = null;
+
+function load(src){ return new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); }); }
+function gate(html){ $('root').innerHTML = `<div class="gate">${html}</div>`; }
+
+async function boot(){
+  const cfg = window.FB_CONFIG;
+  if (!cfg || !cfg.apiKey) return gate('<h2>Firebase 설정이 없어요</h2><p>firebase-config.js를 찾지 못했어요.</p>');
+  try {
+    await load('https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js');
+    await load('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js');
+    await load('https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js');
+  } catch (e) { return gate('<h2>불러오지 못했어요</h2><p>인터넷 연결을 확인하고 새로고침해 주세요.</p>'); }
+  const app = firebase.initializeApp(cfg);
+  auth = firebase.auth(app); fs = firebase.firestore(app);
+  auth.onAuthStateChanged(u => u ? enter(u) : loginView());
+}
+function loginView(msg){
+  $('who').textContent = ''; $('hb').innerHTML = '';
+  gate(`<h2>관리자 로그인</h2><p>관리자로 등록된 구글 계정으로 로그인해 주세요.</p>${msg ? `<p class="err">${esc(msg)}</p>` : ''}<button class="pri" id="lg">구글로 로그인</button>`);
+  $('lg').onclick = async () => {
+    try { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+    catch (e) {
+      const m = { 'auth/operation-not-allowed':'Firebase 콘솔에서 Google 로그인이 아직 켜져 있지 않아요. (Authentication → 로그인 방법 → Google 사용 설정)',
+        'auth/unauthorized-domain':'이 주소가 Firebase 승인 도메인에 없어요. (Authentication → 설정 → 승인된 도메인에 unknowns-babari.github.io 추가)',
+        'auth/popup-blocked':'팝업이 막혔어요. 브라우저에서 팝업을 허용해 주세요.', 'auth/popup-closed-by-user':'로그인 창이 닫혔어요.' }[e.code];
+      loginView(m || `로그인하지 못했어요 (${e.code || e.message})`);
+    }
+  };
+}
+function enter(u){
+  const list = (window.ADMIN_EMAILS || []).map(x => String(x).trim().toLowerCase()).filter(Boolean);
+  const em = (u.email || '').toLowerCase();
+  $('who').textContent = u.email || '';
+  $('hb').innerHTML = '<button id="lo">로그아웃</button>'; $('lo').onclick = () => auth.signOut();
+  if (!list.length) return gate(`<h2>관리자 계정을 한 번 등록해 주세요</h2><p>지금 로그인한 계정은 <code>${esc(u.email)}</code>이에요.</p><p>깃허브에서 <code>admin/admins.js</code>를 열어 이메일을 넣고 저장(Commit)하면, 1~2분 뒤부터 이 계정만 들어올 수 있어요.</p><p><code>window.ADMIN_EMAILS = ['${esc(u.email)}'];</code></p><a class="btn pri" style="text-align:center;text-decoration:none" href="${REPO_EDIT}" target="_blank" rel="noopener">깃허브에서 admins.js 고치기</a>`);
+  if (!list.includes(em)) return gate(`<h2>관리자 계정이 아니에요</h2><p><code>${esc(u.email)}</code>은 관리자 목록에 없어요. 다른 계정으로 로그인해 주세요.</p><button class="pri" id="lo2">다른 계정으로 로그인</button>`), ($('lo2').onclick = () => auth.signOut());
+  shell(); fetchAll();
+}
+function fetchAll(){
+  ['reviews', 'feedback', 'survey', 'packs'].forEach(n => {
+    fs.collection(n).limit(5000).onSnapshot(s => { D[n] = s.docs.map(d => Object.assign({ _id:d.id }, d.data())).sort((a, b) => (b.at || 0) - (a.at || 0)); ST.err[n] = null; ST.loaded |= 1; draw(); },
+      e => { ST.err[n] = e.code || e.message; draw(); });
+  });
+}
+function shell(){
+  $('root').innerHTML = `<main>
+    <section class="tiles" id="tiles" aria-label="요약"></section>
+    <section class="card"><div class="row" style="justify-content:space-between"><div><h2 id="trT">하루 새 기록</h2><p class="cap">막대에 마우스를 올리거나 눌러 그날 숫자를 봐요</p></div>
+      <div class="row"><div class="seg" id="trS" aria-label="데이터 고르기"></div><div class="seg" id="dyS" aria-label="기간"></div></div></div><div id="trC"></div></section>
+    <section class="two"><div class="card"><h2>연령대별 '쓸 의향'</h2><p class="cap">설문에서 "써 보고 싶다/아니다"를 고른 비율</p><div class="legend"><span><i style="background:var(--s1)"></i>쓸 의향 있음</span><span><i style="background:var(--s2)"></i>없음</span></div><div id="svC"></div></div>
+      <div class="card"><h2>리뷰 별점 분포</h2><p class="cap">별점별 리뷰 수</p><div id="stC"></div></div></section>
+    <section class="card"><div class="tbar"><div class="seg" id="tbS" role="tablist"></div><input id="q" type="search" placeholder="검색 (내용·이름·장소·도시…)" aria-label="검색"><button id="csv">CSV 내려받기</button></div><p class="note" id="cnt" style="margin-bottom:8px"></p><div class="tw" id="tbl"></div></section>
+    <p class="note">데이터는 Firebase(dongseon-da195)에 쌓인 깃허브 사이트 기록이에요. Claude 아티팩트 버전에서 남긴 리뷰·피드백은 별도 저장소라 여기 나오지 않아요.</p>
+  </main>`;
+  $('q').oninput = e => { ST.q = e.target.value; drawTable(); };
+  $('csv').onclick = csv;
+}
+function segs(id, opts, cur, on){ $(id).innerHTML = opts.map(([v, l]) => `<button aria-pressed="${v === cur}" data-v="${v}">${l}</button>`).join(''); $(id).querySelectorAll('button').forEach(b => b.onclick = () => on(b.dataset.v)); }
+function draw(){ if (!$('tiles')) return; drawTiles(); drawTrend(); drawSurvey(); drawStars(); drawTable(); }
+
+function drawTiles(){
+  const r = D.reviews, avg = r.length ? (r.reduce((s, x) => s + (x.stars || 0), 0) / r.length).toFixed(1) : '–';
+  const posts = D.feedback.filter(x => x.kind === 'post').length, reps = D.feedback.length - posts;
+  const yes = D.survey.filter(x => x.use === 'yes').length, sv = D.survey.length;
+  const wk = Date.now() - 7 * 864e5, nw = n => D[n].filter(x => (x.at || 0) >= wk).length;
+  const t = [['리뷰', r.length, `평균 별점 ${avg} · 이번 주 +${nw('reviews')}`, 'reviews'],
+    ['피드백', D.feedback.length, `글 ${posts} · 답글 ${reps} · 이번 주 +${nw('feedback')}`, 'feedback'],
+    ['설문 응답', sv, sv ? `쓸 의향 있음 ${Math.round(yes / sv * 100)}% (${yes}명)` : '아직 응답 없음', 'survey'],
+    ['사용자 동선팩', D.packs.length, `이번 주 +${nw('packs')}`, 'packs']];
+  $('tiles').innerHTML = t.map(([l, v, s, k]) => `<div class="tile"><div class="l">${l}</div><div class="v">${ST.err[k] ? '<span class="err" style="font-size:.5em">못 읽음</span>' : N(v)}</div><div class="s">${ST.err[k] ? esc(ST.err[k]) : s}</div></div>`).join('');
+}
+
+/* 툴팁 */
+function tipOn(el, html){ const t = $('tip'); const show = e => { t.innerHTML = html; t.style.display = 'block'; const x = (e.touches ? e.touches[0].clientX : e.clientX), y = (e.touches ? e.touches[0].clientY : e.clientY); t.style.left = Math.min(x + 12, innerWidth - t.offsetWidth - 8) + 'px'; t.style.top = (y - t.offsetHeight - 10) + 'px'; };
+  el.addEventListener('mousemove', show); el.addEventListener('touchstart', show, { passive:true }); el.addEventListener('mouseleave', () => t.style.display = 'none'); }
+document.addEventListener('scroll', () => { $('tip').style.display = 'none'; }, true);
+
+function niceMax(m){ if (m <= 40) return Math.max(4, Math.ceil(m / 4) * 4); const p = Math.pow(10, Math.floor(Math.log10(m))); for (const k of [1, 2, 2.5, 5, 10]) if (k * p >= m) return k * p; return m; }
+function drawTrend(){
+  segs('trS', [['all', '전체'], ['reviews', '리뷰'], ['feedback', '피드백'], ['survey', '설문'], ['packs', '동선팩']], ST.trend, v => { ST.trend = v; drawTrend(); });
+  segs('dyS', [['14', '14일'], ['30', '30일'], ['90', '90일']], String(ST.days), v => { ST.days = +v; drawTrend(); });
+  const keys = ST.trend === 'all' ? ['reviews', 'feedback', 'survey', 'packs'] : [ST.trend];
+  $('trT').textContent = `하루 새 기록 · ${ST.trend === 'all' ? '전체' : LBL[ST.trend]} · 최근 ${ST.days}일`;
+  const days = []; const today = new Date(); today.setHours(0, 0, 0, 0);
+  for (let i = ST.days - 1; i >= 0; i--){ const d = new Date(today.getTime() - i * 864e5); days.push(dayKey(d)); }
+  const cnt = Object.fromEntries(days.map(d => [d, 0]));
+  keys.forEach(k => D[k].forEach(x => { if (!x.at) return; const k2 = dayKey(x.at); if (k2 in cnt) cnt[k2]++; }));
+  const vals = days.map(d => cnt[d]), mx = niceMax(Math.max(1, ...vals)), total = vals.reduce((a, b) => a + b, 0);
+  const W = Math.max(320, $('trC').clientWidth || 700), H = 200, L = 34, R = 8, T = 10, B = 26, iw = W - L - R, ih = H - T - B, bw = iw / days.length, gap = Math.min(2, bw * .25);
+  const y = v => T + ih - v / mx * ih;
+  let g = '';
+  for (let i = 0; i <= 4; i++){ const v = mx / 4 * i; g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${Number.isInteger(v) ? v : v.toFixed(1)}</text>`; }
+  const step = Math.ceil(days.length / 7);
+  days.forEach((d, i) => { if (i % step === 0 || i === days.length - 1) g += `<text x="${i === days.length - 1 ? W - R : L + bw * i + bw / 2}" y="${H - 8}" text-anchor="${i === days.length - 1 ? 'end' : i === 0 ? 'start' : 'middle'}">${d.slice(5).replace('-', '/')}</text>`; });
+  const bars = vals.map((v, i) => { const x = L + bw * i + gap / 2, w = Math.max(1, bw - gap), h = v / mx * ih; return v ? `<path d="M${x},${T + ih} V${T + ih - h + Math.min(4, h)} q0,-${Math.min(4, h)} ${Math.min(4, w / 2)},-${Math.min(4, h)} H${x + w - Math.min(4, w / 2)} q${Math.min(4, w / 2)},0 ${Math.min(4, w / 2)},${Math.min(4, h)} V${T + ih} Z" fill="var(--s1)"/>` : ''; }).join('');
+  const hits = vals.map((v, i) => `<rect class="hit" data-i="${i}" x="${L + bw * i}" y="${T}" width="${bw}" height="${ih}" fill="transparent"/>`).join('');
+  $('trC').innerHTML = `<svg width="100%" viewBox="0 0 ${W} ${H}" role="img" aria-label="최근 ${ST.days}일 하루 새 기록, 합계 ${total}건">${g}<line x1="${L}" x2="${W - R}" y1="${T + ih}" y2="${T + ih}" stroke="#c9c8c3"/>${bars}${hits}</svg><p class="note">기간 합계 ${N(total)}건${total ? '' : ' · 이 기간에는 새 기록이 없어요'}</p>
+   <table class="sr"><caption>날짜별 새 기록</caption><tr><th>날짜</th><th>건수</th></tr>${days.map((d, i) => `<tr><td>${d}</td><td>${vals[i]}</td></tr>`).join('')}</table>`;
+  $('trC').querySelectorAll('.hit').forEach(r => { const i = +r.dataset.i; tipOn(r, `<b>${days[i]}</b><br>${ST.trend === 'all' ? '전체' : LBL[ST.trend]} ${vals[i]}건`); });
+}
+function drawSurvey(){
+  const ages = ['10대', '20대', '30대', '40대', '50대', '60대', '70대', ''];
+  const rows = ages.map(a => { const l = D.survey.filter(x => (x.age || '') === a); return { a:a || '미응답', y:l.filter(x => x.use === 'yes').length, n:l.filter(x => x.use === 'no').length }; }).filter(r => r.y + r.n);
+  if (!rows.length) return $('svC').innerHTML = '<p class="note">아직 설문 응답이 없어요.</p>';
+  const W = Math.max(300, $('svC').clientWidth || 480), rh = 26, gap = 10, L = 54, R = 96, H = rows.length * (rh + gap);
+  const iw = W - L - R;
+  let s = '';
+  rows.forEach((r, i) => { const t = r.y + r.n, wy = r.y / t * iw, y0 = i * (rh + gap);
+    s += `<text x="${L - 8}" y="${y0 + rh / 2 + 4}" text-anchor="end" style="fill:var(--ink)">${r.a}</text>`;
+    if (r.y) s += `<rect class="sv" data-i="${i}" x="${L}" y="${y0}" width="${Math.max(0, wy - (r.n ? 1 : 0))}" height="${rh}" rx="4" fill="var(--s1)"/>`;
+    if (r.n) s += `<rect class="sv" data-i="${i}" x="${L + wy + (r.y ? 1 : 0)}" y="${y0}" width="${Math.max(0, iw - wy - (r.y ? 1 : 0))}" height="${rh}" rx="4" fill="var(--s2)"/>`;
+    s += `<text x="${W - R + 8}" y="${y0 + rh / 2 + 4}">${Math.round(r.y / t * 100)}% · ${t}명</text>`; });
+  $('svC').innerHTML = `<svg width="100%" viewBox="0 0 ${W} ${H}" role="img" aria-label="연령대별 쓸 의향 비율">${s}</svg>
+   <table class="sr"><caption>연령대별 쓸 의향</caption><tr><th>연령대</th><th>있음</th><th>없음</th></tr>${rows.map(r => `<tr><td>${r.a}</td><td>${r.y}</td><td>${r.n}</td></tr>`).join('')}</table>`;
+  $('svC').querySelectorAll('.sv').forEach(el => { const r = rows[+el.dataset.i]; tipOn(el, `<b>${r.a}</b><br>쓸 의향 있음 ${r.y}명 · 없음 ${r.n}명`); });
+}
+function drawStars(){
+  const c = [5, 4, 3, 2, 1].map(s => ({ s, n:D.reviews.filter(x => x.stars === s).length }));
+  const tot = c.reduce((a, b) => a + b.n, 0);
+  if (!tot) return $('stC').innerHTML = '<p class="note">아직 리뷰가 없어요.</p>';
+  const mx = Math.max(...c.map(x => x.n)), W = Math.max(300, $('stC').clientWidth || 480), rh = 22, gap = 10, L = 44, R = 70, iw = W - L - R, H = c.length * (rh + gap);
+  let s = '';
+  c.forEach((r, i) => { const y0 = i * (rh + gap), w = r.n / mx * iw;
+    s += `<text x="${L - 8}" y="${y0 + rh / 2 + 4}" text-anchor="end" style="fill:var(--ink)">★${r.s}</text>`;
+    if (r.n) s += `<rect class="st" data-i="${i}" x="${L}" y="${y0}" width="${w}" height="${rh}" rx="4" fill="var(--s1)"/>`;
+    s += `<text x="${L + w + 8}" y="${y0 + rh / 2 + 4}">${r.n}개 (${Math.round(r.n / tot * 100)}%)</text>`; });
+  $('stC').innerHTML = `<svg width="100%" viewBox="0 0 ${W} ${H}" role="img" aria-label="리뷰 별점 분포">${s}</svg>`;
+  $('stC').querySelectorAll('.st').forEach(el => { const r = c[+el.dataset.i]; tipOn(el, `★${r.s} · ${r.n}개`); });
+}
+
+/* 표 */
+const COLS = {
+  reviews:[['at', '날짜', 'd'], ['place', '장소 ID'], ['stars', '별점', 'n'], ['name', '이름'], ['text', '내용', 't'], ['photos', '사진', 'n']],
+  feedback:[['at', '날짜', 'd'], ['kind', '종류'], ['name', '이름'], ['stars', '별점', 'n'], ['text', '내용', 't'], ['parent', '답글 대상']],
+  survey:[['at', '날짜', 'd'], ['use', '쓸 의향'], ['age', '연령대'], ['from', '응답 위치']],
+  packs:[['at', '날짜', 'd'], ['city', '도시'], ['title', '제목', 't'], ['who', '누구와'], ['tags', '태그'], ['days', '일수', 'n'], ['by', '만든 사람']]
+};
+const VAL = (k, x) => { const v = x[k];
+  if (k === 'at') return fmtD(v);
+  if (k === 'photos' || k === 'days') return Array.isArray(v) ? v.length : 0;
+  if (k === 'tags') return Array.isArray(v) ? v.join(', ') : '';
+  if (k === 'kind') return v === 'post' ? '글' : v === 'reply' ? '답글' : (v || '');
+  if (k === 'use') return v === 'yes' ? '있음' : v === 'no' ? '없음' : '';
+  if (k === 'from') return { review:'리뷰 화면', feedback:'피드백 화면', browse:'둘러보기' }[v] || (v || '');
+  if (k === 'age') return v || '미응답';
+  if (k === 'stars') return v ? v : '';
+  return v == null ? '' : String(v); };
+function rowsNow(){ const q = ST.q.trim().toLowerCase(), cols = COLS[ST.tab];
+  return D[ST.tab].filter(x => !q || cols.some(([k]) => String(VAL(k, x)).toLowerCase().includes(q))); }
+function drawTable(){
+  if (!$('tbS')) return;
+  segs('tbS', Object.keys(LBL).map(k => [k, `${LBL[k]} ${N(D[k].length)}`]), ST.tab, v => { ST.tab = v; drawTable(); });
+  const cols = COLS[ST.tab], l = rowsNow(), show = l.slice(0, 500);
+  $('cnt').textContent = ST.err[ST.tab] ? `읽지 못했어요: ${ST.err[ST.tab]}` : `${N(l.length)}건${ST.q ? ` (검색: "${ST.q}")` : ''}${l.length > 500 ? ' · 화면엔 최근 500건만, CSV엔 전부 들어가요' : ''}`;
+  $('tbl').innerHTML = l.length ? `<table><thead><tr>${cols.map(([, h, c]) => `<th${c === 'n' ? ' style="text-align:right"' : ''}>${h}</th>`).join('')}</tr></thead><tbody>${show.map(x => `<tr>${cols.map(([k, , c]) => `<td class="${c || ''}">${k === 'kind' || k === 'use' ? `<span class="pill">${esc(VAL(k, x))}</span>` : esc(VAL(k, x))}</td>`).join('')}</tr>`).join('')}</tbody></table>` : '<p class="note" style="padding:14px">표시할 기록이 없어요.</p>';
+}
+function csv(){
+  const cols = COLS[ST.tab], l = rowsNow();
+  const q = v => { const s = String(v ?? ''); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+  const body = [['문서 ID'].concat(cols.map(c => c[1])).map(q).join(',')].concat(l.map(x => [x._id].concat(cols.map(([k]) => VAL(k, x))).map(q).join(','))).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + body], { type:'text/csv;charset=utf-8' }));
+  const d = new Date(); a.download = `동선팩_${LBL[ST.tab]}_${dayKey(d)}.csv`; document.body.appendChild(a); a.click(); a.remove();
+}
+let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { drawTrend(); drawSurvey(); drawStars(); }, 150); });
+boot();
+</script>
+</body>
