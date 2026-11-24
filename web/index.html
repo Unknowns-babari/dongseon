@@ -85,7 +85,7 @@ p{margin:0}.sub{color:var(--sub);font-size:.88em}.xs{font-size:.78em}
 .btn{flex:1;min-height:54px;border-radius:12px;border:0;background:var(--pri);color:var(--priInk);font-weight:700;padding:0 12px}
 .btn.ghost{background:var(--card);color:var(--ink);border:1px solid var(--ink)}
 .btn.dark{background:var(--ink);color:var(--bg)}
-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--card);border-top:1px solid var(--line)}
+nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:var(--card);border-top:1px solid var(--line)}
 nav button{height:62px;border:0;background:none;font-size:.85em;color:var(--sub);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
 nav button.on{color:var(--pri);font-weight:700}
 .warn{background:var(--warn);border:2px solid var(--warnLine);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;color:var(--warnInk)}
@@ -545,7 +545,7 @@ main.full>*{animation:none}
 .cgf .when{font-size:.78em;font-weight:800;color:#b45309}
 .cgf .r{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
 .cgf .r button{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;min-height:30px;padding:0 10px;font-size:.78em;font-weight:700}
-.cg2{display:flex;flex-direction:column;gap:16px;padding:0 16px 18px}.bsheet>.cg2,.bsheet>.chlist,.bsheet>.blist{overflow-y:auto;min-height:0;flex:1 1 auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.cg2{display:flex;flex-direction:column;gap:16px;padding:0 16px 18px}.stg h3{font-size:.85em;color:var(--sub);margin:14px 4px 6px;font-weight:700}.stg ul{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line,#e5e7eb);border-radius:16px;overflow:hidden}.stg li+li{border-top:1px solid var(--line,#e5e7eb)}.stg .sti{display:flex;align-items:center;gap:12px;width:100%;min-height:60px;padding:10px 14px;border:0;background:none;text-align:left;font:inherit;color:inherit;text-decoration:none;cursor:pointer}.stg .sti:hover{background:var(--soft)}.stg .ic{width:34px;height:34px;border-radius:10px;background:var(--soft);display:grid;place-items:center;font-weight:800;flex-shrink:0}.stg .tx{flex:1;display:flex;flex-direction:column;gap:1px}.stg .rt{color:var(--sub);display:flex;align-items:center;gap:6px}.stg .rt .dot{width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block}.stg .rt .cnt{font-style:normal;background:var(--pri);color:#fff;border-radius:99px;font-size:.75em;padding:0 7px}.stg .sw{width:42px;height:24px;border-radius:99px;background:#cbd5e1;position:relative;transition:background .2s}.stg .sw i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s}.stg .sw.on{background:var(--pri)}.stg .sw.on i{left:21px}.bsheet>.cg2,.bsheet>.chlist,.bsheet>.blist{overflow-y:auto;min-height:0;flex:1 1 auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .cg2 .hero{position:relative;border-radius:18px;overflow:hidden;min-height:170px;display:flex;align-items:flex-end;background:linear-gradient(135deg,#1e3a5f,#3f7d20)}
 .cg2 .hero .bg{position:absolute;inset:0;background:center/cover no-repeat;transition:opacity .3s}
 .cg2 .hero .bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 20%,rgba(0,0,0,.75))}
@@ -1278,10 +1278,10 @@ function mapHTML(groups){
 /* ---------- screens ---------- */
 function header(){
   const p = pack();
-  const titles = { guide:'도시 소개', home:'동선팩 · 일본', detail:S.edit ? '동선 편집 · ' + p.city : p.city + ' · ' + p.nights, book:'예약 내용', paid:'예약 완료', trip:'여행 중', make:'동선 만들기', src:'참고한 자료' };
+  const titles = { guide:'도시 소개', home:'동선팩 · 일본', detail:S.edit ? '동선 편집 · ' + p.city : p.city + ' · ' + p.nights, book:'예약 내용', paid:'예약 완료', trip:'여행 중', make:'동선 만들기', src:'참고한 자료', set:'설정' };
   const back = S.scr === 'detail' && S.edit ? null : { detail:'home', book:'detail', paid:'home', src:'home' }[S.scr];
   return (back ? `<button class="ib" aria-label="뒤로 가기" data-a="go" data-v="${back}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>` : '')
-    + `<h1>${isWeb() && S.scr === 'home' ? '<span class="brand">동선팩</span> <span class="xs sub" style="font-weight:500">일본 여행 동선을 예약까지 한 번에</span>' : esc(titles[S.scr])}</h1>${isWeb() ? `<div class="wnav">${[['guide', '도시 소개'], ['home', '동선 찾기'], ['trip', '여행 중'], ['make', '동선 만들기']].map(x => `<button class="${S.scr === x[0] ? 'on' : ''}" data-a="go" data-v="${x[0]}">${x[1]}</button>`).join('')}</div>` : ''}${S.scr !== 'home' || S.cityOpen ? '<button class="ib hmb" data-a="gohome" aria-label="홈으로" title="홈으로"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></button>' : ''}<button class="pill upb" data-a="prefs" aria-haspopup="dialog">🎯 맞춤${prefCount() ? `<i class="cnt">${prefCount()}</i>` : ''}</button><button class="pill upb" data-a="upd" aria-haspopup="dialog">새 소식${updNew() ? '<i class="dot" aria-label="새 업데이트 있음"></i>' : ''}</button><button class="pill" data-a="fbk" aria-haspopup="dialog">피드백</button><button class="pill ${S.big ? 'on' : ''}" aria-pressed="${S.big}" data-a="big">가 큰 글씨</button>`;
+    + `<h1>${isWeb() && S.scr === 'home' ? '<span class="brand">동선팩</span> <span class="xs sub" style="font-weight:500">일본 여행 동선을 예약까지 한 번에</span>' : esc(titles[S.scr])}</h1>${isWeb() ? `<div class="wnav">${[['guide', '도시 소개'], ['home', '동선 찾기'], ['trip', '여행 중'], ['make', '동선 만들기'], ['set', '설정']].map(x => `<button class="${S.scr === x[0] ? 'on' : ''}" data-a="go" data-v="${x[0]}">${x[1]}</button>`).join('')}</div>` : ''}${S.scr !== 'home' || S.cityOpen ? '<button class="ib hmb" data-a="gohome" aria-label="홈으로" title="홈으로"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></button>' : ''}<button class="pill upb" data-a="prefs" aria-haspopup="dialog">🎯 맞춤${prefCount() ? `<i class="cnt">${prefCount()}</i>` : ''}</button><button class="pill upb" data-a="upd" aria-haspopup="dialog">새 소식${updNew() ? '<i class="dot" aria-label="새 업데이트 있음"></i>' : ''}</button><button class="pill" data-a="fbk" aria-haspopup="dialog">피드백</button><button class="pill ${S.big ? 'on' : ''}" aria-pressed="${S.big}" data-a="big">가 큰 글씨</button>`;
 }
 
 /* 일본 해안선: 대략적인 윤곽선 (위·경도) */
@@ -1796,6 +1796,26 @@ function cityFood(c){
   return `<h3>맛집 리스트 <span class="xs sub" style="font-weight:600">${l.length}곳</span></h3><div class="grs">${l.map(id => { const x = PL[id], p0 = (x.pts || [])[0] || '';
     return `<div class="gr">${gPic(id, null, (e => e === '📍' ? '🍽️' : e)(gEmoji(id)), x.n)}<div class="gt"><b>${esc(x.n)}</b>${p0 ? `<span class="xs">${esc(p0)}</span>` : ''}<div class="meta"><strong>가격</strong>${esc(x.feeT || '현장 확인')}${x.when ? ` · <strong>추천</strong>${esc(x.when)}` : ''}${x.far ? ` · 근교(${esc(x.far)})` : ''}</div><button class="lnk" data-a="place" data-v="${id}">자세히 보기 ›</button></div></div>`; }).join('')}</div>
    <p class="xs sub" style="margin:0">가격·영업시간은 각 장소의 출처 기사 기준이라 바뀌었을 수 있어요. 자세히 보기에서 출처를 확인하세요.</p>`;
+}
+
+const ADMIN_URL = 'https://unknowns-babari.github.io/dongseon/admin/';
+function settings(){
+  const it = (ic, t, d, attr, right) => `<li><${attr.startsWith('href') ? 'a' : 'button'} class="sti" ${attr}><span class="ic" aria-hidden="true">${ic}</span><span class="tx"><b>${t}</b>${d ? `<span class="xs sub">${d}</span>` : ''}</span><span class="rt">${right || '›'}</span></${attr.startsWith('href') ? 'a' : 'button'}></li>`;
+  return `<div class="stg">
+   <h3>앱 설정</h3><ul>
+    ${it('🎯', '맞춤 설정', '좋아하는 카테고리·연령대·여행 날짜', 'data-a="prefs" aria-haspopup="dialog"', prefCount() ? `<i class="cnt">${prefCount()}</i> ›` : '›')}
+    ${it('가', '큰 글씨', '글자를 크게 보여 줘요', `data-a="big" role="switch" aria-checked="${!!S.big}"`, `<span class="sw ${S.big ? 'on' : ''}"><i></i></span>`)}
+   </ul>
+   <h3>도움말·소식</h3><ul>
+    ${it('📖', '이용 가이드', '사진과 함께 보는 사용법', 'data-a="sgde" aria-haspopup="dialog"')}
+    ${it('🆕', '새 소식', `업데이트 ${UPD.length}건`, 'data-a="upd" aria-haspopup="dialog"', updNew() ? '<i class="dot" aria-label="새 업데이트 있음"></i> ›' : '›')}
+    ${it('💬', '피드백 남기기', '불편한 점이나 바라는 점', 'data-a="fbk" aria-haspopup="dialog"')}
+   </ul>
+   <h3>관리</h3><ul>
+    ${it('🔐', '관리자 로그인', '리뷰·피드백·설문 현황 보기 (관리자 구글 계정만)', `href="${ADMIN_URL}" target="_blank" rel="noopener"`, '↗')}
+   </ul>
+   <p class="xs sub" style="margin:4px 2px 0">관리자 사이트는 새 창으로 열려요.</p>
+  </div>`;
 }
 
 function guide(){
@@ -2515,8 +2535,8 @@ function footer(){
     <div class="btns"><button class="btn" data-a="go" data-v="book">이 동선대로 예약하기</button></div></div>`; }
   if (S.scr === 'book'){ const c = chosen(); return `<div class="foot"><div class="row"><span class="sub">예약 ${c.length}건 · 2인</span><b style="font-size:1.2em">${won(sum(c))}</b></div><button class="btn" data-a="pay">한 번에 결제 (샘플)</button></div>`; }
   if (S.scr === 'paid') return `<div class="foot"><button class="btn" data-a="go" data-v="trip">여행 중 화면 미리 보기</button></div>`;
-  if (['guide','home','trip','make'].includes(S.scr)){
-    const t = [['guide','도시 소개','M4 5a2 2 0 0 1 2-2h5v17H6a2 2 0 0 0-2 2zM20 5a2 2 0 0 0-2-2h-5v17h5a2 2 0 0 1 2 2zM4 5v17M20 5v17'],['home','동선 찾기','M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM21 21l-5-5'],['trip','여행 중','M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11zM12 8v4'],['make','동선 만들기','M12 5v14M5 12h14']];
+  if (['guide','home','trip','make','set'].includes(S.scr)){
+    const t = [['guide','도시 소개','M4 5a2 2 0 0 1 2-2h5v17H6a2 2 0 0 0-2 2zM20 5a2 2 0 0 0-2-2h-5v17h5a2 2 0 0 1 2 2zM4 5v17M20 5v17'],['home','동선 찾기','M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM21 21l-5-5'],['trip','여행 중','M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11zM12 8v4'],['make','동선 만들기','M12 5v14M5 12h14'],['set','설정','M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z']];
     return `<nav>${t.map(x => `<button class="${S.scr === x[0] ? 'on' : ''}" data-a="go" data-v="${x[0]}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${x[2]}"/></svg>${x[1]}</button>`).join('')}</nav>`;
   }
   return '';
@@ -2896,7 +2916,7 @@ function render(){
   const full = S.scr === 'home' || (S.scr === 'detail' && S.edit);
   $('ft').innerHTML = footer();
   $('mn').className = full ? 'full' : S.scr === 'detail' ? 'dt' : '';
-  $('mn').innerHTML = ({ guide, home, detail, book, paid, trip, make, src })[S.scr]();
+  $('mn').innerHTML = ({ guide, home, detail, book, paid, trip, make, src, set:settings })[S.scr]();
   $('ft').innerHTML = footer();
   $('sh').innerHTML = sheet() || pickSheet();
   applyView();
@@ -2926,6 +2946,7 @@ const A = {
   gcity:v => { S.gcity = v; render(); $('mn').scrollTop = 0; },
   gtocity:v => { go({ scr:'home' }); setTimeout(() => A.city(v), 0); },
   big:() => go({ big:!S.big }),
+  sgde:() => gdeOpen(),
   dateopen:() => { S.dateOpen = 1; render(); },
   dateclose:() => { S.dateOpen = 0; render(); },
   dateclear:() => { S.tdate = ''; S.tend = ''; try { localStorage.removeItem(TD_KEY); localStorage.removeItem(TE_KEY); } catch (e) {} render(); },
@@ -3485,7 +3506,8 @@ const UPD = [
  ['11-20 20:55','가격은 원화로, 엔은 작게 괄호로 적어 주세요','모든 가격을 ₩원화 먼저 + 작은 (¥엔) 표기로 통일 · 환율 100엔≈837원(11월 기준)으로 갱신 · 홍콩달러·덴마크 크로네 투어 가격도 원화 어림값 추가'],,
  ['11-20 21:00','도쿠시마, 가고시마, 나가사키도 추가해 주세요','새 도시 3곳 — 명소·맛집 23곳, 동선팩 8개(나루토 소용돌이 당일치기 포함), 숙소 6곳, 도시 가이드·축제·패스, 노면전차 정류장, 트립닷컴 실시간 요금 연결'],
  ['11-24 11:13','도시 소개 페이지 스크롤이 안 돼요','지도 위 도시 시트의 📖 도시 소개 탭이 스크롤되지 않던 문제 수정 (숙소·투어·동선팩 목록도 같은 방식으로 스크롤 보강)'],
- ['11-24 13:01','도시 소개에 맛집 리스트도 넣어 주세요','도시 소개(하단 탭·지도 시트 둘 다)에 그 도시의 맛집 전체를 사진·가격·한 줄 소개와 함께 리스트로 추가']
+ ['11-24 13:01','도시 소개에 맛집 리스트도 넣어 주세요','도시 소개(하단 탭·지도 시트 둘 다)에 그 도시의 맛집 전체를 사진·가격·한 줄 소개와 함께 리스트로 추가'],
+ ['11-24 14:23','관리자 로그인은 설정 탭을 밑에 따로 만들어서 거기 리스트에 넣어 주세요','하단에 ⚙️ 설정 탭 추가 — 맞춤 설정·큰 글씨·이용 가이드·새 소식·피드백, 그리고 관리자 로그인(관리자 사이트로 이동)을 한 목록에 모음']
 ];
 const UPD_KEY = 'dongseon-upd-seen', UPD_V = String(UPD.length);
 function updNew(){ try { return localStorage.getItem(UPD_KEY) !== UPD_V; } catch (e) { return false; } }
