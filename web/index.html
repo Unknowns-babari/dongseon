@@ -545,7 +545,7 @@ main.full>*{animation:none}
 .cgf .when{font-size:.78em;font-weight:800;color:#b45309}
 .cgf .r{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
 .cgf .r button{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;min-height:30px;padding:0 10px;font-size:.78em;font-weight:700}
-.cg2{display:flex;flex-direction:column;gap:16px;padding:0 16px 18px}
+.cg2{display:flex;flex-direction:column;gap:16px;padding:0 16px 18px}.bsheet>.cg2,.bsheet>.chlist,.bsheet>.blist{overflow-y:auto;min-height:0;flex:1 1 auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .cg2 .hero{position:relative;border-radius:18px;overflow:hidden;min-height:170px;display:flex;align-items:flex-end;background:linear-gradient(135deg,#1e3a5f,#3f7d20)}
 .cg2 .hero .bg{position:absolute;inset:0;background:center/cover no-repeat;transition:opacity .3s}
 .cg2 .hero .bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 20%,rgba(0,0,0,.75))}
@@ -3474,7 +3474,8 @@ const UPD = [
  ['11-20 14:50','가이드 중간중간에 사진이 글자를 가려요','가이드 사진 칸이 줄어들며 글자를 덮던 문제 수정'],
  ['11-20 15:40','근교 도시에 다녀오는 동선팩(나라공원, 버스투어로 교토 등)과 1일 버스투어 정보를 넣어 주세요','근교 당일치기·버스투어 동선팩 11개(나라·고베·가마쿠라·하코네·후지산·이누야마·시라카와고·유후인·비에이 등), 도시별 🚌 버스투어 목록 16개'],
  ['11-20 20:55','가격은 원화로, 엔은 작게 괄호로 적어 주세요','모든 가격을 ₩원화 먼저 + 작은 (¥엔) 표기로 통일 · 환율 100엔≈837원(11월 기준)으로 갱신 · 홍콩달러·덴마크 크로네 투어 가격도 원화 어림값 추가'],,
- ['11-20 21:00','도쿠시마, 가고시마, 나가사키도 추가해 주세요','새 도시 3곳 — 명소·맛집 23곳, 동선팩 8개(나루토 소용돌이 당일치기 포함), 숙소 6곳, 도시 가이드·축제·패스, 노면전차 정류장, 트립닷컴 실시간 요금 연결']
+ ['11-20 21:00','도쿠시마, 가고시마, 나가사키도 추가해 주세요','새 도시 3곳 — 명소·맛집 23곳, 동선팩 8개(나루토 소용돌이 당일치기 포함), 숙소 6곳, 도시 가이드·축제·패스, 노면전차 정류장, 트립닷컴 실시간 요금 연결'],
+ ['11-24 11:13','도시 소개 페이지 스크롤이 안 돼요','지도 위 도시 시트의 📖 도시 소개 탭이 스크롤되지 않던 문제 수정 (숙소·투어·동선팩 목록도 같은 방식으로 스크롤 보강)']
 ];
 const UPD_KEY = 'dongseon-upd-seen', UPD_V = String(UPD.length);
 function updNew(){ try { return localStorage.getItem(UPD_KEY) !== UPD_V; } catch (e) { return false; } }
