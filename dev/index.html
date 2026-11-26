@@ -566,6 +566,8 @@ main.full>*{animation:none}
 .gdock .gdh{flex-shrink:0;padding-bottom:6px}.gdock .gdx{display:block;width:100%;height:24px;border:0;background:none;cursor:pointer}.gdock .gdx .hd{display:block;width:40px;height:4px;border-radius:4px;background:var(--line);margin:0 auto}
 .gdock .gdt2{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.gdock .gdt2 b{margin-right:auto;font-size:1em}.gdock .gdt2 .chip{min-height:34px}
 .edays{display:flex;gap:6px;flex:1;flex-wrap:wrap;align-items:center}.edays .chip{display:inline-flex;align-items:center;gap:6px;min-height:40px;box-shadow:0 1px 4px rgba(0,0,0,.12)}.edays .ddot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.stage.edit .ovl.f2{right:0;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 10px 6px 0;scroll-snap-type:x proximity;overscroll-behavior-x:contain;mask-image:linear-gradient(90deg,#000 88%,transparent);-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent)}.stage.edit .ovl.f2::-webkit-scrollbar{display:none}.stage.edit .ovl.f2 .chip{flex-shrink:0;scroll-snap-align:start;white-space:nowrap}
+.lgd{width:10px;height:10px;border-radius:50%;background:#1f4fbf;display:inline-block}
 .devtag{position:fixed;left:50%;top:0;transform:translateX(-50%);z-index:5000;background:#7c3aed;color:#fff;font-size:10px;font-weight:800;padding:1px 8px 2px;border-radius:0 0 8px 8px;pointer-events:none}.stg h3{font-size:.85em;color:var(--sub);margin:14px 4px 6px;font-weight:700}.stg ul{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line,#e5e7eb);border-radius:16px;overflow:hidden}.stg li+li{border-top:1px solid var(--line,#e5e7eb)}.stg .sti{display:flex;align-items:center;gap:12px;width:100%;min-height:60px;padding:10px 14px;border:0;background:none;text-align:left;font:inherit;color:inherit;text-decoration:none;cursor:pointer}.stg .sti:hover{background:var(--soft)}.stg .ic{width:34px;height:34px;border-radius:10px;background:var(--soft);display:grid;place-items:center;font-weight:800;flex-shrink:0}.stg .tx{flex:1;display:flex;flex-direction:column;gap:1px}.stg .rt{color:var(--sub);display:flex;align-items:center;gap:6px}.stg .rt .dot{width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block}.stg .rt .cnt{font-style:normal;background:var(--pri);color:#fff;border-radius:99px;font-size:.75em;padding:0 7px}.stg .sw{width:42px;height:24px;border-radius:99px;background:#cbd5e1;position:relative;transition:background .2s}.stg .sw i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s}.stg .sw.on{background:var(--pri)}.stg .sw.on i{left:21px}.bsheet>.cg2,.bsheet>.chlist,.bsheet>.blist{overflow-y:auto;min-height:0;flex:1 1 auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .cg2 .hero{position:relative;border-radius:18px;overflow:hidden;min-height:170px;display:flex;align-items:flex-end;background:linear-gradient(135deg,#1e3a5f,#3f7d20)}
 .cg2 .hero .bg{position:absolute;inset:0;background:center/cover no-repeat;transition:opacity .3s}
@@ -1299,8 +1301,8 @@ function mapHTML(groups){
 /* ---------- screens ---------- */
 function header(){
   const p = pack();
-  const titles = { guide:'도시 소개', home:'동선팩 · 일본', detail:S.edit ? '동선 편집 · ' + p.city : p.city + ' · ' + p.nights, book:'예약 내용', paid:'예약 완료', trip:'여행 중', make:'동선 만들기', src:'참고한 자료', set:'설정' };
-  const back = S.scr === 'detail' && S.edit ? null : { detail:'home', book:'detail', paid:'home', src:'home' }[S.scr];
+  const titles = { guide:'도시 소개', home:'동선팩 · 일본', detail:p.city + ' · ' + p.nights, book:'예약 내용', paid:'예약 완료', trip:'여행 중', make:'동선 만들기', src:'참고한 자료', set:'설정' };
+  const back = { detail:'home', book:'detail', paid:'home', src:'home' }[S.scr];
   return (back ? `<button class="ib" aria-label="뒤로 가기" data-a="go" data-v="${back}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>` : '')
     + `<h1>${isWeb() && S.scr === 'home' ? '<span class="brand">동선팩</span> <span class="xs sub" style="font-weight:500">일본 여행 동선을 예약까지 한 번에</span>' : esc(titles[S.scr])}</h1>${isWeb() ? `<div class="wnav">${[['guide', '도시 소개'], ['home', '동선 찾기'], ['trip', '여행 중'], ['make', '동선 만들기'], ['set', '설정']].map(x => `<button class="${S.scr === x[0] ? 'on' : ''}" data-a="go" data-v="${x[0]}">${x[1]}</button>`).join('')}</div>` : ''}${S.scr !== 'home' || S.cityOpen ? '<button class="ib hmb" data-a="gohome" aria-label="홈으로" title="홈으로"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></button>' : ''}<button class="pill upb" data-a="prefs" aria-haspopup="dialog">🎯 맞춤${prefCount() ? `<i class="cnt">${prefCount()}</i>` : ''}</button><button class="pill upb" data-a="upd" aria-haspopup="dialog">새 소식${updNew() ? '<i class="dot" aria-label="새 업데이트 있음"></i>' : ''}</button><button class="pill" data-a="fbk" aria-haspopup="dialog">피드백</button><button class="pill ${S.big ? 'on' : ''}" aria-pressed="${S.big}" data-a="big">가 큰 글씨</button>`;
 }
@@ -2380,10 +2382,10 @@ function editStage(){
     ${OM.ok ? '<div class="gslot"></div>' : `<div class="pan" data-key="edit:${p.id}"><svg aria-hidden="true"><g class="world">${grid}${rails}${lines}${arrows}${prevLine}</g></svg>${stas}${pins}</div>
     <div class="zoom" style="bottom:${ph + 40}px"><button data-a="zin" aria-label="확대">+</button><button data-a="zout" aria-label="축소">−</button><button data-a="zreset" aria-label="처음 위치로">⟲</button></div>`}
     <div class="ovl"><div class="edays" role="group" aria-label="편집할 날">${r.map((_, k) => `<button class="chip ${k === d ? 'on' : ''}" style="--c:${COLORS[k % 5]}" data-a="day" data-v="${k}" aria-pressed="${k === d}"><i class="ddot" style="background:${COLORS[k % 5]}"></i>${k + 1}일차</button>`).join('')}</div>
-      <button class="pill on" data-a="edit">완료</button></div>
-    <div class="ovl f2">${['전체', '관광', '거리', '체험', '맛집'].concat(S.likes.length ? ['맞춤'] : []).map(c => `<button class="chip ${mf === c ? 'on' : ''}" data-a="mf" data-v="${c}">${c === '전체' ? '전체' : c === '맞춤' ? '✨ 내 카테고리' : ico(c, 14) + ' ' + c}</button>`).join('')}${OM.ok ? `<button class="chip ${S.op !== false ? 'on' : ''}" data-a="optog">지도 인기 장소</button><button class="chip" data-a="opop" ${OP.busy ? 'disabled' : ''}>${OP.busy ? '찾는 중…' : '이 지역 다시 찾기'}</button>` : ''}</div>
+      <button class="pill on" data-a="edit" title="공유·여행 날짜·숙소">ⓘ 동선 정보</button></div>
+    <div class="ovl f2" role="group" aria-label="지도에 보일 장소">${['전체', '동선', '관광', '맛집', '거리', '체험'].concat(S.likes.length ? ['맞춤'] : []).map(c => `<button class="chip ${mf === c ? 'on' : ''}" data-a="mf" data-v="${c}" aria-pressed="${mf === c}">${c === '전체' ? '전체' : c === '동선' ? '<i class="lgd"></i> 내 동선만' : c === '맞춤' ? '✨ 내 카테고리' : ico(c, 14) + ' ' + c + (c === '관광' || c === '맛집' ? '만' : '')}</button>`).join('')}${OM.ok ? `<button class="chip ${S.op !== false ? 'on' : ''}" data-a="optog">지도 인기 장소</button><button class="chip" data-a="opop" ${OP.busy ? 'disabled' : ''}>${OP.busy ? '찾는 중…' : '이 지역 다시 찾기'}</button>` : ''}</div>
     ${OM.ok && OP.msg ? `<p class="gerr">${esc(OP.msg)}</p>` : ''}
-    <div class="legend ${OM.ok ? 'gm' : ''}" style="bottom:${ph + 8}px"><span><i class="lg n"></i>내 동선</span>${S.rprev ? '<span><i class="lg p"></i>추천 경로</span>' : ''}<button class="lgb ${mf === '관광' ? 'on' : ''}" data-a="mf" data-v="${mf === '관광' ? '전체' : '관광'}" aria-pressed="${mf === '관광'}"><i class="lg t"></i>관광만</button><button class="lgb ${mf === '맛집' ? 'on' : ''}" data-a="mf" data-v="${mf === '맛집' ? '전체' : '맛집'}" aria-pressed="${mf === '맛집'}"><i class="lg f"></i>맛집만</button><span><i class="lg s"></i>거리</span><span><i class="lg e"></i>체험</span>${OM.ok ? `<button class="lgb ${S.op !== false ? 'on' : ''}" data-a="optog" aria-pressed="${S.op !== false}"><i class="lg o"></i>지도 인기 장소</button>` : `<span><i class="lg r"></i>역·노선(대략)</span><span id="scl" data-s="${P.s}">${nice < 1 ? nice * 1000 + 'm' : nice + 'km'} <i class="sc" style="width:${(nice / 111.32 * P.s).toFixed(0)}px"></i></span>`}</div>
+    <span id="scl" hidden data-s="${P.s}"></span>
     ${S.ins || S.rep ? `<div class="epick">${pickBanner(r)}</div>` : ''}<div class="epanel ${mode}${mode === 'day' && S.eg === 'guide' ? ' gdrp' : ''}" style="${mode === 'card' ? `max-height:${Math.round(H * 0.66)}px` : `height:${mode === 'day' && S.eg === 'guide' ? Math.max(ph, Math.round(H * 0.56)) : ph}px`}">${mode === 'day' ? egTabs(p, d) + (S.eg === 'guide' ? guideDrawer(p, r, d) : dayList(p, r, d)) : nearPanel(p, r, d, sel, mode, where) + (mode === 'card' && !S.ins && !S.rep ? `<div class="mydl">${dayList(p, r, d, true)}</div>` : '')}</div>
   </div>`;
 }
@@ -2507,7 +2509,7 @@ function detail(){
   ${hotelSec(p)}
   </div></div>
   <div class="dmapcol">${detailMap(p, r, groups, all ? -1 : d)}
-  <div class="maplinks">${all ? '' : (r[d].length ? `<a href="${gdir(r[d])}" target="_blank" rel="noopener">구글 지도에서 ${d + 1}일차 경로 열기</a>` : '')}${edited(p) ? `<button class="pill" data-a="reset">원래 동선으로</button>` : ''}<button class="pill" data-a="edit">지도 크게 보기</button></div></div>`;
+  <div class="maplinks">${all ? '' : (r[d].length ? `<a href="${gdir(r[d])}" target="_blank" rel="noopener">구글 지도에서 ${d + 1}일차 경로 열기</a>` : '')}${edited(p) ? `<button class="pill" data-a="reset">원래 동선으로</button>` : ''}<button class="pill" data-a="edit">🗺 지도로 돌아가기</button></div></div>`;
 }
 
 function recList(p, r, d){
@@ -2616,9 +2618,9 @@ function src(){
 }
 
 function footer(){
-  if (S.scr === 'detail' && S.edit) return '';
+  if (S.scr === 'detail' && S.edit && (S.ins || S.rep)) return '';
   if (S.scr === 'detail'){ const l = items(pack());
-    return gdDock(pack()) + `<div class="foot"><div class="row"><span class="sub">숙소·교통·입장권 ${l.length}건 · 2인</span><b style="font-size:1.2em">${won(sum(l))}</b></div>
+    return (S.edit ? '' : gdDock(pack())) + `<div class="foot"><div class="row"><span class="sub">숙소·교통·입장권 ${l.length}건 · 2인</span><b style="font-size:1.2em">${won(sum(l))}</b></div>
     <div class="btns"><button class="btn" data-a="go" data-v="book">이 동선대로 예약하기</button></div></div>`; }
   if (S.scr === 'book'){ const c = chosen(); return `<div class="foot"><div class="row"><span class="sub">예약 ${c.length}건 · 2인</span><b style="font-size:1.2em">${won(sum(c))}</b></div><button class="btn" data-a="pay">한 번에 결제 (샘플)</button></div>`; }
   if (S.scr === 'paid') return `<div class="foot"><button class="btn" data-a="go" data-v="trip">여행 중 화면 미리 보기</button></div>`;
@@ -2997,6 +2999,7 @@ function zoomBtn(f){ const el = curPan(); if (!el) return; const v = viewOf(el);
 const isWeb = () => false; /* 웹에서도 앱과 같은 화면 */
 const SIDE = 420;
 function render(){
+  if (S.scr === 'detail' && !S.info && !S.edit){ S.edit = true; if (S.day < 0) S.day = 0; }
   try { document.documentElement.classList.toggle('web', isWeb()); } catch (e) {}
   document.body.classList.toggle('big', S.big);
   $('hd').innerHTML = header();
@@ -3118,12 +3121,12 @@ const A = {
   egt:v => { S.egt = v; render(); const l = document.querySelector('.gdl2'); if (l) l.scrollTop = 0; },
   gadd:v => { const [id0, dd] = String(v).split('|'); v = id0; if (!PL[v]) return; const r = route(pack()).map(x => x.slice()), d = Math.max(0, Math.min(dd != null ? +dd : S.day, r.length - 1));
     if (r.some(ids => ids.includes(v))) return; r[d].push(v); setRoute(r); S.chg = true; S.rprev = ''; render(); toast(`${PL[v].n} → ${d + 1}일차 ${r[d].length}번에 넣었어요`); },
-  mf:v => { S.mf = v; if (['관광', '거리', '체험', '맛집'].includes(v)) S.lt = v; render(); },
+  mf:v => { const f0 = document.querySelector('.ovl.f2'), x0 = f0 ? f0.scrollLeft : 0; S.mf = v; if (['관광', '거리', '체험', '맛집'].includes(v)) S.lt = v; render(); const f1 = document.querySelector('.ovl.f2'); if (f1) f1.scrollLeft = x0; },
   rmph:v => { const f = R.files.splice(+v, 1)[0]; if (f) try { URL.revokeObjectURL(f.url); } catch (e) {} $('sh').innerHTML = sheet(); },
   rf:v => { S.rf = v; render(); },
-  open:v => { S.up = false; S.hid = null; S.off = {}; S.dsel = null; const p = PACKS.find(x => x.id === v); go({ scr:'detail', pid:v, city:p.city, day:-1, edit:false }); },
+  open:v => { S.up = false; S.hid = null; S.off = {}; S.dsel = null; const p = PACKS.find(x => x.id === v); S.info = false; go({ scr:'detail', pid:v, city:p.city, day:0, edit:true }); },
   day:v => { S.day = +v; S.rprev = false; render(); },
-  edit:() => { S.edit = !S.edit; S.sel = null; S.pl = ''; S.rep = null; S.ins = null; S.chg = false; S.rprev = false; if (S.edit && S.day < 0) S.day = 0; render(); $('mn').scrollTop = 0; },
+  edit:() => { S.edit = !S.edit; S.info = !S.edit; S.sel = null; S.pl = ''; S.rep = null; S.ins = null; S.chg = false; S.rprev = false; if (S.edit && S.day < 0) S.day = 0; render(); $('mn').scrollTop = 0; },
   reset:() => { delete S.routes[S.pid]; try { localStorage.setItem(SAVE_KEY, JSON.stringify(S.routes)); } catch (e) {} render(); },
   mv:v => { const [d, i, k] = v.split(':').map(Number), r = route(pack()).map(x => x.slice()), j = i + k; if (j < 0 || j >= r[d].length) return; [r[d][i], r[d][j]] = [r[d][j], r[d][i]]; setRoute(r); S.chg = true; S.rprev = false; render(); },
   del:v => { const [d, i] = v.split(':').map(Number), r = route(pack()).map(x => x.slice()); r[d].splice(i, 1); setRoute(r); S.chg = true; S.rprev = false; if (!S.edit) S.sel = null; render(); },
