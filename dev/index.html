@@ -2421,7 +2421,7 @@ function nearPanel(p, r, d, sel, mode, where){
     const G = [['관광', '관광지'], ['거리', '거리·골목'], ['체험', '체험코스'], ['맛집', '맛집']], grp = grp2;
     const lt = G.some(g => g[0] === S.lt) ? S.lt : ['맛집', '거리', '체험'].includes(mf) ? mf : sel ? grp(sel) : '관광', ids = base.filter(id => grp(id) === lt);
     const tabs = `<div class="ltabs" role="tablist">${G.map(([k, n]) => `<button class="ltab ${lt === k ? 'on' : ''}" role="tab" aria-selected="${lt === k}" data-a="lt" data-v="${k}">${n} <span>${base.filter(id => grp(id) === k).length}</span></button>`).join('')}</div>`;
-    return `${repBar}<div class="row"><h3 class="grow">${esc(p.city)} ${G.find(g => g[0] === lt)[1]} ${ids.length}곳 <span class="xs sub">${o ? esc(o.k) + '에서 가까운 순' : '리뷰 많은 순'}${lk}${pickDay >= 0 ? ` · ${pickDay + 1}일차에 이미 있는 곳은 뺐어요` : ''}</span></h3><button class="pill back" data-a="pl" data-v="">← 내 동선</button></div>
+    return `${repBar}<div class="row"><h3 class="grow">${esc(p.city)} ${G.find(g => g[0] === lt)[1]} ${ids.length}곳 <span class="xs sub">${o ? esc(o.k) + '에서 가까운 순' : '리뷰 많은 순'}${lk}${pickDay >= 0 ? ` · ${pickDay + 1}일차에 이미 있는 곳은 뺐어요` : ''}</span></h3><button class="pill back" data-a="pl" data-v="">← 뒤로 가기</button></div>
     ${tabs}${ids.length ? '' : `<p class="sub" style="padding:16px 4px">넣을 수 있는 ${G.find(g => g[0] === lt)[1]} 목록이 비어 있어요.${mf === '맞춤' ? ' 내 카테고리 필터를 끄면 더 보여요.' : ''}</p>`}
     <div class="plist">${ids.map(id => { const x = PL[id];
       return `<article class="pl ${id === sel ? 'on' : ''}"><div class="pcb">
@@ -2429,7 +2429,7 @@ function nearPanel(p, r, d, sel, mode, where){
         <span>${rateT(id)} <span class="xs sub">· ${esc(x.feeT)}${o && id !== sel ? ' · 직선 ' + kmT(km(o, x)) : ''}</span></span>
         <div class="pact">${placeActs(id, r, d, where)}<button class="mini info" data-a="place" data-v="${id}" aria-label="정보·리뷰 보기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg></button></div></div></article>`; }).join('')}</div>`;
   }
-  return `${repBar}${S.chg && !S.rep ? `<button class="chgbar" data-a="showreco">동선이 바뀌었어요 · ${d + 1}일차 추천 경로 보기 ›</button>` : ''}<div class="row"><h3 class="grow" style="font-size:1em">주변 장소 ${ids.length}곳 <span class="xs sub" style="font-weight:500">· 옆으로 넘기기</span></h3><button class="pill" data-a="pl" data-v="list">목록 보기</button><button class="pill back" data-a="sel" data-v="">← 내 동선</button></div>
+  return `${repBar}${S.chg && !S.rep ? `<button class="chgbar" data-a="showreco">동선이 바뀌었어요 · ${d + 1}일차 추천 경로 보기 ›</button>` : ''}<div class="row"><h3 class="grow" style="font-size:1em">주변 장소 ${ids.length}곳 <span class="xs sub" style="font-weight:500">· 옆으로 넘기기</span></h3><button class="pill" data-a="pl" data-v="list">목록 보기</button><button class="pill back" data-a="sel" data-v="">← 뒤로 가기</button></div>
    <div class="pcar">${ids.map(id => { const x = PL[id];
      return `<article class="pc ${id === sel ? 'on' : ''}" data-a="sel" data-v="${id}"><div class="pcb">
        <span><span class="tag ${x.cat === '맛집' ? 'food' : ''}">${x.cat}</span>${likeOk(id) ? ' <span class="lkb">✨ 맞춤</span>' : ''} ${rateT(id)}</span>
@@ -3656,7 +3656,7 @@ document.addEventListener('keydown', e => { const el = $('upd'); if (e.key === '
   setTimeout(() => { const b = el.querySelector('[data-ntc]'); b && b.focus(); }, 50);
 })();
 
-const DEV_BUILD = '11-26 13:56';
+const DEV_BUILD = '11-26 13:57';
 document.addEventListener('DOMContentLoaded', () => { const t = document.createElement('div'); t.className = 'devtag'; t.textContent = '개발 버전 · ' + DEV_BUILD; document.body.appendChild(t); });
 let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (S.scr === 'home' || S.scr === 'detail') render(); }, 150); });
 render();
