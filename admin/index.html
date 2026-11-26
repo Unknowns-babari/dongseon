@@ -58,7 +58,6 @@ td.d{white-space:nowrap;color:var(--sub);font-variant-numeric:tabular-nums}
 <div id="root"></div>
 <div class="tip" id="tip" role="tooltip"></div>
 <script src="../firebase-config.js"></script>
-<script src="admins.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
@@ -82,6 +81,7 @@ async function boot(){
     await load('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js');
     await load('https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js');
   } catch (e) { return gate('<h2>불러오지 못했어요</h2><p>인터넷 연결을 확인하고 새로고침해 주세요.</p>'); }
+  try { window.ADMIN_EMAILS = []; await load('admins.js?t=' + Date.now()); } catch (e) {}
   const app = firebase.initializeApp(cfg);
   auth = firebase.auth(app); fs = firebase.firestore(app);
   auth.onAuthStateChanged(u => u ? enter(u) : loginView());
@@ -104,7 +104,7 @@ function enter(u){
   const em = (u.email || '').toLowerCase();
   $('who').textContent = u.email || '';
   $('hb').innerHTML = '<button id="lo">로그아웃</button>'; $('lo').onclick = () => auth.signOut();
-  if (!list.length) return gate(`<h2>관리자 계정을 한 번 등록해 주세요</h2><p>지금 로그인한 계정은 <code>${esc(u.email)}</code>이에요.</p><p>깃허브에서 <code>admin/admins.js</code>를 열어 이메일을 넣고 저장(Commit)하면, 1~2분 뒤부터 이 계정만 들어올 수 있어요.</p><p><code>window.ADMIN_EMAILS = ['${esc(u.email)}'];</code></p><a class="btn pri" style="text-align:center;text-decoration:none" href="${REPO_EDIT}" target="_blank" rel="noopener">깃허브에서 admins.js 고치기</a>`);
+  if (!list.length) return gate(`<h2>관리자 계정을 한 번 등록해 주세요</h2><p>지금 로그인한 계정은 <code>${esc(u.email)}</code>이에요.</p><p>깃허브에서 <code>admin/admins.js</code>를 열어 이메일을 넣고 저장(Commit)하면, 1~2분 뒤부터 이 계정만 들어올 수 있어요.</p><p><code>window.ADMIN_EMAILS = ['${esc(u.email)}'];</code></p><a class="btn pri" style="text-align:center;text-decoration:none" href="${REPO_EDIT}" target="_blank" rel="noopener">깃허브에서 admins.js 고치기</a><button id="rl">이미 고쳤어요 · 다시 확인</button><p class="note">고친 뒤 깃허브에 반영되기까지 1~2분 걸려요.</p>`), ($('rl').onclick = () => location.reload());
   if (!list.includes(em)) return gate(`<h2>관리자 계정이 아니에요</h2><p><code>${esc(u.email)}</code>은 관리자 목록에 없어요. 다른 계정으로 로그인해 주세요.</p><button class="pri" id="lo2">다른 계정으로 로그인</button>`), ($('lo2').onclick = () => auth.signOut());
   shell(); fetchAll();
 }
