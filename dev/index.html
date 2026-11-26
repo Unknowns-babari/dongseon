@@ -561,6 +561,10 @@ main.full>*{animation:none}
 #gal .nv{position:absolute;top:50%;transform:translateY(-50%);font-size:1.4em}#gal .nv.p{left:10px}#gal .nv.n{right:10px}#gal .nv[disabled]{opacity:.25}
 #gal .gc{font-size:.78em;opacity:.85;text-align:center;padding:6px 12px}#gal .gc a{color:#cfe0ff}
 #gal .gt{display:flex;gap:8px;justify-content:center;padding:8px 12px 16px;overflow-x:auto}#gal .gt button{width:56px;height:56px;padding:0;overflow:hidden;border:2px solid transparent;flex-shrink:0;border-radius:10px}#gal .gt button.on{border-color:#fff}#gal .gt img{width:100%;height:100%;object-fit:cover}
+.gdbar{display:flex;align-items:center;gap:10px;width:100%;border:0;border-top:1px solid var(--line);background:var(--soft);padding:10px 16px;font:inherit;color:var(--ink);text-align:left;cursor:pointer;min-height:56px}.gdbar .gi2{font-size:1.3em}.gdbar>span:nth-child(2){flex:1;display:flex;flex-direction:column;font-size:.92em}.gdbar small{color:var(--sub);font-size:.8em}.gdbar .ch{font-size:1.2em;color:var(--pri);font-weight:800}
+.gdock{height:min(56vh,520px);display:flex;flex-direction:column;background:var(--card);border-top:1px solid var(--line);border-radius:18px 18px 0 0;box-shadow:0 -8px 24px rgba(0,0,0,.12);padding:0 14px}
+.gdock .gdh{flex-shrink:0;padding-bottom:6px}.gdock .gdx{display:block;width:100%;height:24px;border:0;background:none;cursor:pointer}.gdock .gdx .hd{display:block;width:40px;height:4px;border-radius:4px;background:var(--line);margin:0 auto}
+.gdock .gdt2{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.gdock .gdt2 b{margin-right:auto;font-size:1em}.gdock .gdt2 .chip{min-height:34px}
 .devtag{position:fixed;left:50%;top:0;transform:translateX(-50%);z-index:5000;background:#7c3aed;color:#fff;font-size:10px;font-weight:800;padding:1px 8px 2px;border-radius:0 0 8px 8px;pointer-events:none}.stg h3{font-size:.85em;color:var(--sub);margin:14px 4px 6px;font-weight:700}.stg ul{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line,#e5e7eb);border-radius:16px;overflow:hidden}.stg li+li{border-top:1px solid var(--line,#e5e7eb)}.stg .sti{display:flex;align-items:center;gap:12px;width:100%;min-height:60px;padding:10px 14px;border:0;background:none;text-align:left;font:inherit;color:inherit;text-decoration:none;cursor:pointer}.stg .sti:hover{background:var(--soft)}.stg .ic{width:34px;height:34px;border-radius:10px;background:var(--soft);display:grid;place-items:center;font-weight:800;flex-shrink:0}.stg .tx{flex:1;display:flex;flex-direction:column;gap:1px}.stg .rt{color:var(--sub);display:flex;align-items:center;gap:6px}.stg .rt .dot{width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block}.stg .rt .cnt{font-style:normal;background:var(--pri);color:#fff;border-radius:99px;font-size:.75em;padding:0 7px}.stg .sw{width:42px;height:24px;border-radius:99px;background:#cbd5e1;position:relative;transition:background .2s}.stg .sw i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s}.stg .sw.on{background:var(--pri)}.stg .sw.on i{left:21px}.bsheet>.cg2,.bsheet>.chlist,.bsheet>.blist{overflow-y:auto;min-height:0;flex:1 1 auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .cg2 .hero{position:relative;border-radius:18px;overflow:hidden;min-height:170px;display:flex;align-items:flex-end;background:linear-gradient(135deg,#1e3a5f,#3f7d20)}
 .cg2 .hero .bg{position:absolute;inset:0;background:center/cover no-repeat;transition:opacity .3s}
@@ -2314,6 +2318,16 @@ function sline(r, d){
 }
 
 /* ---------- 동선 편집: 지도에서 보기 ---------- */
+function gdDock(p){
+  if (!CG[p.city]) return '';
+  const r = route(p), n = r.length;
+  if (!S.gdo) return `<button class="gdbar" data-a="gdo" aria-expanded="false"><span class="gi2">📖</span><span><b>${esc(p.city)} 도시 소개</b>에서 장소 넣기<small>볼거리·먹을거리·맛집을 보고 + 한 번으로 담아요</small></span><span class="ch" aria-hidden="true">⌃</span></button>`;
+  const d = Math.max(0, Math.min(S.gday != null ? S.gday : (S.day >= 0 ? S.day : 0), n - 1));
+  return `<div class="gdock" role="region" aria-label="${esc(p.city)} 도시 소개 서랍">
+    <div class="gdh"><button class="gdx" data-a="gdo" aria-expanded="true" aria-label="서랍 접기"><span class="hd"></span></button>
+      <div class="gdt2"><b>📖 ${esc(p.city)} 도시 소개</b><span class="xs sub">넣을 날</span>${r.map((_, k) => `<button class="chip ${k === d ? 'on' : ''}" data-a="gday" data-v="${k}" aria-pressed="${k === d}">${k + 1}일차</button>`).join('')}</div></div>
+    ${guideDrawer(p, r, d)}</div>`;
+}
 function egTabs(p, d){
   const g = S.eg === 'guide';
   return `<div class="egt" role="tablist" aria-label="편집 패널"><button role="tab" aria-selected="${!g}" class="${g ? '' : 'on'}" data-a="eg" data-v="route">${d + 1}일차 동선</button><button role="tab" aria-selected="${g}" class="${g ? 'on' : ''}" data-a="eg" data-v="guide">📖 ${esc(p.city)} 도시 소개</button></div>`;
@@ -2330,7 +2344,7 @@ function guideDrawer(p, r, d){
   setTimeout(gPicFill, 0);
   const card = it => { const x = PL[it.id], w = where[it.id];
     const btn = w ? `<button class="gadd in" data-a="sel" data-v="${it.id}" aria-label="${esc(x.n)} — ${w[0] + 1}일차 ${w[1] + 1}번에 있어요">${w[0] + 1}일차 ${w[1] + 1}번</button>`
-      : `<button class="gadd" data-a="gadd" data-v="${it.id}" aria-label="${esc(x.n)}를 ${d + 1}일차 끝에 넣기">+ ${d + 1}일차</button>`;
+      : `<button class="gadd" data-a="gadd" data-v="${it.id}|${d}" aria-label="${esc(x.n)}를 ${d + 1}일차 끝에 넣기">+ ${d + 1}일차</button>`;
     return `<li class="gdc">${gPic(it.id, null, (e => e === '📍' && x.cat === '맛집' ? '🍽️' : e)(gEmoji(it.id)), x.n)}<button class="gtx" data-a="sel" data-v="${it.id}"><span class="xs sub">${esc(it.kick)}</span><b>${esc(x.n)}</b><span class="xs">${esc(it.line)}</span><span class="xs sub">${[esc(x.feeT), esc(x.when)].filter(Boolean).join(' · ')}${x.far ? ' · 근교' : ''}</span></button>${btn}</li>`; };
   return `<div class="gdr"><div class="gdt" role="tablist" aria-label="소개 분류">${T.map(x => `<button role="tab" aria-selected="${x === t}" class="chip ${x === t ? 'on' : ''}" data-a="egt" data-v="${x}">${x}</button>`).join('')}</div>
     ${g ? `<p class="xs sub gdl">${esc(g.t)} · 사진을 누르면 다른 사진도 볼 수 있어요</p>` : ''}
@@ -2603,7 +2617,7 @@ function src(){
 function footer(){
   if (S.scr === 'detail' && S.edit) return '';
   if (S.scr === 'detail'){ const l = items(pack());
-    return `<div class="foot"><div class="row"><span class="sub">숙소·교통·입장권 ${l.length}건 · 2인</span><b style="font-size:1.2em">${won(sum(l))}</b></div>
+    return gdDock(pack()) + `<div class="foot"><div class="row"><span class="sub">숙소·교통·입장권 ${l.length}건 · 2인</span><b style="font-size:1.2em">${won(sum(l))}</b></div>
     <div class="btns"><button class="btn" data-a="go" data-v="book">이 동선대로 예약하기</button></div></div>`; }
   if (S.scr === 'book'){ const c = chosen(); return `<div class="foot"><div class="row"><span class="sub">예약 ${c.length}건 · 2인</span><b style="font-size:1.2em">${won(sum(c))}</b></div><button class="btn" data-a="pay">한 번에 결제 (샘플)</button></div>`; }
   if (S.scr === 'paid') return `<div class="foot"><button class="btn" data-a="go" data-v="trip">여행 중 화면 미리 보기</button></div>`;
@@ -3097,9 +3111,11 @@ const A = {
   opop:() => { if (!OM.map) return; const c = OM.map.getCenter(), ne = OM.map.getBounds().getNorthEast(); fetchPop(pack().city, { lat:c.lat, lng:c.lng }, km({ la:c.lat, lo:c.lng }, { la:ne.lat, lo:ne.lng }) * 800); render(); },
   pick:v => { S.sel = v; S.pl = ''; render(); },
   pl:v => { S.pl = v; if (!v){ S.rep = null; S.ins = null; } render(); },
+  gdo:() => { S.gdo = !S.gdo; render(); },
+  gday:v => { S.gday = +v; render(); },
   eg:v => { S.eg = v === 'guide' ? 'guide' : 'route'; S.sel = null; render(); },
   egt:v => { S.egt = v; render(); const l = document.querySelector('.gdl2'); if (l) l.scrollTop = 0; },
-  gadd:v => { if (!PL[v]) return; const r = route(pack()).map(x => x.slice()), d = Math.max(0, Math.min(S.day, r.length - 1));
+  gadd:v => { const [id0, dd] = String(v).split('|'); v = id0; if (!PL[v]) return; const r = route(pack()).map(x => x.slice()), d = Math.max(0, Math.min(dd != null ? +dd : S.day, r.length - 1));
     if (r.some(ids => ids.includes(v))) return; r[d].push(v); setRoute(r); S.chg = true; S.rprev = ''; render(); toast(`${PL[v].n} → ${d + 1}일차 ${r[d].length}번에 넣었어요`); },
   mf:v => { S.mf = v; if (['관광', '거리', '체험', '맛집'].includes(v)) S.lt = v; render(); },
   rmph:v => { const f = R.files.splice(+v, 1)[0]; if (f) try { URL.revokeObjectURL(f.url); } catch (e) {} $('sh').innerHTML = sheet(); },
