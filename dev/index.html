@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>[개발] 동선팩 (무료 지도)</title>
 <script src="firebase-config.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
-<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js"></script>
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
+<link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin>
+<link rel="preload" as="script" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" media="print" onload="this.media='all'">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
 <style>
 /* VOICE: 차분하고 친절한 여행 앱, 큰 글씨·큰 버튼
    IDEA: 실제 여행자 동선을 실제 좌표 위 번호 핀으로 따라가는 '동선 카드'
@@ -1400,7 +1400,7 @@ const photosOf = id => (REV[id] || []).flatMap(r => Array.isArray(r.photos) ? r.
 function photoStrip(id, n){
   const x = PL[id], ph = photosOf(id);
   if (!ph.length) return `<div class="ph none ${x.cat === '맛집' ? 'food' : ''}">${ico(gic(x), 26)}<span>아직 여행자 사진이 없어요</span></div>`;
-  return `<div class="ph">${ph.slice(0, n).map(p => `<img src="${psrc(p)}" alt="${esc(x.n)} 여행자 사진" loading="lazy">`).join('')}${ph.length > n ? `<span class="more">+${ph.length - n}</span>` : ''}</div>`;
+  return `<div class="ph">${ph.slice(0, n).map(p => `<img loading="lazy" decoding="async" src="${psrc(p)}" alt="${esc(x.n)} 여행자 사진" loading="lazy">`).join('')}${ph.length > n ? `<span class="more">+${ph.length - n}</span>` : ''}</div>`;
 }
 
 /* ---------- 장소 사진: 위키미디어 공용(자유 이용 라이선스)에서 불러와 출처·라이선스와 함께 표시 ---------- */
@@ -1432,7 +1432,7 @@ async function wmLoad(id){
 }
 function wmHTML(id){
   const w = WM[id]; if (!w || w.st !== 'ok') return '';
-  return `<div class="wmg" role="list" aria-label="${esc(PL[id].n)} 사진">${w.l.map(x => `<figure role="listitem"><img src="${esc(x.src)}" alt="${esc(PL[id].n)} 사진" decoding="async" referrerpolicy="no-referrer" onerror="wmErr(this)"><figcaption>사진: ${esc(x.by)} · ${esc(x.lic)} · <a href="${esc(x.page)}" target="_blank" rel="noopener">위키미디어 공용</a></figcaption></figure>`).join('')}</div>`;
+  return `<div class="wmg" role="list" aria-label="${esc(PL[id].n)} 사진">${w.l.map(x => `<figure role="listitem"><img loading="lazy" decoding="async" src="${esc(x.src)}" alt="${esc(PL[id].n)} 사진" decoding="async" referrerpolicy="no-referrer" onerror="wmErr(this)"><figcaption>사진: ${esc(x.by)} · ${esc(x.lic)} · <a href="${esc(x.page)}" target="_blank" rel="noopener">위키미디어 공용</a></figcaption></figure>`).join('')}</div>`;
 }
 function wmErr(img){ const f = img.closest('figure'); if (f) f.remove(); const g = document.querySelector('.wmg'); if (g && !g.querySelector('figure')){ const w = g.parentElement; if (w) w.hidden = true; const n = document.getElementById('wmnote'); if (n) n.hidden = true; } }
 function wmFill(id){ const el = document.getElementById('wm-' + id); if (!el) return; const h = wmHTML(id); if (h){ el.innerHTML = h; el.hidden = false; const n = document.getElementById('wmnote'); if (n) n.hidden = false; } }
@@ -1749,13 +1749,13 @@ const mEmoji = n => /눈 축제/.test(n) ? '❄️' : /불꽃|하나비/.test(n)
 function gPic(key, q, em, alt){
   if (q && !JA[key]) JA[key] = q;
   const w = WM[key], ok = w && w.st === 'ok';
-  return `<div class="pic" data-wk="${esc(key)}"><span class="em" aria-hidden="true">${em}</span>${ok ? `<img src="${esc(w.l[0].src)}" alt="${esc(alt)}" referrerpolicy="no-referrer" onerror="this.remove()"><small>사진: ${esc(w.l[0].by)} · ${esc(w.l[0].lic)}</small>` : ''}</div>`;
+  return `<div class="pic" data-wk="${esc(key)}"><span class="em" aria-hidden="true">${em}</span>${ok ? `<img loading="lazy" decoding="async" src="${esc(w.l[0].src)}" alt="${esc(alt)}" referrerpolicy="no-referrer" onerror="this.remove()"><small>사진: ${esc(w.l[0].by)} · ${esc(w.l[0].lic)}</small>` : ''}</div>`;
 }
 const wmWait = k => new Promise(res => { let n = 0; const t = () => { const w = WM[k]; if (w && w.st !== 'loading' || n++ > 40) return res(); setTimeout(t, 300); }; wmLoad(k).then(t, t); });
 function gPicFill(){
   if (!EXTMAP) return;
   document.querySelectorAll('.cg2 .pic[data-wk], .hdet .pic[data-wk], .gdr .pic[data-wk]').forEach(el => { const k = el.dataset.wk; if (!JA[k] || (WM[k] && WM[k].st !== 'loading' && el.querySelector('img'))) return;
-    wmWait(k).then(() => { const w = WM[k]; if (!w || w.st !== 'ok' || el.querySelector('img')) return; const im = new Image(); im.alt = ''; im.referrerPolicy = 'no-referrer'; im.onerror = () => im.remove(); im.src = w.l[0].src; el.appendChild(im); const sm = document.createElement('small'); sm.textContent = '사진: ' + w.l[0].by + ' · ' + w.l[0].lic; el.appendChild(sm); }); });
+    wmWait(k).then(() => { const w = WM[k]; if (!w || w.st !== 'ok' || el.querySelector('img')) return; const im = new Image(); im.loading = 'lazy'; im.decoding = 'async'; im.alt = ''; im.referrerPolicy = 'no-referrer'; im.onerror = () => im.remove(); im.src = w.l[0].src; el.appendChild(im); const sm = document.createElement('small'); sm.textContent = '사진: ' + w.l[0].by + ' · ' + w.l[0].lic; el.appendChild(sm); }); });
   const hero = document.querySelector('.cg2 .hero .bg[data-wk]'); if (hero){ const k = hero.dataset.wk; wmWait(k).then(() => { const w = WM[k]; if (w && w.st === 'ok') hero.style.backgroundImage = `url("${w.l[Math.min(1, w.l.length - 1)].src}")`; }); }
 }
 
@@ -1767,9 +1767,9 @@ function galRender(){
   const L = w.l, i = Math.max(0, Math.min(GAL.i, L.length - 1)), x = L[i];
   el.setAttribute('aria-label', GAL.alt + ' 사진 ' + (i + 1) + '/' + L.length);
   el.innerHTML = `<div class="gh"><b>${esc(GAL.alt)}</b><span>${i + 1} / ${L.length}</span><button data-g="x" aria-label="닫기">✕</button></div>
-    <div class="gb"><img src="${esc(x.src)}" alt="${esc(GAL.alt)} 사진 ${i + 1}" referrerpolicy="no-referrer">${L.length > 1 ? `<button class="nv p" data-g="p" aria-label="이전 사진" ${i ? '' : 'disabled'}>‹</button><button class="nv n" data-g="n" aria-label="다음 사진" ${i < L.length - 1 ? '' : 'disabled'}>›</button>` : ''}</div>
+    <div class="gb"><img loading="lazy" decoding="async" src="${esc(x.src)}" alt="${esc(GAL.alt)} 사진 ${i + 1}" referrerpolicy="no-referrer">${L.length > 1 ? `<button class="nv p" data-g="p" aria-label="이전 사진" ${i ? '' : 'disabled'}>‹</button><button class="nv n" data-g="n" aria-label="다음 사진" ${i < L.length - 1 ? '' : 'disabled'}>›</button>` : ''}</div>
     <p class="gc">사진: ${esc(x.by)} · ${esc(x.lic)}${x.page ? ` · <a href="${esc(x.page)}" target="_blank" rel="noopener">원본 보기</a>` : ''}</p>
-    ${L.length > 1 ? `<div class="gt">${L.map((y, j) => `<button data-g="t" data-i="${j}" class="${j === i ? 'on' : ''}" aria-label="${j + 1}번째 사진"><img src="${esc(y.src)}" alt="" referrerpolicy="no-referrer"></button>`).join('')}</div>` : ''}`;
+    ${L.length > 1 ? `<div class="gt">${L.map((y, j) => `<button data-g="t" data-i="${j}" class="${j === i ? 'on' : ''}" aria-label="${j + 1}번째 사진"><img loading="lazy" decoding="async" src="${esc(y.src)}" alt="" referrerpolicy="no-referrer"></button>`).join('')}</div>` : ''}`;
   el.hidden = false;
 }
 function galBind(el){
@@ -2171,7 +2171,7 @@ function rvView(){
     ? (!EXTMAP ? '<p class="sub" style="margin:0">이 버전에서는 바깥 사진을 불러올 수 없어요. GitHub 사이트에서 볼 수 있어요.</p>'
       : !ph || ph.st === 'loading' ? '<p class="sub" style="margin:0">경로 주변 사진을 찾는 중이에요…</p>'
       : ph.st === 'none' ? '<p class="sub" style="margin:0">이 경로 주변에서 찾은 자유 이용 사진이 없어요.</p>'
-      : `<div class="wmg">${ph.l.map(p => `<figure><img src="${esc(p.src)}" alt="${esc(p.t)}" decoding="async" referrerpolicy="no-referrer" onerror="this.closest('figure').remove()"><figcaption>${esc(p.t)} · 사진: ${esc(p.by)} · ${esc(p.lic)} · <a href="${esc(p.page)}" target="_blank" rel="noopener">위키미디어 공용</a></figcaption></figure>`).join('')}</div><p class="xs sub" style="margin:0">출발·중간·도착 지점과 지나는 역 반경 400m 안에서 찍힌 사진이에요.</p>`)
+      : `<div class="wmg">${ph.l.map(p => `<figure><img loading="lazy" decoding="async" src="${esc(p.src)}" alt="${esc(p.t)}" decoding="async" referrerpolicy="no-referrer" onerror="this.closest('figure').remove()"><figcaption>${esc(p.t)} · 사진: ${esc(p.by)} · ${esc(p.lic)} · <a href="${esc(p.page)}" target="_blank" rel="noopener">위키미디어 공용</a></figcaption></figure>`).join('')}</div><p class="xs sub" style="margin:0">출발·중간·도착 지점과 지나는 역 반경 400m 안에서 찍힌 사진이에요.</p>`)
     : `<dl><dt>이동 방법</dt><dd>${esc(fx.t)}</dd><dt>예상 시간</dt><dd>약 ${minT(fx.m)}${g.real ? ` <span class="xs sub">(경로 계산 ${minT(Math.round(g.dur / 60))})</span>` : ''}</dd><dt>거리</dt><dd>${rvDist(a, b, fx)}</dd>
       ${fx.via ? `<dt>타고 내리는 역</dt><dd>${fx.via.map(v => esc(v.n) + '역').join(' → ')}</dd>` : ''}${g.names && g.names.length ? `<dt>지나는 길</dt><dd>${g.names.map(esc).join(' → ')}</dd>` : ''}</dl>
       <span class="xs sub">${g.real ? '도보·차 경로는 OpenStreetMap 도로 정보로 계산했어요.' : g.loading ? '실제 길을 계산하는 중이에요…' : '대중교통은 역 위치를 이은 대략적인 선이에요.'} 시간은 어림값이에요.</span>
@@ -2668,7 +2668,7 @@ function revList(id){
   const loc = LOCAL ? '<p class="xs sub">이 파일 버전에서는 리뷰와 사진이 지금 쓰는 브라우저에만 저장돼요.</p>' : '';
   if (!l.length) return loc + slow + '<p class="sub">아직 리뷰가 없어요. 첫 리뷰를 남겨 주세요.</p>';
   const avg = l.reduce((a, r) => a + (+r.stars || 0), 0) / l.length;
-  return loc + slow + `<p><b>평균 ${avg.toFixed(1)}점</b> <span class="sub">· 리뷰 ${l.length}개</span></p>` + l.map(r => `<div class="rev"><span><span class="s">${'★'.repeat(+r.stars || 0)}${'☆'.repeat(5 - (+r.stars || 0))}</span> <b style="font-size:.9em">${esc(r.name || '익명')}</b> <span class="xs sub">${r.at ? new Date(r.at).toLocaleDateString('ko-KR') : ''}</span></span><p style="font-size:.92em;white-space:pre-wrap">${esc(r.text)}</p>${Array.isArray(r.photos) && r.photos.length ? `<div class="rph">${r.photos.filter(okPh).slice(0, 3).map(p => `<img src="${psrc(p)}" alt="리뷰 사진" loading="lazy">`).join('')}</div>` : ''}</div>`).join('');
+  return loc + slow + `<p><b>평균 ${avg.toFixed(1)}점</b> <span class="sub">· 리뷰 ${l.length}개</span></p>` + l.map(r => `<div class="rev"><span><span class="s">${'★'.repeat(+r.stars || 0)}${'☆'.repeat(5 - (+r.stars || 0))}</span> <b style="font-size:.9em">${esc(r.name || '익명')}</b> <span class="xs sub">${r.at ? new Date(r.at).toLocaleDateString('ko-KR') : ''}</span></span><p style="font-size:.92em;white-space:pre-wrap">${esc(r.text)}</p>${Array.isArray(r.photos) && r.photos.length ? `<div class="rph">${r.photos.filter(okPh).slice(0, 3).map(p => `<img loading="lazy" decoding="async" src="${psrc(p)}" alt="리뷰 사진" loading="lazy">`).join('')}</div>` : ''}</div>`).join('');
 }
 function menuOf(id){
   const x = PL[id], m = MENU[id];
@@ -2795,7 +2795,7 @@ function sheet(){
      <label for="rname" class="xs sub">닉네임 (선택)</label><input type="text" id="rname" maxlength="20" value="${esc(R.name)}" placeholder="익명">
      <label for="rtext" class="xs sub">리뷰</label><textarea id="rtext" rows="4" maxlength="500" placeholder="다녀온 느낌, 팁, 아쉬운 점을 적어 주세요">${esc(R.text)}</textarea>
      <span class="xs sub">사진 (최대 3장)</span>
-     ${ASSETS ? `<div class="phin">${R.files.map((f, i) => `<span class="thumb"><img src="${f.url}" alt="올릴 사진 ${i + 1}"><button type="button" data-a="rmph" data-v="${i}" aria-label="사진 ${i + 1} 빼기">×</button></span>`).join('')}${R.files.length < 3 ? `<label class="addph"><input type="file" id="rphoto" accept="image/*" multiple>+ 사진</label>` : ''}</div>`
+     ${ASSETS ? `<div class="phin">${R.files.map((f, i) => `<span class="thumb"><img loading="lazy" decoding="async" src="${f.url}" alt="올릴 사진 ${i + 1}"><button type="button" data-a="rmph" data-v="${i}" aria-label="사진 ${i + 1} 빼기">×</button></span>`).join('')}${R.files.length < 3 ? `<label class="addph"><input type="file" id="rphoto" accept="image/*" multiple>+ 사진</label>` : ''}</div>`
        : `<p class="xs sub">${revState === 'loading' ? '사진 올리기를 준비하는 중이에요…' : '이 화면에서는 사진을 올릴 수 없어요. 앱을 공유받을 때 참여자(Contributor) 이상 권한이 있어야 해요.'}</p>`}
      ${R.msg ? `<p class="msg" id="rmsg">${esc(R.msg)}</p>` : '<p id="rmsg" hidden></p>'}
      <button class="btn" type="submit" ${R.busy || revState === 'off' ? 'disabled' : ''}>${R.busy ? '저장 중…' : '리뷰 올리기'}</button></form>
@@ -2837,6 +2837,15 @@ function withKo(base){ const k = koLayer(); return k ? Object.assign({ '한국�
 
 /* ---------- 무료 실제 지도 (Leaflet + OpenStreetMap) ---------- */
 const OM = { ok:!!window.L, map:null, el:null, layer:null, fitKey:'' };
+/* 지도 프로그램은 첫 화면을 그린 뒤 받아요 (그 사이엔 가벼운 그림 지도) */
+(function(){
+  if (window.L) return;
+  const ld = src => new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = src; sc.async = true; sc.crossOrigin = 'anonymous'; sc.onload = ok; sc.onerror = no; document.head.appendChild(sc); });
+  const go = () => ld('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js')
+    .then(() => ld('https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js').then(() => ld('https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js')).catch(() => {}))
+    .then(() => { if (window.L && !OM.ok){ OM.ok = true; try { render(); } catch (e) {} } }).catch(() => {});
+  if (document.readyState === 'complete') setTimeout(go, 0); else window.addEventListener('load', () => setTimeout(go, 0));
+})();
 const OP = { done:{}, busy:false, msg:'' }, OKEY = 'dongseon-osm-places';
 try { const c = JSON.parse(localStorage.getItem(OKEY) || '{}'); Object.entries(c).forEach(([id, v]) => { if (!PL[id] && v && v.n) PL[id] = v; }); } catch (e) {}
 function saveO(){ try { const o = {}; Object.keys(PL).forEach(k => { if (PL[k].o) o[k] = PL[k]; }); localStorage.setItem(OKEY, JSON.stringify(o)); } catch (e) {} }
@@ -3520,7 +3529,7 @@ function gdeRender(){
   const el = $('gde'), i = GD.i, [t, d, l] = GDE[i];
   el.innerHTML = `<div class="fkbox"><div class="bh"><h2 id="gdet">📖 이용 가이드</h2><button class="ib" data-gd="x" aria-label="닫기">✕</button></div><div class="bb">
     <div class="toc">${GDE.map((g, k) => `<button class="${k === i ? 'on' : ''}" data-gd="${k}">${k + 1}. ${g[0].replace(/^[^가-힣A-Za-z]+/, '')}</button>`).join('')}</div>
-    <div class="shot"><img src="${GDB}${i + 1}.jpg" alt="${esc(t)} 화면" loading="eager" onerror="this.parentNode.style.display='none'"></div>
+    <div class="shot"><img loading="lazy" decoding="async" src="${GDB}${i + 1}.jpg" alt="${esc(t)} 화면" loading="eager" onerror="this.parentNode.style.display='none'"></div>
     <span class="stp">${i + 1} / ${GDE.length}</span><h3>${t}</h3><p>${d}</p><ul>${l.map(x => `<li>${x}</li>`).join('')}</ul>
     <div class="dots">${GDE.map((g, k) => `<button class="${k === i ? 'on' : ''}" data-gd="${k}" aria-label="${k + 1}번째 단계"></button>`).join('')}</div>
     <div class="nav"><button class="btn" data-gd="prev" ${i ? '' : 'disabled style="opacity:.4"'}>‹ 이전</button>${i < GDE.length - 1 ? `<button class="btn dark" data-gd="next">다음 ›</button>` : `<button class="btn dark" data-gd="x">시작하기</button>`}</div>
