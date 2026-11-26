@@ -133,10 +133,10 @@ function viewTabs(){
   let ap = $('apps');
   if (ST.view === 'apps'){
     if (!ap){ ap = document.createElement('section'); ap.id = 'apps'; m.prepend(ap);
-      ap.innerHTML = `<p class="note" style="margin-bottom:12px">두 화면은 실제 사이트를 그대로 띄운 거예요. 안에서 누르는 리뷰·피드백은 실제로 저장되니 조심하세요.</p><div class="apps">${APPS.map(a => { const u = new URL(a.url, location.href).href;
-        return `<div class="app"><div class="ah"><h2>${a.t}</h2><span class="tag" style="background:${a.c}">${a.tag}</span><button data-r="${a.k}" aria-label="${a.t} 처음부터 다시 불러오기">↻ 새로고침</button><a class="btn" href="${u}" target="_blank" rel="noopener">새 창으로 ↗</a></div>
-          <p class="url">${esc(u)}<br>${a.d}</p><div class="phone"><iframe id="if-${a.k}" src="${u}" title="${a.t} 화면"></iframe></div></div>`; }).join('')}</div>`;
-      ap.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { const f = $('if-' + b.dataset.r); f.src = f.src; });
+      ap.innerHTML = `<p class="note" style="margin-bottom:12px">두 화면은 실제 사이트를 그대로 띄운 거예요. 안에서 누르는 리뷰·피드백은 실제로 저장되니 조심하세요.</p><div class="apps">${APPS.map(a => { const u = new URL(a.url, location.href).href, fresh = u + '?v=' + Date.now();
+        return `<div class="app"><div class="ah"><h2>${a.t}</h2><span class="tag" style="background:${a.c}">${a.tag}</span><button data-r="${a.k}" aria-label="${a.t} 처음부터 다시 불러오기">↻ 새로고침</button><a class="btn" href="${fresh}" target="_blank" rel="noopener">새 창으로 ↗</a></div>
+          <p class="url">${esc(u)}<br>${a.d}</p><div class="phone"><iframe id="if-${a.k}" data-u="${u}" src="${fresh}" title="${a.t} 화면"></iframe></div></div>`; }).join('')}</div>`;
+      ap.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { const f = $('if-' + b.dataset.r); f.src = f.dataset.u + '?v=' + Date.now(); });
     }
     ap.hidden = false;
   } else if (ap) ap.hidden = true;
