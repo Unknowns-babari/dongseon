@@ -3656,7 +3656,8 @@ document.addEventListener('keydown', e => { const el = $('upd'); if (e.key === '
   setTimeout(() => { const b = el.querySelector('[data-ntc]'); b && b.focus(); }, 50);
 })();
 
-document.addEventListener('DOMContentLoaded', () => { const t = document.createElement('div'); t.className = 'devtag'; t.textContent = '개발 버전'; document.body.appendChild(t); });
+const DEV_BUILD = '11-26 13:56';
+document.addEventListener('DOMContentLoaded', () => { const t = document.createElement('div'); t.className = 'devtag'; t.textContent = '개발 버전 · ' + DEV_BUILD; document.body.appendChild(t); });
 let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (S.scr === 'home' || S.scr === 'detail') render(); }, 150); });
 render();
 
